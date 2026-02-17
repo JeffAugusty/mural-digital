@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mural Digital - Faculdade</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main id="mural">
+        <section class="tela ativa" id="tela-boas-vindas">
+            <img src="assets/boas-vinda.png" alt="Bem-vindos">
+        </section>
+
+        <section class="tela" id="tela-calendario">
+            <img src="assets/calendario.jpg" alt="Calendário Acadêmico">
+        </section>
+
+        <section class="tela" id="tela-tempo">
+            <video autoplay muted loop playsinline id="weather-video">
+                <source src="" type="video/mp4">
+            </video>
+            
+            <div class="glass-ui">
+                <div class="weather-layout">
+                    <div class="clock-side">
+                        <div id="relogio">00:00:00</div>
+                        <div id="data-extenso">--</div>
+                    </div>
+                    
+                    <div class="info-side">
+                        <h1 id="cidade">ITUIUTABA</h1>
+                        <div id="temp-valor">--°C</div>
+                        <p id="condicao">Sincronizando...</p>
+                        
+                        <div class="temp-range">
+                            <span id="temp-max">Máx: --°C</span>
+                            <span class="divider">|</span>
+                            <span id="temp-min">Min: --°C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
