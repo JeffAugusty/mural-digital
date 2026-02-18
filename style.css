@@ -1,18 +1,20 @@
+/* RESET GERAL */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    cursor: none; /* Esconde o mouse */
+    cursor: none; /* Esconde o mouse na TV */
 }
 
 body {
     background: #000;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: white;
     overflow: hidden;
     height: 100vh;
 }
 
+/* SISTEMA DE TELAS */
 .tela {
     position: absolute;
     width: 100%;
@@ -30,14 +32,16 @@ body {
     z-index: 2;
 }
 
+/* IMAGENS DE COMUNICADO */
 img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: contain; /* Não corta a imagem na TV */
     background: #000;
 }
 
-/* VÍDEO DE FUNDO (Ocupa tudo) */
+/* --- CLIMA DINÂMICO (OTIMIZADO) --- */
+
 #weather-video {
     position: absolute;
     top: 0;
@@ -46,97 +50,101 @@ img {
     height: 100%;
     object-fit: cover;
     z-index: 0;
-    filter: brightness(0.9); /* Leve escurecida para o texto branco saltar */
+    /* Força aceleração de hardware para parar de travar no Mac 2014 */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
-/* --- A CORREÇÃO ESTÁ AQUI: VIDRO MAIS TRANSPARENTE --- */
+/* PAINEL DE VIDRO RESPONSIVO */
 .glass-ui {
     position: relative;
     z-index: 2;
-    width: 90%;  /* Ocupa 90% da largura */
-    height: 80%; /* Ocupa 80% da altura */
+    width: 90vw;   /* 90% da largura da TV */
+    height: 80vh;  /* 80% da altura da TV */
+    background: rgba(255, 255, 255, 0.05);
     
-    /* MUDANÇA CRÍTICA 1: Fundo quase invisível (0.03 de opacidade) */
-    background: rgba(255, 255, 255, 0.03); 
+    /* REDUZIDO: Blur alto trava PCs antigos. 10px mantém o visual e a fluidez */
+    backdrop-filter: blur(10px) saturate(160%);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
     
-    /* MUDANÇA CRÍTICA 2: Blur reduzido de 50px para 15px. 
-       Isso faz o fundo ficar nítido. */
-    backdrop-filter: blur(10px) saturate(120%);
-    -webkit-backdrop-filter: blur(10px) saturate(120%);
-    
-    border-radius: 60px;
-    /* Borda mais fina e sutil */
+    border-radius: 4vw;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    /* Sombra mais suave */
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    box-shadow: 0 4vh 10vh rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
 }
+
+
 
 .weather-layout {
     display: flex;
     width: 100%;
     height: 100%;
+    flex-direction: row; /* Mantém lado a lado */
+    align-items: center;
+    justify-content: space-around;
 }
 
+/* LADOS DO PAINEL */
 .clock-side, .info-side {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    /* Sombra no texto para garantir leitura sobre qualquer vídeo */
-    text-shadow: 0 2px 15px rgba(0,0,0,0.7);
+    padding: 2vw;
+    text-shadow: 0 0.5vh 2vh rgba(0, 0, 0, 0.6);
 }
 
 .clock-side {
     border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Tipografia */
+/* TIPOGRAFIA FLUIDA (VW = Viewport Width) */
 #relogio {
-    font-size: 12rem;
+    font-size: 9vw; /* Escala com a TV */
     font-weight: 700;
-    letter-spacing: -6px;
+    letter-spacing: -0.5vw;
     line-height: 1;
 }
 
 #data-extenso {
-    font-size: 2rem;
-    margin-top: 15px;
+    font-size: 2vw;
+    margin-top: 2vh;
     font-weight: 300;
     text-transform: capitalize;
-    opacity: 0.9;
+    opacity: 0.8;
 }
 
 #temp-valor {
-    font-size: 14rem;
+    font-size: 11vw; /* Escala com a TV */
     font-weight: 700;
     line-height: 1;
 }
 
 #cidade {
-    font-size: 2.2rem;
-    letter-spacing: 15px;
+    font-size: 1.8vw;
+    letter-spacing: 1.2vw;
     font-weight: 400;
-    margin-bottom: 10px;
+    margin-bottom: 2vh;
     opacity: 0.9;
 }
 
 #condicao {
-    font-size: 2.5rem;
+    font-size: 2.2vw;
     font-weight: 300;
-    margin-bottom: 20px;
-    text-transform: capitalize;
+    margin-bottom: 3vh;
 }
 
+/* BLOCO DE MÁXIMA E MÍNIMA */
 .temp-range {
-    font-size: 1.8rem;
-    /* Fundo dos dados de temperatura mais transparente */
-    background: rgba(0,0,0,0.2); 
-    padding: 15px 45px;
-    border-radius: 50px;
+    font-size: 1.8vw;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.5vh 4vw;
+    border-radius: 5vw;
     display: flex;
-    gap: 20px;
-    border: 1px solid rgba(255,255,255,0.1);
+    gap: 2vw;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .divider { opacity: 0.3; }
