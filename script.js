@@ -1,8 +1,8 @@
-// Coordenadas de Ituiutaba, MG
+// Coordenadas exatas de Ituiutaba, MG
 const LAT = '-18.98'; 
 const LON = '-49.46';
 
-// 1. FUNÇÃO DO RELÓGIO (COM SEGUNDOS)
+// 1. RELÓGIO COM SEGUNDOS (PRECISÃO PARA OS ALUNOS)
 function updateClock() {
     const agora = new Date();
     document.getElementById('relogio').innerText = agora.toLocaleTimeString('pt-BR', {
@@ -13,7 +13,7 @@ function updateClock() {
     });
 }
 
-// 2. SINCRONIZAÇÃO DO CLIMA E VÍDEOS LOCAIS
+// 2. SINCRONIZAÇÃO DE CLIMA COM FILTRO DE SEGURANÇA
 async function syncWeather() {
     try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo`;
@@ -23,77 +23,84 @@ async function syncWeather() {
         const code = data.current_weather.weathercode;
         const temp = data.current_weather.temperature;
         const hora = new Date().getHours();
-        const isDay = hora >= 6 && hora < 18; // Lógica de dia/noite
+        const isDay = hora >= 6 && hora < 18; // Lógica Dia/Noite
         
         const video = document.getElementById('weather-video');
         const source = video.querySelector('source');
 
-        // Atualiza textos na interface
         document.getElementById('temp-valor').innerText = `${Math.round(temp)}°C`;
         document.getElementById('temp-max').innerText = `Máx: ${Math.round(data.daily.temperature_2m_max[0])}°C`;
         document.getElementById('temp-min').innerText = `Min: ${Math.round(data.daily.temperature_2m_min[0])}°C`;
 
-        // Lógica de seleção de vídeo baseada nos seus arquivos
         let novoVideo = "";
         let desc = "";
 
+        // --- LÓGICA DE DECISÃO REFINADA (ANTI-ERRO) ---
         if (!isDay) {
             novoVideo = "assets/noite-estrelada.mp4";
             desc = "Céu Estrelado";
         } else if (code === 0) {
             novoVideo = "assets/ceu-limpo.mp4";
             desc = "Céu Limpo";
-        } else if (code >= 1 && code <= 3) {
-            novoVideo = (code === 1) ? "assets/ceu-ensolarado.mp4" : "assets/ceu-nublado.mp4";
-            desc = (code === 1) ? "Ensolarado" : "Nublado";
+        } else if (code === 1) {
+            novoVideo = "assets/ceu-ensolarado.mp4";
+            desc = "Ensolarado";
+        } else if (code === 2 || code === 3) {
+            novoVideo = "assets/ceu-nublado.mp4";
+            desc = "Nublado";
         } else if (code >= 95) {
             novoVideo = "assets/ceu-tempestade.mp4";
             desc = "Tempestade";
-        } else if (code >= 51) {
+        } 
+        // FILTRO: Somente códigos 63, 65, 67 (Chuva moderada/forte) 
+        // ou 81, 82 (Pancadas fortes) ativam o vídeo de chuva.
+        else if ((code >= 63 && code <= 67) || code === 81 || code === 82) {
             novoVideo = "assets/ceu-chuvoso.mp4";
             desc = "Chuva";
+        } 
+        // CÓDIGOS DE SEGURANÇA (51-61, 80): Se a API estiver em dúvida, mostramos "Nublado".
+        else {
+            novoVideo = "assets/ceu-nublado.mp4";
+            desc = "Nublado";
         }
 
-        // --- MONITORAMENTO NO CONSOLE (F12) ---
+        // MONITORAMENTO PROFISSIONAL NO CONSOLE
         console.clear();
-        console.log("%c--- MONITORAMENTO MURAL DIGITAL ---", "color: #00a8ff; font-weight: bold; font-size: 14px;");
+        console.log("%c--- MONITORAMENTO MURAL DIGITAL ---", "color: #00a8ff; font-weight: bold;");
         console.table({
             "Horário": new Date().toLocaleTimeString(),
-            "Cidade": "Ituiutaba",
-            "Estado": isDay ? "Dia" : "Noite",
-            "Código Weather": code,
-            "Condição": desc,
+            "Código API": code,
+            "Condição Real": desc,
             "Temperatura": temp + "°C",
-            "Arquivo Ativo": novoVideo
+            "Vídeo": novoVideo
         });
 
-        // Troca o vídeo apenas se a condição mudar
+        // Troca o vídeo suavemente se houver mudança
         if (!source.src.includes(novoVideo)) {
-            console.log("%c[SISTEMA] Trocando fundo para: " + novoVideo, "color: #ffa500;");
             source.src = novoVideo;
             video.load();
         }
 
         document.getElementById('condicao').innerText = desc;
+        document.getElementById('cidade').innerText = "ITUIUTABA";
 
-    } catch (e) { 
-        console.error("%c[ERRO] Falha ao buscar clima: " + e.message, "color: #ff0000;");
+    } catch (e) {
+        console.error("Erro na API: " + e.message);
     }
 }
 
-// 3. ROTAÇÃO DE TELAS (20 segundos cada)
+// 3. ROTAÇÃO DE TELAS (20 SEGUNDOS)
 let step = 0;
 const sections = document.querySelectorAll('.tela');
 function rotate() {
     sections[step].classList.remove('ativa');
     step = (step + 1) % sections.length;
     sections[step].classList.add('ativa');
-    console.log("%c[MURAL] Mudando para tela: " + sections[step].id, "color: #00ff00;");
 }
 
 // INICIALIZAÇÃO
 setInterval(updateClock, 1000);
 updateClock();
 syncWeather();
-setInterval(syncWeather, 600000); // Sincroniza clima a cada 10 min
+setInterval(syncWeather, 600000); // Atualiza clima a cada 10 min
 setInterval(rotate, 20000); // Troca de tela a cada 20 segundos
