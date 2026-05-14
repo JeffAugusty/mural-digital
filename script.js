@@ -137,5 +137,5 @@ setInterval(syncWeather, 600000); // 10 min
 // Carrega as imagens e inicia a rotação
 carregarImagensDoDrive().then(() => {
     telas = document.querySelectorAll('.tela'); // Captura inicial
-    setInterval(rotate, 20000); // 20 segundos
+    setInterval(rotate, 1800000); // 30 minutos
 });
