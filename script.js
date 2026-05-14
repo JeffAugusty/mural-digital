@@ -1,8 +1,12 @@
-// Coordenadas exatas de Ituiutaba, MG
+// Configurações Globais
+const URL_API_DRIVE = 'https://script.google.com/macros/s/AKfycbwt1akQ3NLHgea6VPNo_XdFjP0-ncBeve1ATsRbabLgq_djN3qYCn3Uuzl5K7EWDoSS/exec';
 const LAT = '-18.98'; 
 const LON = '-49.46';
 
-// 1. RELÓGIO COM SEGUNDOS (PRECISÃO PARA OS ALUNOS)
+let telas = [];
+let step = 0;
+
+// 1. RELÓGIO COM SEGUNDOS
 function updateClock() {
     const agora = new Date();
     document.getElementById('relogio').innerText = agora.toLocaleTimeString('pt-BR', {
@@ -13,7 +17,7 @@ function updateClock() {
     });
 }
 
-// 2. SINCRONIZAÇÃO DE CLIMA COM FILTRO DE SEGURANÇA
+// 2. SINCRONIZAÇÃO DE CLIMA (Open-Meteo)
 async function syncWeather() {
     try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo`;
@@ -23,7 +27,7 @@ async function syncWeather() {
         const code = data.current_weather.weathercode;
         const temp = data.current_weather.temperature;
         const hora = new Date().getHours();
-        const isDay = hora >= 6 && hora < 18; // Lógica Dia/Noite
+        const isDay = hora >= 6 && hora < 18; 
         
         const video = document.getElementById('weather-video');
         const source = video.querySelector('source');
@@ -35,7 +39,6 @@ async function syncWeather() {
         let novoVideo = "";
         let desc = "";
 
-        // --- LÓGICA DE DECISÃO REFINADA (ANTI-ERRO) ---
         if (!isDay) {
             novoVideo = "assets/noite-estrelada.mp4";
             desc = "Céu Estrelado";
@@ -51,20 +54,14 @@ async function syncWeather() {
         } else if (code >= 95) {
             novoVideo = "assets/ceu-tempestade.mp4";
             desc = "Tempestade";
-        } 
-        // FILTRO: Somente códigos 63, 65, 67 (Chuva moderada/forte) 
-        // ou 81, 82 (Pancadas fortes) ativam o vídeo de chuva.
-        else if ((code >= 63 && code <= 67) || code === 81 || code === 82) {
+        } else if ((code >= 63 && code <= 67) || code === 81 || code === 82) {
             novoVideo = "assets/ceu-chuvoso.mp4";
             desc = "Chuva";
-        } 
-        // CÓDIGOS DE SEGURANÇA (51-61, 80): Se a API estiver em dúvida, mostramos "Nublado".
-        else {
+        } else {
             novoVideo = "assets/ceu-nublado.mp4";
             desc = "Nublado";
         }
 
-        // MONITORAMENTO PROFISSIONAL NO CONSOLE
         console.clear();
         console.log("%c--- MONITORAMENTO MURAL DIGITAL ---", "color: #00a8ff; font-weight: bold;");
         console.table({
@@ -75,7 +72,6 @@ async function syncWeather() {
             "Vídeo": novoVideo
         });
 
-        // Troca o vídeo suavemente se houver mudança
         if (!source.src.includes(novoVideo)) {
             source.src = novoVideo;
             video.load();
@@ -85,22 +81,61 @@ async function syncWeather() {
         document.getElementById('cidade').innerText = "ITUIUTABA";
 
     } catch (e) {
-        console.error("Erro na API: " + e.message);
+        console.error("Erro na API de Clima: " + e.message);
     }
 }
 
-// 3. ROTAÇÃO DE TELAS (20 SEGUNDOS)
-let step = 0;
-const sections = document.querySelectorAll('.tela');
-function rotate() {
-    sections[step].classList.remove('ativa');
-    step = (step + 1) % sections.length;
-    sections[step].classList.add('ativa');
+// 3. BUSCAR IMAGENS DO GOOGLE DRIVE
+async function carregarImagensDoDrive() {
+    try {
+        const resposta = await fetch(URL_API_DRIVE);
+        const imagens = await resposta.json();
+        
+        const container = document.getElementById('container-imagens-dinamicas');
+        
+        // Mantém as imagens atuais se a API falhar ou vier vazia
+        if (!imagens || imagens.length === 0) return;
+
+        container.innerHTML = ''; 
+
+        imagens.forEach((img, index) => {
+            const section = document.createElement('section');
+            section.className = 'tela';
+            section.id = `tela-drive-${index}`;
+            section.innerHTML = `<img src="${img.url}" alt="${img.nome}" style="width: 100vw; height: 100vh; object-fit: cover;">`;
+            container.appendChild(section);
+        });
+
+        // Atualiza a lista global de seções (Tempo + Novas do Drive)
+        telas = document.querySelectorAll('.tela');
+    } catch (erro) {
+        console.error("Erro ao carregar imagens do Drive:", erro);
+    }
 }
 
-// INICIALIZAÇÃO
-setInterval(updateClock, 1000);
+// 4. ROTAÇÃO DINÂMICA
+function rotate() {
+    if (telas.length === 0) return;
+
+    telas[step].classList.remove('ativa');
+    step = (step + 1) % telas.length;
+    telas[step].classList.add('ativa');
+
+    // Sempre que voltar para a tela de Clima (step 0), tenta atualizar as imagens do Drive
+    if (step === 0) {
+        carregarImagensDoDrive();
+    }
+}
+
+// INICIALIZAÇÃO E INTERVALOS
 updateClock();
+setInterval(updateClock, 1000);
+
 syncWeather();
-setInterval(syncWeather, 600000); // Atualiza clima a cada 10 min
-setInterval(rotate, 20000); // Troca de tela a cada 20 segundos
+setInterval(syncWeather, 600000); // 10 min
+
+// Carrega as imagens e inicia a rotação
+carregarImagensDoDrive().then(() => {
+    telas = document.querySelectorAll('.tela'); // Captura inicial
+    setInterval(rotate, 20000); // 20 segundos
+});
