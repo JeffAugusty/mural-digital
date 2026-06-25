@@ -93,7 +93,6 @@ async function carregarImagensDoDrive() {
         
         const container = document.getElementById('container-imagens-dinamicas');
         
-        // Mantém as imagens atuais se a API falhar ou vier vazia
         if (!imagens || imagens.length === 0) return;
 
         container.innerHTML = ''; 
@@ -106,7 +105,6 @@ async function carregarImagensDoDrive() {
             container.appendChild(section);
         });
 
-        // Atualiza a lista global de seções (Tempo + Novas do Drive)
         telas = document.querySelectorAll('.tela');
     } catch (erro) {
         console.error("Erro ao carregar imagens do Drive:", erro);
@@ -120,22 +118,21 @@ function rotate() {
     telas[step].classList.remove('ativa');
     step = (step + 1) % telas.length;
     telas[step].classList.add('ativa');
-
-    // Sempre que voltar para a tela de Clima (step 0), tenta atualizar as imagens do Drive
-    if (step === 0) {
-        carregarImagensDoDrive();
-    }
 }
 
-// INICIALIZAÇÃO E INTERVALOS
+// ==========================================
+// EXECUÇÃO DOS TIMERS
+// ==========================================
+
 updateClock();
 setInterval(updateClock, 1000);
 
 syncWeather();
-setInterval(syncWeather, 600000); // 10 min
+setInterval(syncWeather, 600000); 
 
-// Carrega as imagens e inicia a rotação
 carregarImagensDoDrive().then(() => {
-    telas = document.querySelectorAll('.tela'); // Captura inicial
-    setInterval(rotate, 1800000); // 30 minutos
+    telas = document.querySelectorAll('.tela'); 
+    setInterval(rotate, 20000); 
 });
+
+setInterval(carregarImagensDoDrive, 1800000);

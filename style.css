@@ -32,16 +32,15 @@ body {
     z-index: 2;
 }
 
-/* IMAGENS DE COMUNICADO */
+/* IMAGENS DE COMUNICADO (DO DRIVE) */
 img {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Não corta a imagem na TV */
-    background: #000;
+    object-fit: contain; 
+    background: #000; 
 }
 
-/* --- CLIMA DINÂMICO (OTIMIZADO) --- */
-
+/* --- CLIMA DINÂMICO --- */
 #weather-video {
     position: absolute;
     top: 0;
@@ -49,8 +48,7 @@ img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: 0;
-    /* Força aceleração de hardware para parar de travar no Mac 2014 */
+    z-index: 0; /* Camada do fundo */
     will-change: transform;
     transform: translateZ(0);
 }
@@ -58,15 +56,12 @@ img {
 /* PAINEL DE VIDRO RESPONSIVO */
 .glass-ui {
     position: relative;
-    z-index: 2;
-    width: 90vw;   /* 90% da largura da TV */
-    height: 80vh;  /* 80% da altura da TV */
+    z-index: 2; /* Fica na frente da logo da Alpha */
+    width: 90vw;   
+    height: 80vh;  
     background: rgba(255, 255, 255, 0.05);
-    
-    /* REDUZIDO: Blur alto trava PCs antigos. 10px mantém o visual e a fluidez */
     backdrop-filter: blur(10px) saturate(160%);
     -webkit-backdrop-filter: blur(10px) saturate(160%);
-    
     border-radius: 4vw;
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 4vh 10vh rgba(0, 0, 0, 0.5);
@@ -74,13 +69,11 @@ img {
     align-items: center;
 }
 
-
-
 .weather-layout {
     display: flex;
     width: 100%;
     height: 100%;
-    flex-direction: row; /* Mantém lado a lado */
+    flex-direction: row; 
     align-items: center;
     justify-content: space-around;
 }
@@ -100,9 +93,9 @@ img {
     border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* TIPOGRAFIA FLUIDA (VW = Viewport Width) */
+/* TIPOGRAFIA FLUIDA */
 #relogio {
-    font-size: 9vw; /* Escala com a TV */
+    font-size: 9vw; 
     font-weight: 700;
     letter-spacing: -0.5vw;
     line-height: 1;
@@ -117,7 +110,7 @@ img {
 }
 
 #temp-valor {
-    font-size: 11vw; /* Escala com a TV */
+    font-size: 11vw; 
     font-weight: 700;
     line-height: 1;
 }
@@ -136,7 +129,6 @@ img {
     margin-bottom: 3vh;
 }
 
-/* BLOCO DE MÁXIMA E MÍNIMA */
 .temp-range {
     font-size: 1.8vw;
     background: rgba(0, 0, 0, 0.3);
@@ -148,3 +140,24 @@ img {
 }
 
 .divider { opacity: 0.3; }
+
+/* ==========================================
+   CONFIGURAÇÃO DE POSIÇÃO DA LOGO ALPHA (RODAPÉ ABSOLUTO)
+========================================== */
+#marca-dagua {
+    position: absolute !important;
+    bottom: 2vh !important; /* Colado rigidamente no rodapé da TV */
+    left: 50% !important; /* Centraliza horizontalmente */
+    transform: translateX(-50%) !important; /* Ajuste milimétrico de centro */
+    
+    /* CORREÇÃO DO BUG: Força o navegador a recalcular o tamanho real do PNG */
+    width: 14vw !important;  
+    height: auto !important; 
+    
+    background: transparent !important; 
+    opacity: 0.85 !important; 
+    pointer-events: none !important; 
+    
+    /* EFEITO CAMADA: Fica atrás do painel de vidro (z-index: 2), mas na frente do vídeo (z-index: 0) */
+    z-index: 1 !important; 
+}
