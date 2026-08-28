@@ -132,7 +132,7 @@ setInterval(syncWeather, 600000);
 
 carregarImagensDoDrive().then(() => {
     telas = document.querySelectorAll('.tela'); 
-    setInterval(rotate, 20000); 
+    setInterval(rotate, 300000); 
 });
 
 setInterval(carregarImagensDoDrive, 1800000);
