@@ -1,12 +1,33 @@
 // ======================================================
-// CONFIGURAÇÕES
+// MURAL DIGITAL - FIREBASE COMPATÍVEL
+// Mantém: clima, eventos, QR Code, contagem e Google Drive
 // ======================================================
+
+const firebaseConfig = {
+    apiKey: 'AIzaSyBxD5x__EVbG06U4_wz4VRil_e1t-cB3EY',
+    authDomain: 'mural-digital-uniube.firebaseapp.com',
+    projectId: 'mural-digital-uniube',
+    storageBucket: 'mural-digital-uniube.firebasestorage.app',
+    messagingSenderId: '942785678797',
+    appId: '1:942785678797:web:e349801af7aa24a582c884'
+};
+
+let db = null;
+
+try {
+    if (typeof firebase !== 'undefined') {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        db = firebase.firestore();
+    }
+} catch (erro) {
+    console.error('Erro ao iniciar o Firebase:', erro);
+}
 
 const URL_API_DRIVE =
     'https://script.google.com/macros/s/AKfycbwt1akQ3NLHgea6VPNo_XdFjP0-ncBeve1ATsRbabLgq_djN3qYCn3Uuzl5K7EWDoSS/exec';
-
-const URL_API_EVENTOS =
-    'https://script.google.com/macros/s/AKfycbz_bGph_C6Cp_Ht9dMn4GJW0WJEtMEoKNyK8-kmgJl7Kz1beFkT8cn7b4DYaE-f-2dn/exec';
 
 const LAT = '-18.98';
 const LON = '-49.46';
@@ -14,6 +35,7 @@ const LON = '-49.46';
 const TEMPO_CLIMA = 25000;
 const TEMPO_EVENTO = 25000;
 const TEMPO_COMUNICADO = 15000;
+const CHAVE_CACHE_EVENTOS = 'mural-eventos-firebase-v1';
 
 let telas = [];
 let step = 0;
@@ -52,19 +74,12 @@ function atualizarRelogio() {
 function escolherClima(codigo, isDay) {
     const code = Number(codigo);
     const dia = Number(isDay) === 1;
-
     const tempestade = code >= 95;
-
     const chuva =
         (code >= 51 && code <= 82) ||
         code === 85 ||
         code === 86;
-
-    const nublado =
-        code === 2 ||
-        code === 3 ||
-        code === 45 ||
-        code === 48;
+    const nublado = [2, 3, 45, 48].includes(code);
 
     if (!dia) {
         if (tempestade) {
@@ -84,9 +99,7 @@ function escolherClima(codigo, isDay) {
         if (nublado) {
             return {
                 video: 'assets/noite-nublada.mp4',
-                descricao: code >= 45
-                    ? 'Neblina'
-                    : 'Nublado'
+                descricao: code >= 45 ? 'Neblina' : 'Nublado'
             };
         }
 
@@ -113,9 +126,7 @@ function escolherClima(codigo, isDay) {
     if (nublado) {
         return {
             video: 'assets/ceu-nublado.mp4',
-            descricao: code >= 45
-                ? 'Neblina'
-                : 'Nublado'
+            descricao: code >= 45 ? 'Neblina' : 'Nublado'
         };
     }
 
@@ -143,72 +154,42 @@ async function atualizarClima() {
             `&daily=temperature_2m_max,temperature_2m_min` +
             `&timezone=America%2FSao_Paulo`;
 
-        const resposta = await fetch(
-            url,
-            { cache: 'no-store' }
-        );
+        const resposta = await fetch(url, {
+            cache: 'no-store'
+        });
 
         if (!resposta.ok) {
-            throw new Error(
-                `Erro HTTP ${resposta.status}`
-            );
+            throw new Error(`Erro HTTP ${resposta.status}`);
         }
 
         const dados = await resposta.json();
-
-        if (!dados.current || !dados.daily) {
-            throw new Error(
-                'Resposta do clima incompleta'
-            );
-        }
 
         const clima = escolherClima(
             dados.current.weather_code,
             dados.current.is_day
         );
 
-        document.getElementById(
-            'temp-valor'
-        ).textContent =
-            `${Math.round(
-                dados.current.temperature_2m
-            )}°C`;
+        document.getElementById('temp-valor').textContent =
+            `${Math.round(dados.current.temperature_2m)}°C`;
 
-        document.getElementById(
-            'temp-max'
-        ).textContent =
-            `Máx: ${Math.round(
-                dados.daily.temperature_2m_max[0]
-            )}°C`;
+        document.getElementById('temp-max').textContent =
+            `Máx: ${Math.round(dados.daily.temperature_2m_max[0])}°C`;
 
-        document.getElementById(
-            'temp-min'
-        ).textContent =
-            `Mín: ${Math.round(
-                dados.daily.temperature_2m_min[0]
-            )}°C`;
+        document.getElementById('temp-min').textContent =
+            `Mín: ${Math.round(dados.daily.temperature_2m_min[0])}°C`;
 
-        document.getElementById(
-            'condicao'
-        ).textContent =
+        document.getElementById('condicao').textContent =
             clima.descricao;
 
-        document.getElementById(
-            'cidade'
-        ).textContent =
+        document.getElementById('cidade').textContent =
             'ITUIUTABA';
 
         trocarVideoClima(clima.video);
 
     } catch (erro) {
-        console.error(
-            'Erro ao carregar o clima:',
-            erro
-        );
+        console.error('Erro ao carregar o clima:', erro);
 
-        document.getElementById(
-            'condicao'
-        ).textContent =
+        document.getElementById('condicao').textContent =
             'CLIMA INDISPONÍVEL';
     }
 }
@@ -216,25 +197,16 @@ async function atualizarClima() {
 
 function trocarVideoClima(novoVideo) {
     const video =
-        document.getElementById(
-            'weather-video'
-        );
+        document.getElementById('weather-video');
 
     const source =
         video.querySelector('source');
 
-    if (
-        source.getAttribute('src') ===
-        novoVideo
-    ) {
+    if (source.getAttribute('src') === novoVideo) {
         return;
     }
 
-    source.setAttribute(
-        'src',
-        novoVideo
-    );
-
+    source.setAttribute('src', novoVideo);
     video.load();
 
     if (
@@ -251,55 +223,62 @@ function trocarVideoClima(novoVideo) {
 // DATAS
 // ======================================================
 
-function converterDataBR(
+function normalizarData(dataTexto) {
+    const texto = String(dataTexto || '').trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+        return texto;
+    }
+
+    const resultado =
+        texto.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+
+    if (!resultado) {
+        return '';
+    }
+
+    return (
+        `${resultado[3]}-` +
+        `${String(Number(resultado[2])).padStart(2, '0')}-` +
+        `${String(Number(resultado[1])).padStart(2, '0')}`
+    );
+}
+
+
+function formatarDataBR(dataTexto) {
+    const data = normalizarData(dataTexto);
+
+    if (!data) {
+        return String(dataTexto || '');
+    }
+
+    const [ano, mes, dia] = data.split('-');
+    return `${dia}/${mes}/${ano}`;
+}
+
+
+function converterData(
     dataTexto,
     horaTexto = '00:00:00',
     fimDoDia = false
 ) {
-    const data =
-        String(dataTexto || '').trim();
+    const data = normalizarData(dataTexto);
 
-    const resultadoData = data.match(
-        /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/
-    );
-
-    if (!resultadoData) {
+    if (!data) {
         return null;
     }
 
-    const dia =
-        String(Number(resultadoData[1]))
-            .padStart(2, '0');
+    const numerosHora =
+        String(horaTexto || '').match(/\d+/g) || [];
 
-    const mes =
-        String(Number(resultadoData[2]))
-            .padStart(2, '0');
+    const hora =
+        fimDoDia ? 23 : Number(numerosHora[0] || 0);
 
-    const ano =
-        resultadoData[3];
+    const minuto =
+        fimDoDia ? 59 : Number(numerosHora[1] || 0);
 
-    let hora = 0;
-    let minuto = 0;
-    let segundo = 0;
-
-    if (fimDoDia) {
-        hora = 23;
-        minuto = 59;
-        segundo = 59;
-    } else {
-        const numerosHora =
-            String(horaTexto || '')
-                .match(/\d+/g) || [];
-
-        hora =
-            Number(numerosHora[0] || 0);
-
-        minuto =
-            Number(numerosHora[1] || 0);
-
-        segundo =
-            Number(numerosHora[2] || 0);
-    }
+    const segundo =
+        fimDoDia ? 59 : Number(numerosHora[2] || 0);
 
     if (
         hora > 23 ||
@@ -314,10 +293,8 @@ function converterDataBR(
         `${String(minuto).padStart(2, '0')}:` +
         `${String(segundo).padStart(2, '0')}`;
 
-    const timestamp = Date.parse(
-        `${ano}-${mes}-${dia}` +
-        `T${horario}-03:00`
-    );
+    const timestamp =
+        Date.parse(`${data}T${horario}-03:00`);
 
     return Number.isFinite(timestamp)
         ? timestamp
@@ -326,44 +303,25 @@ function converterDataBR(
 
 
 function eventoEstaVisivel(evento) {
-    const ativo =
-        String(evento.ativo || 'SIM')
-            .trim()
-            .toUpperCase();
-
-    if (ativo !== 'SIM') {
+    if (evento.ativo === false) {
         return false;
     }
 
     const agora = Date.now();
 
-    const inicio =
-        evento.exibirDesde
-            ? converterDataBR(
-                evento.exibirDesde
-            )
-            : null;
+    const inicio = evento.exibirDesde
+        ? converterData(evento.exibirDesde)
+        : null;
 
-    const fim =
-        evento.exibirAte
-            ? converterDataBR(
-                evento.exibirAte,
-                '00:00:00',
-                true
-            )
-            : null;
+    const fim = evento.exibirAte
+        ? converterData(evento.exibirAte, '00:00:00', true)
+        : null;
 
-    if (
-        inicio !== null &&
-        agora < inicio
-    ) {
+    if (inicio !== null && agora < inicio) {
         return false;
     }
 
-    if (
-        fim !== null &&
-        agora > fim
-    ) {
+    if (fim !== null && agora > fim) {
         return false;
     }
 
@@ -372,59 +330,29 @@ function eventoEstaVisivel(evento) {
 
 
 // ======================================================
-// CORES
+// CORES E SEGURANÇA
 // ======================================================
 
 function validarCor(valor, padrao) {
-    const cor =
-        String(valor || '').trim();
+    const cor = String(valor || '').trim();
 
-    const corValida =
-        /^#[0-9a-f]{3}([0-9a-f]{3})?$/i
-            .test(cor);
+    if (/^#[0-9a-f]{6}$/i.test(cor)) {
+        return cor.toUpperCase();
+    }
 
-    return corValida
-        ? cor.toUpperCase()
-        : padrao;
+    return padrao;
 }
 
 
 function corDeContraste(cor) {
-    let hexadecimal =
-        cor.replace('#', '');
+    const hexadecimal = cor.replace('#', '');
 
-    if (hexadecimal.length === 3) {
-        hexadecimal =
-            hexadecimal
-                .split('')
-                .map(letra => letra + letra)
-                .join('');
-    }
-
-    const vermelho =
-        parseInt(
-            hexadecimal.substring(0, 2),
-            16
-        );
-
-    const verde =
-        parseInt(
-            hexadecimal.substring(2, 4),
-            16
-        );
-
-    const azul =
-        parseInt(
-            hexadecimal.substring(4, 6),
-            16
-        );
+    const vermelho = parseInt(hexadecimal.substring(0, 2), 16);
+    const verde = parseInt(hexadecimal.substring(2, 4), 16);
+    const azul = parseInt(hexadecimal.substring(4, 6), 16);
 
     const luminosidade =
-        (
-            vermelho * 299 +
-            verde * 587 +
-            azul * 114
-        ) / 1000;
+        (vermelho * 299 + verde * 587 + azul * 114) / 1000;
 
     return luminosidade >= 150
         ? '#171717'
@@ -432,33 +360,18 @@ function corDeContraste(cor) {
 }
 
 
-function aplicarCoresEvento(
-    section,
-    evento
-) {
+function aplicarCoresEvento(section, evento) {
     const principal =
-        validarCor(
-            evento.corPrincipal,
-            '#FFB000'
-        );
+        validarCor(evento.corPrincipal, '#FFB000');
 
     const secundaria =
-        validarCor(
-            evento.corSecundaria,
-            '#EE2B0B'
-        );
+        validarCor(evento.corSecundaria, '#EE2B0B');
 
     const destaque =
-        validarCor(
-            evento.corDestaque,
-            '#FFD400'
-        );
+        validarCor(evento.corDestaque, '#FFD400');
 
     const texto =
-        validarCor(
-            evento.corTexto,
-            '#FFFFFF'
-        );
+        validarCor(evento.corTexto, '#FFFFFF');
 
     section.style.setProperty(
         '--evento-cor-principal',
@@ -484,12 +397,14 @@ function aplicarCoresEvento(
         '--evento-cor-destaque-texto',
         corDeContraste(destaque)
     );
+
+    section.style.setProperty(
+        'background',
+        `linear-gradient(135deg, ${principal}, ${secundaria})`,
+        'important'
+    );
 }
 
-
-// ======================================================
-// SEGURANÇA DOS DADOS
-// ======================================================
 
 function escaparHTML(valor) {
     return String(valor || '')
@@ -535,283 +450,284 @@ function obterDominio(link) {
 
 
 // ======================================================
-// CARREGAR EVENTOS
+// EVENTOS DO FIREBASE
 // ======================================================
 
-async function carregarEventos() {
+function salvarCacheEventos(eventos) {
     try {
-        const resposta = await fetch(
-            `${URL_API_EVENTOS}` +
-            `?atualizacao=${Date.now()}`,
-            {
-                cache: 'no-store'
-            }
+        localStorage.setItem(
+            CHAVE_CACHE_EVENTOS,
+            JSON.stringify(eventos)
         );
-
-        if (!resposta.ok) {
-            throw new Error(
-                `Erro HTTP ${resposta.status}`
-            );
-        }
-
-        const dados =
-            await resposta.json();
-
-        if (dados.sucesso === false) {
-            throw new Error(
-                dados.erro ||
-                'Erro na API de eventos'
-            );
-        }
-
-        const lista =
-            Array.isArray(dados)
-                ? dados
-                : dados.eventos;
-
-        const eventos =
-            Array.isArray(lista)
-                ? lista.filter(
-                    eventoEstaVisivel
-                )
-                : [];
-
-        const container =
-            document.getElementById(
-                'container-eventos'
-            );
-
-        const novasTelas = [];
-
-        eventos.forEach(
-            (evento, index) => {
-                const destino =
-                    converterDataBR(
-                        evento.data,
-                        evento.hora
-                    );
-
-                if (destino === null) {
-                    console.error(
-                        'Data ou horário inválido:',
-                        evento.data,
-                        evento.hora
-                    );
-
-                    return;
-                }
-
-                const section =
-                    document.createElement(
-                        'section'
-                    );
-
-                section.className =
-                    'tela tela-evento';
-
-                section.id =
-                    `tela-evento-${index}`;
-
-                section.dataset.duration =
-                    String(TEMPO_EVENTO);
-
-                aplicarCoresEvento(
-                    section,
-                    evento
-                );
-
-                const titulo =
-                    escaparHTML(
-                        evento.titulo
-                    );
-
-                const data =
-                    escaparHTML(
-                        evento.data
-                    );
-
-                const hora =
-                    escaparHTML(
-                        evento.hora
-                    );
-
-                const local =
-                    escaparHTML(
-                        evento.local
-                    );
-
-                const chamada =
-                    escaparHTML(
-                        evento.chamada
-                    );
-
-                const link =
-                    validarLink(
-                        evento.link
-                    );
-
-                const dominio =
-                    escaparHTML(
-                        obterDominio(link)
-                    );
-
-                section.innerHTML = `
-                    <div class="evento-fundo"></div>
-
-                    <div class="evento-card">
-
-                        <div class="evento-conteudo">
-
-                            <div class="evento-etiqueta">
-                                PRÓXIMO EVENTO
-                            </div>
-
-                            <h1 class="evento-titulo">
-                                ${titulo}
-                            </h1>
-
-                            <div class="evento-informacoes">
-
-                                <div class="evento-informacao">
-                                    <span>DATA</span>
-                                    <strong>${data}</strong>
-                                </div>
-
-                                <div class="evento-informacao">
-                                    <span>HORÁRIO</span>
-                                    <strong>${hora}</strong>
-                                </div>
-
-                                <div class="evento-informacao evento-local">
-                                    <span>LOCAL</span>
-                                    <strong>${local}</strong>
-                                </div>
-
-                            </div>
-
-                            <div class="evento-chamada">
-                                ${chamada}
-                            </div>
-
-                            <div
-                                class="evento-contagem"
-                                data-destino="${destino}"
-                            >
-                                <div class="evento-contagem-titulo">
-                                    O EVENTO COMEÇA EM
-                                </div>
-
-                                <div class="contador">
-
-                                    <div class="contador-bloco">
-                                        <strong data-unidade="dias">
-                                            00
-                                        </strong>
-                                        <span>DIAS</span>
-                                    </div>
-
-                                    <div class="contador-separador">
-                                        :
-                                    </div>
-
-                                    <div class="contador-bloco">
-                                        <strong data-unidade="horas">
-                                            00
-                                        </strong>
-                                        <span>HORAS</span>
-                                    </div>
-
-                                    <div class="contador-separador">
-                                        :
-                                    </div>
-
-                                    <div class="contador-bloco">
-                                        <strong data-unidade="minutos">
-                                            00
-                                        </strong>
-                                        <span>MIN</span>
-                                    </div>
-
-                                    <div class="contador-separador">
-                                        :
-                                    </div>
-
-                                    <div class="contador-bloco">
-                                        <strong data-unidade="segundos">
-                                            00
-                                        </strong>
-                                        <span>SEG</span>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="evento-lateral">
-
-                            <aside class="evento-acao">
-
-                                <div class="evento-qr-titulo">
-                                    APONTE A CÂMERA
-                                </div>
-
-                                <div class="evento-qr-code"></div>
-
-                                <div class="evento-qr-texto">
-                                    Inscrições e informações
-                                </div>
-
-                                <div class="evento-dominio">
-                                    ${dominio}
-                                </div>
-
-                            </aside>
-
-                            <img
-                                src="logo-uniube.png"
-                                class="evento-logo"
-                                alt="Uniube"
-                            >
-
-                        </div>
-
-                    </div>
-
-                    <div class="credito-desenvolvedor">
-                        Desenvolvido por
-                        <span>Jeferson Augusto</span>
-                    </div>
-                `;
-
-                novasTelas.push({
-                    section,
-                    link
-                });
-            }
-        );
-
-        container.replaceChildren(
-            ...novasTelas.map(
-                item => item.section
-            )
-        );
-
-        atualizarContagens();
-
-        novasTelas.forEach(item => {
-            criarQRCode(
-                item.section,
-                item.link
-            );
-        });
-
     } catch (erro) {
-        console.error(
-            'Erro ao carregar eventos:',
-            erro
-        );
+        console.warn('Não foi possível salvar o cache:', erro);
     }
+}
+
+
+function carregarCacheEventos() {
+    try {
+        const dados =
+            localStorage.getItem(CHAVE_CACHE_EVENTOS);
+
+        return dados
+            ? JSON.parse(dados)
+            : [];
+
+    } catch {
+        return [];
+    }
+}
+
+
+function renderizarEventos(lista) {
+    const idAtivo = obterIdTelaAtiva();
+
+    const eventos = lista
+        .filter(eventoEstaVisivel)
+        .sort((a, b) =>
+            (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
+            String(a.data || '').localeCompare(String(b.data || ''))
+        );
+
+    const container =
+        document.getElementById('container-eventos');
+
+    const novasTelas = [];
+
+    eventos.forEach(evento => {
+        const destino =
+            converterData(evento.data, evento.hora);
+
+        if (destino === null) {
+            console.error(
+                'Data ou horário inválido:',
+                evento.data,
+                evento.hora
+            );
+
+            return;
+        }
+
+        const section =
+            document.createElement('section');
+
+        section.className =
+            'tela tela-evento';
+
+        section.id =
+            `tela-evento-${evento.id}`;
+
+        const segundos =
+            Math.max(5, Number(evento.duracao || 25));
+
+        section.dataset.duration =
+            String(segundos * 1000);
+
+        aplicarCoresEvento(section, evento);
+
+        const titulo =
+            escaparHTML(evento.titulo);
+
+        const data =
+            escaparHTML(formatarDataBR(evento.data));
+
+        const hora =
+            escaparHTML(evento.hora);
+
+        const local =
+            escaparHTML(evento.local);
+
+        const chamada =
+            escaparHTML(evento.chamada);
+
+        const link =
+            validarLink(evento.link);
+
+        const dominio =
+            escaparHTML(obterDominio(link));
+
+        section.innerHTML = `
+            <div class="evento-fundo"></div>
+
+            <div class="evento-card">
+
+                <div class="evento-conteudo">
+
+                    <div class="evento-etiqueta">
+                        PRÓXIMO EVENTO
+                    </div>
+
+                    <h1 class="evento-titulo">
+                        ${titulo}
+                    </h1>
+
+                    <div class="evento-informacoes">
+
+                        <div class="evento-informacao">
+                            <span>DATA</span>
+                            <strong>${data}</strong>
+                        </div>
+
+                        <div class="evento-informacao">
+                            <span>HORÁRIO</span>
+                            <strong>${hora}</strong>
+                        </div>
+
+                        <div class="evento-informacao evento-local">
+                            <span>LOCAL</span>
+                            <strong>${local}</strong>
+                        </div>
+
+                    </div>
+
+                    <div class="evento-chamada">
+                        ${chamada}
+                    </div>
+
+                    <div
+                        class="evento-contagem"
+                        data-destino="${destino}"
+                    >
+                        <div class="evento-contagem-titulo">
+                            O EVENTO COMEÇA EM
+                        </div>
+
+                        <div class="contador">
+
+                            <div class="contador-bloco">
+                                <strong data-unidade="dias">00</strong>
+                                <span>DIAS</span>
+                            </div>
+
+                            <div class="contador-separador">:</div>
+
+                            <div class="contador-bloco">
+                                <strong data-unidade="horas">00</strong>
+                                <span>HORAS</span>
+                            </div>
+
+                            <div class="contador-separador">:</div>
+
+                            <div class="contador-bloco">
+                                <strong data-unidade="minutos">00</strong>
+                                <span>MIN</span>
+                            </div>
+
+                            <div class="contador-separador">:</div>
+
+                            <div class="contador-bloco">
+                                <strong data-unidade="segundos">00</strong>
+                                <span>SEG</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="evento-lateral">
+
+                    <aside class="evento-acao">
+
+                        <div class="evento-qr-titulo">
+                            APONTE A CÂMERA
+                        </div>
+
+                        <div class="evento-qr-code"></div>
+
+                        <div class="evento-qr-texto">
+                            Inscrições e informações
+                        </div>
+
+                        <div class="evento-dominio">
+                            ${dominio}
+                        </div>
+
+                    </aside>
+
+                    <img
+                        src="logo-uniube.png"
+                        class="evento-logo"
+                        alt="Uniube"
+                    >
+
+                </div>
+
+            </div>
+
+            <div class="credito-desenvolvedor">
+                Desenvolvido por
+                <span>Jeferson Augusto</span>
+            </div>
+        `;
+
+        novasTelas.push({
+            section,
+            link
+        });
+    });
+
+    container.replaceChildren(
+        ...novasTelas.map(item => item.section)
+    );
+
+    atualizarContagens();
+
+    novasTelas.forEach(item => {
+        criarQRCode(
+            item.section,
+            item.link
+        );
+    });
+
+    sincronizarTelas(idAtivo);
+    agendarRotacao();
+}
+
+
+function iniciarEventosFirebase() {
+    const cache = carregarCacheEventos();
+
+    if (cache.length) {
+        renderizarEventos(cache);
+    }
+
+    if (!db) {
+        console.error('Firebase indisponível. O restante do mural continuará funcionando.');
+
+        if (!cache.length) {
+            renderizarEventos([]);
+        }
+
+        return;
+    }
+
+    db.collection('eventos').onSnapshot(
+        snapshot => {
+            const eventos = snapshot.docs.map(documento => ({
+                id: documento.id,
+                ...documento.data()
+            }));
+
+            salvarCacheEventos(eventos);
+            renderizarEventos(eventos);
+
+            console.info(
+                `${eventos.length} evento(s) recebido(s) do Firebase.`
+            );
+        },
+        erro => {
+            console.error(
+                'Erro ao receber eventos do Firebase:',
+                erro
+            );
+
+            if (!cache.length) {
+                renderizarEventos([]);
+            }
+        }
+    );
 }
 
 
@@ -821,48 +737,37 @@ async function carregarEventos() {
 
 function criarQRCode(section, link) {
     const area =
-        section.querySelector(
-            '.evento-qr-code'
-        );
+        section.querySelector('.evento-qr-code');
 
     const lateral =
-        section.querySelector(
-            '.evento-lateral'
-        );
+        section.querySelector('.evento-lateral');
 
     if (!link) {
         lateral.style.display = 'none';
         return;
     }
 
-    if (typeof QRCode === 'undefined') {
-        area.textContent =
-            'QR indisponível';
-
+    if (typeof window.QRCode === 'undefined') {
+        area.textContent = 'QR indisponível';
         return;
     }
 
     try {
         area.innerHTML = '';
 
-        new QRCode(area, {
+        new window.QRCode(area, {
             text: link,
             width: 260,
             height: 260,
             colorDark: '#101010',
             colorLight: '#FFFFFF',
             correctLevel:
-                QRCode.CorrectLevel.M
+                window.QRCode.CorrectLevel.M
         });
 
     } catch (erro) {
-        console.error(
-            'Erro ao criar QR Code:',
-            erro
-        );
-
-        area.textContent =
-            'QR indisponível';
+        console.error('Erro ao criar QR Code:', erro);
+        area.textContent = 'QR indisponível';
     }
 }
 
@@ -873,50 +778,26 @@ function criarQRCode(section, link) {
 
 function atualizarContagens() {
     const contagens =
-        document.querySelectorAll(
-            '.evento-contagem'
-        );
+        document.querySelectorAll('.evento-contagem');
 
     contagens.forEach(contagem => {
         const destino =
-            Number(
-                contagem.dataset.destino
-            );
+            Number(contagem.dataset.destino);
 
         const titulo =
-            contagem.querySelector(
-                '.evento-contagem-titulo'
-            );
+            contagem.querySelector('.evento-contagem-titulo');
 
-        const diasElemento =
+        const campo = unidade =>
             contagem.querySelector(
-                '[data-unidade="dias"]'
-            );
-
-        const horasElemento =
-            contagem.querySelector(
-                '[data-unidade="horas"]'
-            );
-
-        const minutosElemento =
-            contagem.querySelector(
-                '[data-unidade="minutos"]'
-            );
-
-        const segundosElemento =
-            contagem.querySelector(
-                '[data-unidade="segundos"]'
+                `[data-unidade="${unidade}"]`
             );
 
         if (!Number.isFinite(destino)) {
-            titulo.textContent =
-                'DATA INDISPONÍVEL';
-
-            diasElemento.textContent = '--';
-            horasElemento.textContent = '--';
-            minutosElemento.textContent = '--';
-            segundosElemento.textContent = '--';
-
+            titulo.textContent = 'DATA INDISPONÍVEL';
+            campo('dias').textContent = '--';
+            campo('horas').textContent = '--';
+            campo('minutos').textContent = '--';
+            campo('segundos').textContent = '--';
             return;
         }
 
@@ -924,154 +805,93 @@ function atualizarContagens() {
             destino - Date.now();
 
         if (diferenca <= 0) {
-            titulo.textContent =
-                'EVENTO EM ANDAMENTO';
-
-            diasElemento.textContent = '00';
-            horasElemento.textContent = '00';
-            minutosElemento.textContent = '00';
-            segundosElemento.textContent = '00';
-
+            titulo.textContent = 'EVENTO EM ANDAMENTO';
+            campo('dias').textContent = '00';
+            campo('horas').textContent = '00';
+            campo('minutos').textContent = '00';
+            campo('segundos').textContent = '00';
             return;
         }
 
-        titulo.textContent =
-            'O EVENTO COMEÇA EM';
-
         const dias =
-            Math.floor(
-                diferenca /
-                86400000
-            );
+            Math.floor(diferenca / 86400000);
 
         const horas =
             Math.floor(
-                (
-                    diferenca %
-                    86400000
-                ) /
-                3600000
+                (diferenca % 86400000) / 3600000
             );
 
         const minutos =
             Math.floor(
-                (
-                    diferenca %
-                    3600000
-                ) /
-                60000
+                (diferenca % 3600000) / 60000
             );
 
         const segundos =
             Math.floor(
-                (
-                    diferenca %
-                    60000
-                ) /
-                1000
+                (diferenca % 60000) / 1000
             );
 
-        diasElemento.textContent =
-            String(dias)
-                .padStart(2, '0');
-
-        horasElemento.textContent =
-            String(horas)
-                .padStart(2, '0');
-
-        minutosElemento.textContent =
-            String(minutos)
-                .padStart(2, '0');
-
-        segundosElemento.textContent =
-            String(segundos)
-                .padStart(2, '0');
+        titulo.textContent = 'O EVENTO COMEÇA EM';
+        campo('dias').textContent = String(dias).padStart(2, '0');
+        campo('horas').textContent = String(horas).padStart(2, '0');
+        campo('minutos').textContent = String(minutos).padStart(2, '0');
+        campo('segundos').textContent = String(segundos).padStart(2, '0');
     });
 }
 
 
 // ======================================================
-// IMAGENS DO GOOGLE DRIVE
+// COMUNICADOS DO GOOGLE DRIVE
 // ======================================================
 
 async function carregarImagensDoDrive() {
     try {
         const resposta = await fetch(
-            `${URL_API_DRIVE}` +
-            `?atualizacao=${Date.now()}`,
+            `${URL_API_DRIVE}?atualizacao=${Date.now()}`,
             {
                 cache: 'no-store'
             }
         );
 
         if (!resposta.ok) {
-            throw new Error(
-                `Erro HTTP ${resposta.status}`
-            );
+            throw new Error(`Erro HTTP ${resposta.status}`);
         }
 
-        const imagens =
-            await resposta.json();
+        const imagens = await resposta.json();
 
         if (!Array.isArray(imagens)) {
-            throw new Error(
-                'Formato de imagens inválido'
-            );
+            throw new Error('Formato de imagens inválido');
         }
 
-        const container =
-            document.getElementById(
-                'container-imagens-dinamicas'
-            );
+        const novasTelas = imagens.map((item, index) => {
+            const section =
+                document.createElement('section');
 
-        const novasTelas =
-            imagens.map(
-                (item, index) => {
-                    const section =
-                        document.createElement(
-                            'section'
-                        );
+            section.className =
+                'tela tela-comunicado';
 
-                    section.className =
-                        'tela tela-comunicado';
+            section.id =
+                `tela-drive-${index}`;
 
-                    section.id =
-                        `tela-drive-${index}`;
+            section.dataset.duration =
+                String(TEMPO_COMUNICADO);
 
-                    section.dataset.duration =
-                        String(
-                            TEMPO_COMUNICADO
-                        );
+            const imagem =
+                document.createElement('img');
 
-                    const imagem =
-                        document.createElement(
-                            'img'
-                        );
+            imagem.src = item.url;
+            imagem.alt = item.nome || 'Comunicado';
+            imagem.className = 'imagem-comunicado';
+            imagem.decoding = 'async';
 
-                    imagem.src =
-                        item.url;
+            section.appendChild(imagem);
 
-                    imagem.alt =
-                        item.nome ||
-                        'Comunicado';
+            return section;
+        });
 
-                    imagem.className =
-                        'imagem-comunicado';
-
-                    imagem.decoding =
-                        'async';
-
-                    section.appendChild(
-                        imagem
-                    );
-
-                    return section;
-                }
-            );
-
-        container.replaceChildren(
-            ...novasTelas
-        );
+        document
+            .getElementById('container-imagens-dinamicas')
+            .replaceChildren(...novasTelas);
 
     } catch (erro) {
         console.error(
@@ -1083,14 +903,12 @@ async function carregarImagensDoDrive() {
 
 
 // ======================================================
-// ROTAÇÃO DAS TELAS
+// ROTAÇÃO
 // ======================================================
 
 function obterIdTelaAtiva() {
     const ativa =
-        document.querySelector(
-            '.tela.ativa'
-        );
+        document.querySelector('.tela.ativa');
 
     return ativa
         ? ativa.id
@@ -1101,13 +919,12 @@ function obterIdTelaAtiva() {
 function sincronizarTelas(
     idPreferido = 'tela-tempo'
 ) {
-    telas = Array.from(
-        document.querySelectorAll(
-            '.tela'
-        )
-    );
+    telas =
+        Array.from(
+            document.querySelectorAll('.tela')
+        );
 
-    if (telas.length === 0) {
+    if (!telas.length) {
         return;
     }
 
@@ -1117,36 +934,27 @@ function sincronizarTelas(
 
     const encontrado =
         telas.findIndex(
-            tela =>
-                tela.id ===
-                idPreferido
+            tela => tela.id === idPreferido
         );
 
-    step =
-        encontrado >= 0
-            ? encontrado
-            : 0;
+    step = encontrado >= 0
+        ? encontrado
+        : 0;
 
-    telas[step]
-        .classList.add('ativa');
-
+    telas[step].classList.add('ativa');
     controlarVideoClima();
 }
 
 
 function agendarRotacao() {
-    window.clearTimeout(
-        timerRotacao
-    );
+    window.clearTimeout(timerRotacao);
 
     if (telas.length <= 1) {
         return;
     }
 
     const duracao =
-        Number(
-            telas[step].dataset.duration
-        ) ||
+        Number(telas[step].dataset.duration) ||
         TEMPO_COMUNICADO;
 
     timerRotacao =
@@ -1162,15 +970,12 @@ function rotacionarTela() {
         return;
     }
 
-    telas[step]
-        .classList.remove('ativa');
+    telas[step].classList.remove('ativa');
 
     step =
-        (step + 1) %
-        telas.length;
+        (step + 1) % telas.length;
 
-    telas[step]
-        .classList.add('ativa');
+    telas[step].classList.add('ativa');
 
     controlarVideoClima();
     agendarRotacao();
@@ -1179,17 +984,12 @@ function rotacionarTela() {
 
 function controlarVideoClima() {
     const video =
-        document.getElementById(
-            'weather-video'
-        );
+        document.getElementById('weather-video');
 
     const climaAtivo =
         document
-            .getElementById(
-                'tela-tempo'
-            )
-            .classList
-            .contains('ativa');
+            .getElementById('tela-tempo')
+            .classList.contains('ativa');
 
     if (climaAtivo) {
         video.play().catch(() => {});
@@ -1199,18 +999,12 @@ function controlarVideoClima() {
 }
 
 
-async function atualizarConteudo(
-    carregador
-) {
-    const idAtivo =
-        obterIdTelaAtiva();
+async function atualizarComunicados() {
+    const idAtivo = obterIdTelaAtiva();
 
-    await carregador();
+    await carregarImagensDoDrive();
 
-    sincronizarTelas(
-        idAtivo
-    );
-
+    sincronizarTelas(idAtivo);
     agendarRotacao();
 }
 
@@ -1220,6 +1014,11 @@ async function atualizarConteudo(
 // ======================================================
 
 async function iniciarMural() {
+    document.documentElement.setAttribute(
+        'data-versao-mural',
+        '7.0-firebase'
+    );
+
     atualizarRelogio();
     atualizarClima();
 
@@ -1238,37 +1037,24 @@ async function iniciarMural() {
         600000
     );
 
-    await Promise.allSettled([
-        carregarEventos(),
-        carregarImagensDoDrive()
-    ]);
+    iniciarEventosFirebase();
+
+    await carregarImagensDoDrive();
 
     sincronizarTelas(
-        'tela-tempo'
+        obterIdTelaAtiva()
     );
 
     agendarRotacao();
 
-    // Atualiza eventos a cada 10 minutos.
-    window.setInterval(() => {
-        atualizarConteudo(
-            carregarEventos
-        );
-    }, 600000);
-
-    // Atualiza comunicados a cada 30 minutos.
-    window.setInterval(() => {
-        atualizarConteudo(
-            carregarImagensDoDrive
-        );
-    }, 1800000);
+    window.setInterval(
+        atualizarComunicados,
+        1800000
+    );
 }
 
 
-if (
-    document.readyState ===
-    'loading'
-) {
+if (document.readyState === 'loading') {
     document.addEventListener(
         'DOMContentLoaded',
         iniciarMural
