@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Painel do Mural Digital</title>
+    <style>
+        :root {
+            --azul: #0067b9;
+            --azul-escuro: #003f73;
+            --fundo: #eef3f8;
+            --texto: #172033;
+            --borda: #d7e0ea;
+            --perigo: #c62828;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--texto);
+            background: var(--fundo);
+        }
+        button, input, textarea, select { font: inherit; }
+        button { cursor: pointer; }
+        .oculto { display: none !important; }
+
+        .login-tela {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: linear-gradient(135deg, #003f73, #008aca);
+        }
+        .login-card {
+            width: min(420px, 100%);
+            padding: 36px;
+            border-radius: 24px;
+            background: #fff;
+            box-shadow: 0 25px 70px rgba(0,0,0,.25);
+        }
+        .login-card h1 { margin: 0 0 8px; font-size: 28px; }
+        .login-card p { margin: 0 0 26px; color: #667085; }
+
+        .topo {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px clamp(20px, 5vw, 70px);
+            color: #fff;
+            background: linear-gradient(90deg, var(--azul-escuro), var(--azul));
+        }
+        .topo h1 { margin: 0; font-size: clamp(20px, 2vw, 30px); }
+        .topo p { margin: 4px 0 0; font-size: 13px; opacity: .82; }
+        .topo-acoes { display: flex; align-items: center; gap: 12px; }
+
+        .pagina {
+            width: min(1460px, calc(100% - 32px));
+            margin: 26px auto 60px;
+            display: grid;
+            grid-template-columns: minmax(480px, 1fr) minmax(380px, .8fr);
+            gap: 24px;
+            align-items: start;
+        }
+        .coluna { display: grid; gap: 24px; }
+        .card {
+            padding: 24px;
+            border: 1px solid var(--borda);
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 7px 25px rgba(23,32,51,.06);
+        }
+        .card-cabecalho {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .card h2 { margin: 0; font-size: 20px; }
+        .grade { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .campo { display: grid; gap: 7px; }
+        .campo-largo { grid-column: 1 / -1; }
+        label { font-size: 13px; font-weight: 700; color: #344054; }
+        input, textarea, select {
+            width: 100%;
+            border: 1px solid #cfd8e3;
+            border-radius: 10px;
+            padding: 11px 12px;
+            color: #172033;
+            background: #fff;
+            outline: none;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--azul);
+            box-shadow: 0 0 0 3px rgba(0,103,185,.12);
+        }
+        textarea { min-height: 76px; resize: vertical; }
+        .linha-check { display: flex; align-items: center; gap: 10px; }
+        .linha-check input { width: 20px; height: 20px; }
+
+        .temas { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tema {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 11px;
+            border: 1px solid var(--borda);
+            border-radius: 999px;
+            color: #344054;
+            background: #fff;
+        }
+        .tema:hover { border-color: #7f9db8; }
+        .tema-bolinha { width: 16px; height: 16px; border-radius: 50%; }
+        .cores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .cor-controle { display: grid; gap: 7px; }
+        .cor-controle input {
+            height: 48px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        .botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+        .botao {
+            border: 0;
+            border-radius: 10px;
+            padding: 11px 17px;
+            font-weight: 700;
+        }
+        .botao-primario { color: #fff; background: var(--azul); }
+        .botao-primario:hover { background: #00538f; }
+        .botao-secundario { color: #344054; background: #e8eef5; }
+        .botao-perigo { color: #fff; background: var(--perigo); }
+        .botao-topo { color: #fff; background: rgba(255,255,255,.14); }
+
+        .mensagem {
+            margin: 0 0 18px;
+            padding: 11px 13px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        .mensagem-sucesso { color: #146c38; background: #e5f7ec; }
+        .mensagem-erro { color: #a32121; background: #fde9e9; }
+
+        .preview {
+            aspect-ratio: 16 / 9;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 26%;
+            gap: 5%;
+            align-items: center;
+            overflow: hidden;
+            padding: 7%;
+            color: #fff;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #ffb000, #ee2b0b);
+        }
+        .preview::after {
+            content: "";
+            position: absolute;
+            inset: 4%;
+            border: 1px solid rgba(255,255,255,.3);
+            border-radius: 8%;
+            background: rgba(0,0,0,.16);
+        }
+        .preview-conteudo, .preview-lateral { position: relative; z-index: 2; }
+        .preview-etiqueta {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: clamp(7px, .75vw, 12px);
+            font-weight: 800;
+            background: #fff;
+        }
+        .preview h3 {
+            margin: 10px 0;
+            font-size: clamp(15px, 2.3vw, 34px);
+            line-height: .98;
+            text-transform: uppercase;
+        }
+        .preview-info { font-size: clamp(7px, .85vw, 13px); font-weight: 700; }
+        .preview-chamada {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 5px 10px;
+            border-radius: 100px;
+            font-size: clamp(7px, .8vw, 12px);
+            font-weight: 800;
+        }
+        .preview-qr {
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            border-radius: 10%;
+            color: #151515;
+            background: #fff;
+            font-size: clamp(13px, 2vw, 30px);
+            font-weight: 900;
+        }
+
+        .lista { display: grid; gap: 12px; }
+        .evento-item {
+            display: grid;
+            grid-template-columns: 8px 1fr auto;
+            gap: 14px;
+            align-items: center;
+            padding: 14px;
+            border: 1px solid var(--borda);
+            border-radius: 13px;
+        }
+        .evento-cor { width: 8px; align-self: stretch; border-radius: 99px; }
+        .evento-item h3 { margin: 0 0 5px; font-size: 16px; }
+        .evento-item p { margin: 0; color: #667085; font-size: 13px; }
+        .evento-acoes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+        .evento-acoes button {
+            border: 0;
+            padding: 7px 9px;
+            border-radius: 8px;
+            color: #344054;
+            background: #eaf0f6;
+        }
+        .evento-acoes .excluir { color: #a32121; background: #fde9e9; }
+        .status {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        .status-ativo { color: #146c38; background: #def4e7; }
+        .status-inativo { color: #8a4b00; background: #fff0d5; }
+        .vazio { padding: 30px 10px; color: #667085; text-align: center; }
+
+        @media (max-width: 1000px) {
+            .pagina { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .topo { align-items: flex-start; flex-direction: column; }
+            .pagina { width: min(100% - 20px, 1460px); margin-top: 10px; }
+            .card { padding: 17px; border-radius: 14px; }
+            .grade, .cores { grid-template-columns: 1fr; }
+            .evento-item { grid-template-columns: 6px 1fr; }
+            .evento-acoes { grid-column: 2; justify-content: flex-start; }
+            .botoes { flex-direction: column-reverse; }
+            .botao { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <section id="login-tela" class="login-tela">
+        <form id="login-form" class="login-card">
+            <h1>Painel do Mural</h1>
+            <p>Entre para administrar os eventos exibidos na TV.</p>
+            <div id="login-mensagem" class="mensagem mensagem-erro oculto"></div>
+            <div class="campo">
+                <label for="login-email">E-mail</label>
+                <input id="login-email" type="email" autocomplete="username" required>
+            </div>
+            <div class="campo" style="margin-top:14px">
+                <label for="login-senha">Senha</label>
+                <input id="login-senha" type="password" autocomplete="current-password" required>
+            </div>
+            <button id="login-botao" class="botao botao-primario" style="width:100%;margin-top:20px" type="submit">Entrar</button>
+        </form>
+    </section>
+
+    <main id="admin-app" class="oculto">
+        <header class="topo">
+            <div>
+                <h1>Painel do Mural Digital</h1>
+                <p id="usuario-email"></p>
+            </div>
+            <div class="topo-acoes">
+                <a class="botao botao-topo" href="index.html" target="_blank" style="text-decoration:none">Abrir mural</a>
+                <button id="sair-botao" class="botao botao-topo" type="button">Sair</button>
+            </div>
+        </header>
+
+        <div class="pagina">
+            <div class="coluna">
+                <section class="card">
+                    <div class="card-cabecalho">
+                        <h2 id="form-titulo">Novo evento</h2>
+                    </div>
+
+                    <div id="form-mensagem" class="mensagem oculto"></div>
+
+                    <form id="evento-form">
+                        <input id="evento-id" type="hidden">
+
+                        <div class="grade">
+                            <div class="campo campo-largo">
+                                <label class="linha-check">
+                                    <input id="ativo" type="checkbox" checked>
+                                    Exibir este evento no mural
+                                </label>
+                            </div>
+
+                            <div class="campo campo-largo">
+                                <label for="titulo">Título do evento</label>
+                                <input id="titulo" maxlength="100" required placeholder="Ex.: Corrida Ituiutaba 125 anos">
+                            </div>
+
+                            <div class="campo">
+                                <label for="data">Data do evento</label>
+                                <input id="data" type="date" required>
+                            </div>
+
+                            <div class="campo">
+                                <label for="hora">Horário</label>
+                                <input id="hora" type="time" required>
+                            </div>
+
+                            <div class="campo campo-largo">
+                                <label for="local">Local</label>
+                                <input id="local" maxlength="100" required placeholder="Ex.: Ginásio Municipal">
+                            </div>
+
+                            <div class="campo campo-largo">
+                                <label for="chamada">Chamada curta</label>
+                                <input id="chamada" maxlength="100" placeholder="Ex.: 4 km • 8 km • Kids">
+                            </div>
+
+                            <div class="campo campo-largo">
+                                <label for="link">Link para o QR Code</label>
+                                <input id="link" type="url" placeholder="https://...">
+                            </div>
+
+                            <div class="campo">
+                                <label for="exibir-desde">Exibir desde</label>
+                                <input id="exibir-desde" type="date" required>
+                            </div>
+
+                            <div class="campo">
+                                <label for="exibir-ate">Exibir até</label>
+                                <input id="exibir-ate" type="date" required>
+                            </div>
+
+                            <div class="campo">
+                                <label for="duracao">Tempo na TV (segundos)</label>
+                                <input id="duracao" type="number" min="5" max="300" value="25" required>
+                            </div>
+
+                            <div class="campo">
+                                <label for="ordem">Ordem de exibição</label>
+                                <input id="ordem" type="number" min="0" max="999" value="0" required>
+                            </div>
+
+                            <div class="campo campo-largo">
+                                <label>Temas prontos</label>
+                                <div id="temas" class="temas"></div>
+                            </div>
+
+                            <div class="campo campo-largo">
+                                <label>Cores personalizadas</label>
+                                <div class="cores">
+                                    <div class="cor-controle">
+                                        <label for="cor-principal">Principal</label>
+                                        <input id="cor-principal" type="color" value="#ffb000">
+                                    </div>
+                                    <div class="cor-controle">
+                                        <label for="cor-secundaria">Secundária</label>
+                                        <input id="cor-secundaria" type="color" value="#ee2b0b">
+                                    </div>
+                                    <div class="cor-controle">
+                                        <label for="cor-destaque">Destaque</label>
+                                        <input id="cor-destaque" type="color" value="#ffd400">
+                                    </div>
+                                    <div class="cor-controle">
+                                        <label for="cor-texto">Texto</label>
+                                        <input id="cor-texto" type="color" value="#ffffff">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="botoes">
+                            <button id="cancelar-botao" class="botao botao-secundario oculto" type="button">Cancelar edição</button>
+                            <button id="salvar-botao" class="botao botao-primario" type="submit">Salvar evento</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+
+            <div class="coluna">
+                <section class="card">
+                    <div class="card-cabecalho"><h2>Prévia da TV</h2></div>
+                    <div id="preview" class="preview">
+                        <div class="preview-conteudo">
+                            <div id="preview-etiqueta" class="preview-etiqueta">PRÓXIMO EVENTO</div>
+                            <h3 id="preview-titulo">Título do evento</h3>
+                            <div id="preview-info" class="preview-info">DATA • HORÁRIO • LOCAL</div>
+                            <div id="preview-chamada" class="preview-chamada">CHAMADA</div>
+                        </div>
+                        <div class="preview-lateral"><div class="preview-qr">QR</div></div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-cabecalho">
+                        <h2>Eventos cadastrados</h2>
+                        <span id="total-eventos">0 eventos</span>
+                    </div>
+                    <div id="lista-eventos" class="lista">
+                        <div class="vazio">Carregando eventos...</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+        import {
+            getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+        } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
+        import {
+            getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
+            onSnapshot, serverTimestamp
+        } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: 'AIzaSyBxD5x__EVbG06U4_wz4VRil_e1t-cB3EY',
+            authDomain: 'mural-digital-uniube.firebaseapp.com',
+            projectId: 'mural-digital-uniube',
+            storageBucket: 'mural-digital-uniube.firebasestorage.app',
+            messagingSenderId: '942785678797',
+            appId: '1:942785678797:web:e349801af7aa24a582c884'
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const TEMAS = {
+            Laranja: ['#FFB000', '#EE2B0B', '#FFD400', '#FFFFFF'],
+            'Verde-água': ['#20B2AA', '#48D1CC', '#7FFFD4', '#FFFFFF'],
+            Azul: ['#0066CC', '#00A8FF', '#7FDBFF', '#FFFFFF'],
+            Uniube: ['#004A8F', '#0077C8', '#FFD200', '#FFFFFF'],
+            Roxo: ['#6A1B9A', '#9C27B0', '#E1BEE7', '#FFFFFF'],
+            Vermelho: ['#B71C1C', '#E53935', '#FFC107', '#FFFFFF'],
+            Rosa: ['#AD1457', '#EC407A', '#FFD1E1', '#FFFFFF'],
+            Verde: ['#176B45', '#2E8B57', '#A7F3D0', '#FFFFFF']
+        };
+
+        let eventos = [];
+        let pararEscuta = null;
+
+        const $ = seletor => document.querySelector(seletor);
+        const loginTela = $('#login-tela');
+        const adminApp = $('#admin-app');
+        const form = $('#evento-form');
+
+        function mostrarMensagem(elemento, texto, tipo = 'erro') {
+            elemento.textContent = texto;
+            elemento.className = `mensagem mensagem-${tipo}`;
+            elemento.classList.remove('oculto');
+        }
+
+        function esconderMensagem(elemento) {
+            elemento.classList.add('oculto');
+        }
+
+        function escaparHTML(valor) {
+            return String(valor || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function formatarData(data) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(data || '')) return data || '--';
+            const [ano, mes, dia] = data.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function contraste(cor) {
+            const hex = cor.replace('#', '');
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            return ((r * 299 + g * 587 + b * 114) / 1000) >= 150 ? '#171717' : '#FFFFFF';
+        }
+
+        function aplicarTema(cores) {
+            $('#cor-principal').value = cores[0].toLowerCase();
+            $('#cor-secundaria').value = cores[1].toLowerCase();
+            $('#cor-destaque').value = cores[2].toLowerCase();
+            $('#cor-texto').value = cores[3].toLowerCase();
+            atualizarPreview();
+        }
+
+        function montarTemas() {
+            const area = $('#temas');
+            Object.entries(TEMAS).forEach(([nome, cores]) => {
+                const botao = document.createElement('button');
+                botao.type = 'button';
+                botao.className = 'tema';
+                botao.innerHTML = `<span class="tema-bolinha" style="background:linear-gradient(135deg,${cores[0]},${cores[1]})"></span>${nome}`;
+                botao.addEventListener('click', () => aplicarTema(cores));
+                area.appendChild(botao);
+            });
+        }
+
+        function atualizarPreview() {
+            const principal = $('#cor-principal').value;
+            const secundaria = $('#cor-secundaria').value;
+            const destaque = $('#cor-destaque').value;
+            const texto = $('#cor-texto').value;
+            $('#preview').style.background = `linear-gradient(135deg, ${principal}, ${secundaria})`;
+            $('#preview').style.color = texto;
+            $('#preview-etiqueta').style.color = principal;
+            $('#preview-etiqueta').style.background = texto;
+            $('#preview-chamada').style.background = destaque;
+            $('#preview-chamada').style.color = contraste(destaque);
+            $('#preview-titulo').textContent = $('#titulo').value.trim() || 'Título do evento';
+            $('#preview-info').textContent = [
+                formatarData($('#data').value),
+                $('#hora').value || 'HORÁRIO',
+                $('#local').value.trim() || 'LOCAL'
+            ].join(' • ');
+            $('#preview-chamada').textContent = $('#chamada').value.trim() || 'CHAMADA';
+        }
+
+        function dadosDoFormulario() {
+            return {
+                ativo: $('#ativo').checked,
+                titulo: $('#titulo').value.trim(),
+                data: $('#data').value,
+                hora: $('#hora').value,
+                local: $('#local').value.trim(),
+                chamada: $('#chamada').value.trim(),
+                link: $('#link').value.trim(),
+                exibirDesde: $('#exibir-desde').value,
+                exibirAte: $('#exibir-ate').value,
+                duracao: Number($('#duracao').value) || 25,
+                ordem: Number($('#ordem').value) || 0,
+                corPrincipal: $('#cor-principal').value.toUpperCase(),
+                corSecundaria: $('#cor-secundaria').value.toUpperCase(),
+                corDestaque: $('#cor-destaque').value.toUpperCase(),
+                corTexto: $('#cor-texto').value.toUpperCase(),
+                atualizadoEm: serverTimestamp()
+            };
+        }
+
+        function validarFormulario(dados) {
+            if (!dados.titulo || !dados.data || !dados.hora || !dados.local) {
+                return 'Preencha título, data, horário e local.';
+            }
+            if (!dados.exibirDesde || !dados.exibirAte) {
+                return 'Preencha o período de exibição.';
+            }
+            if (dados.exibirDesde > dados.exibirAte) {
+                return 'A data “Exibir desde” não pode ser posterior a “Exibir até”.';
+            }
+            return '';
+        }
+
+        function limparFormulario() {
+            form.reset();
+            $('#evento-id').value = '';
+            $('#ativo').checked = true;
+            $('#duracao').value = 25;
+            $('#ordem').value = 0;
+            $('#form-titulo').textContent = 'Novo evento';
+            $('#salvar-botao').textContent = 'Salvar evento';
+            $('#cancelar-botao').classList.add('oculto');
+            aplicarTema(TEMAS.Laranja);
+            esconderMensagem($('#form-mensagem'));
+        }
+
+        function editarEvento(id) {
+            const evento = eventos.find(item => item.id === id);
+            if (!evento) return;
+            $('#evento-id').value = evento.id;
+            $('#ativo').checked = evento.ativo !== false;
+            $('#titulo').value = evento.titulo || '';
+            $('#data').value = evento.data || '';
+            $('#hora').value = evento.hora || '';
+            $('#local').value = evento.local || '';
+            $('#chamada').value = evento.chamada || '';
+            $('#link').value = evento.link || '';
+            $('#exibir-desde').value = evento.exibirDesde || '';
+            $('#exibir-ate').value = evento.exibirAte || '';
+            $('#duracao').value = evento.duracao || 25;
+            $('#ordem').value = evento.ordem || 0;
+            $('#cor-principal').value = (evento.corPrincipal || '#FFB000').toLowerCase();
+            $('#cor-secundaria').value = (evento.corSecundaria || '#EE2B0B').toLowerCase();
+            $('#cor-destaque').value = (evento.corDestaque || '#FFD400').toLowerCase();
+            $('#cor-texto').value = (evento.corTexto || '#FFFFFF').toLowerCase();
+            $('#form-titulo').textContent = 'Editar evento';
+            $('#salvar-botao').textContent = 'Salvar alterações';
+            $('#cancelar-botao').classList.remove('oculto');
+            atualizarPreview();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function duplicarEvento(id) {
+            const evento = eventos.find(item => item.id === id);
+            if (!evento) return;
+            const { id: ignorarId, ...copia } = evento;
+            await addDoc(collection(db, 'eventos'), {
+                ...copia,
+                titulo: `${copia.titulo} - Cópia`,
+                ativo: false,
+                criadoEm: serverTimestamp(),
+                atualizadoEm: serverTimestamp()
+            });
+        }
+
+        async function excluirEvento(id, titulo) {
+            if (!window.confirm(`Excluir definitivamente o evento “${titulo}”?`)) return;
+            try {
+                await deleteDoc(doc(db, 'eventos', id));
+                if ($('#evento-id').value === id) limparFormulario();
+            } catch (erro) {
+                mostrarMensagem($('#form-mensagem'), `Não foi possível excluir: ${erro.message}`);
+            }
+        }
+
+        function renderizarEventos() {
+            const lista = $('#lista-eventos');
+            const ordenados = [...eventos].sort((a, b) =>
+                (Number(a.ordem) - Number(b.ordem)) ||
+                String(a.data || '').localeCompare(String(b.data || ''))
+            );
+            $('#total-eventos').textContent = `${ordenados.length} evento${ordenados.length === 1 ? '' : 's'}`;
+
+            if (!ordenados.length) {
+                lista.innerHTML = '<div class="vazio">Nenhum evento cadastrado. Use o formulário para criar o primeiro.</div>';
+                return;
+            }
+
+            lista.innerHTML = ordenados.map(evento => `
+                <article class="evento-item">
+                    <div class="evento-cor" style="background:linear-gradient(${escaparHTML(evento.corPrincipal || '#FFB000')},${escaparHTML(evento.corSecundaria || '#EE2B0B')})"></div>
+                    <div>
+                        <h3>${escaparHTML(evento.titulo)}
+                            <span class="status ${evento.ativo !== false ? 'status-ativo' : 'status-inativo'}">
+                                ${evento.ativo !== false ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </h3>
+                        <p>${formatarData(evento.data)} às ${escaparHTML(evento.hora)} • ${escaparHTML(evento.local)}</p>
+                    </div>
+                    <div class="evento-acoes">
+                        <button type="button" data-acao="editar" data-id="${evento.id}">Editar</button>
+                        <button type="button" data-acao="duplicar" data-id="${evento.id}">Duplicar</button>
+                        <button type="button" class="excluir" data-acao="excluir" data-id="${evento.id}" data-titulo="${escaparHTML(evento.titulo)}">Excluir</button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function iniciarEscuta() {
+            if (pararEscuta) pararEscuta();
+            pararEscuta = onSnapshot(collection(db, 'eventos'), snapshot => {
+                eventos = snapshot.docs.map(documento => ({ id: documento.id, ...documento.data() }));
+                renderizarEventos();
+            }, erro => {
+                $('#lista-eventos').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar eventos: ${escaparHTML(erro.message)}</div>`;
+            });
+        }
+
+        $('#login-form').addEventListener('submit', async evento => {
+            evento.preventDefault();
+            esconderMensagem($('#login-mensagem'));
+            const botao = $('#login-botao');
+            botao.disabled = true;
+            botao.textContent = 'Entrando...';
+            try {
+                await signInWithEmailAndPassword(auth, $('#login-email').value.trim(), $('#login-senha').value);
+            } catch (erro) {
+                mostrarMensagem($('#login-mensagem'), 'E-mail ou senha incorretos.');
+            } finally {
+                botao.disabled = false;
+                botao.textContent = 'Entrar';
+            }
+        });
+
+        form.addEventListener('submit', async evento => {
+            evento.preventDefault();
+            esconderMensagem($('#form-mensagem'));
+            const dados = dadosDoFormulario();
+            const erroValidacao = validarFormulario(dados);
+            if (erroValidacao) {
+                mostrarMensagem($('#form-mensagem'), erroValidacao);
+                return;
+            }
+
+            const botao = $('#salvar-botao');
+            const id = $('#evento-id').value;
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+            try {
+                if (id) {
+                    await updateDoc(doc(db, 'eventos', id), dados);
+                } else {
+                    await addDoc(collection(db, 'eventos'), {
+                        ...dados,
+                        criadoEm: serverTimestamp()
+                    });
+                }
+                limparFormulario();
+                mostrarMensagem($('#form-mensagem'), 'Evento salvo com sucesso.', 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#form-mensagem'), `Não foi possível salvar: ${erro.message}`);
+            } finally {
+                botao.disabled = false;
+                botao.textContent = $('#evento-id').value ? 'Salvar alterações' : 'Salvar evento';
+            }
+        });
+
+        $('#lista-eventos').addEventListener('click', evento => {
+            const botao = evento.target.closest('button[data-acao]');
+            if (!botao) return;
+            if (botao.dataset.acao === 'editar') editarEvento(botao.dataset.id);
+            if (botao.dataset.acao === 'duplicar') duplicarEvento(botao.dataset.id);
+            if (botao.dataset.acao === 'excluir') excluirEvento(botao.dataset.id, botao.dataset.titulo);
+        });
+
+        $('#cancelar-botao').addEventListener('click', limparFormulario);
+        $('#sair-botao').addEventListener('click', () => signOut(auth));
+        form.addEventListener('input', atualizarPreview);
+
+        onAuthStateChanged(auth, usuario => {
+            if (usuario) {
+                loginTela.classList.add('oculto');
+                adminApp.classList.remove('oculto');
+                $('#usuario-email').textContent = usuario.email;
+                iniciarEscuta();
+            } else {
+                if (pararEscuta) pararEscuta();
+                adminApp.classList.add('oculto');
+                loginTela.classList.remove('oculto');
+            }
+        });
+
+        montarTemas();
+        limparFormulario();
+    </script>
+</body>
+</html>
