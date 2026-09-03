@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <title>Mural Digital - Ituiutaba</title>
-    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="style.css?v=7.0-firebase">
 </head>
 <body>
+
     <section class="tela ativa" id="tela-tempo" data-duration="25000">
         <video autoplay muted loop playsinline preload="auto" id="weather-video">
             <source src="assets/ceu-limpo.mp4" type="video/mp4">
@@ -14,6 +20,7 @@
 
         <div class="glass-ui">
             <div class="weather-layout">
+
                 <div class="clock-side">
                     <div id="relogio">00:00:00</div>
                     <div id="data-extenso">Carregando data...</div>
@@ -30,6 +37,7 @@
                         <span id="temp-min">Mín: --°C</span>
                     </div>
                 </div>
+
             </div>
         </div>
 
@@ -42,6 +50,9 @@
     <div id="container-imagens-dinamicas"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+    <script src="script.js?v=7.1-firebase-compat"></script>
+
 </body>
 </html>
