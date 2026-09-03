@@ -36,6 +36,7 @@ const TEMPO_CLIMA = 25000;
 const TEMPO_EVENTO = 25000;
 const TEMPO_COMUNICADO = 15000;
 const CHAVE_CACHE_EVENTOS = 'mural-eventos-firebase-v1';
+const CHAVE_CACHE_COMUNICADOS = 'mural-comunicados-drive-v1';
 
 let telas = [];
 let step = 0;
@@ -844,6 +845,66 @@ function atualizarContagens() {
 // COMUNICADOS DO GOOGLE DRIVE
 // ======================================================
 
+function carregarCacheComunicados() {
+    try {
+        const dados = JSON.parse(
+            localStorage.getItem(CHAVE_CACHE_COMUNICADOS) || '[]'
+        );
+
+        return Array.isArray(dados)
+            ? dados
+            : [];
+    } catch (erro) {
+        console.warn('Não foi possível ler o cache dos comunicados:', erro);
+        return [];
+    }
+}
+
+
+function salvarCacheComunicados(imagens) {
+    try {
+        localStorage.setItem(
+            CHAVE_CACHE_COMUNICADOS,
+            JSON.stringify(imagens)
+        );
+    } catch (erro) {
+        console.warn('Não foi possível salvar o cache dos comunicados:', erro);
+    }
+}
+
+
+function renderizarComunicados(imagens) {
+    const novasTelas = imagens.map((item, index) => {
+        const section =
+            document.createElement('section');
+
+        section.className =
+            'tela tela-comunicado';
+
+        section.id =
+            `tela-drive-${index}`;
+
+        section.dataset.duration =
+            String(TEMPO_COMUNICADO);
+
+        const imagem =
+            document.createElement('img');
+
+        imagem.src = item.url;
+        imagem.alt = item.nome || 'Comunicado';
+        imagem.className = 'imagem-comunicado';
+        imagem.decoding = 'async';
+
+        section.appendChild(imagem);
+
+        return section;
+    });
+
+    document
+        .getElementById('container-imagens-dinamicas')
+        .replaceChildren(...novasTelas);
+}
+
 async function carregarImagensDoDrive() {
     try {
         const resposta = await fetch(
@@ -863,35 +924,8 @@ async function carregarImagensDoDrive() {
             throw new Error('Formato de imagens inválido');
         }
 
-        const novasTelas = imagens.map((item, index) => {
-            const section =
-                document.createElement('section');
-
-            section.className =
-                'tela tela-comunicado';
-
-            section.id =
-                `tela-drive-${index}`;
-
-            section.dataset.duration =
-                String(TEMPO_COMUNICADO);
-
-            const imagem =
-                document.createElement('img');
-
-            imagem.src = item.url;
-            imagem.alt = item.nome || 'Comunicado';
-            imagem.className = 'imagem-comunicado';
-            imagem.decoding = 'async';
-
-            section.appendChild(imagem);
-
-            return section;
-        });
-
-        document
-            .getElementById('container-imagens-dinamicas')
-            .replaceChildren(...novasTelas);
+        salvarCacheComunicados(imagens);
+        renderizarComunicados(imagens);
 
     } catch (erro) {
         console.error(
@@ -1016,7 +1050,7 @@ async function atualizarComunicados() {
 async function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '7.0-firebase'
+        '7.2-rotacao-cache'
     );
 
     atualizarRelogio();
@@ -1038,6 +1072,21 @@ async function iniciarMural() {
     );
 
     iniciarEventosFirebase();
+
+    const comunicadosEmCache =
+        carregarCacheComunicados();
+
+    if (comunicadosEmCache.length) {
+        renderizarComunicados(
+            comunicadosEmCache
+        );
+    }
+
+    sincronizarTelas(
+        obterIdTelaAtiva()
+    );
+
+    agendarRotacao();
 
     await carregarImagensDoDrive();
 
