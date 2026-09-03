@@ -7,38 +7,41 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <section class="tela ativa" id="tela-tempo">
+    <section class="tela ativa" id="tela-tempo" data-duration="25000">
         <video autoplay muted loop playsinline preload="auto" id="weather-video">
             <source src="assets/ceu-limpo.mp4" type="video/mp4">
         </video>
-        
+
         <div class="glass-ui">
             <div class="weather-layout">
                 <div class="clock-side">
                     <div id="relogio">00:00:00</div>
                     <div id="data-extenso">Carregando data...</div>
                 </div>
+
                 <div class="info-side">
                     <div id="cidade">ITUIUTABA</div>
                     <div id="temp-valor">--°C</div>
                     <div id="condicao">CARREGANDO...</div>
+
                     <div class="temp-range">
                         <span id="temp-max">Máx: --°C</span>
                         <span class="divider">|</span>
-                        <span id="temp-min">Min: --°C</span>
+                        <span id="temp-min">Mín: --°C</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="credito-desenvolvedor">
-    Desenvolvido por <span>Jeferson Augusto</span>
-</div>
+        <div class="credito-desenvolvedor">
+            Desenvolvido por <span>Jeferson Augusto</span>
+        </div>
     </section>
 
+    <div id="container-eventos"></div>
     <div id="container-imagens-dinamicas"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

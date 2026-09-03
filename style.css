@@ -1,4 +1,3 @@
-/* RESET GERAL */
 * {
     margin: 0;
     padding: 0;
@@ -6,223 +5,581 @@
     cursor: none;
 }
 
+html,
 body {
-    background: #000;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Roboto, Helvetica, Arial, sans-serif;
-    color: white;
-    overflow: hidden;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
 }
 
+body {
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
-/* SISTEMA DE TELAS */
+/* TELAS */
+
 .tela {
     position: absolute;
+    inset: 0;
+    z-index: 1;
     width: 100%;
     height: 100vh;
-
+    height: 100dvh;
     display: flex;
-    justify-content: center;
     align-items: center;
-
+    justify-content: center;
     opacity: 0;
-    transition: opacity 1.5s ease-in-out;
-
-    z-index: 1;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 1.2s ease-in-out, visibility 0s linear 1.2s;
 }
 
 .tela.ativa {
-    opacity: 1;
     z-index: 2;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 1.2s ease-in-out, visibility 0s linear 0s;
 }
 
+/* CLIMA */
 
-/* IMAGENS DE COMUNICADO DO GOOGLE DRIVE */
-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background: #000;
-}
-
-
-/* VÍDEO DO CLIMA */
 #weather-video {
     position: absolute;
-    top: 0;
-    left: 0;
-
+    inset: 0;
+    z-index: 0;
     width: 100%;
     height: 100%;
-
     object-fit: cover;
-
-    z-index: 0;
-
     will-change: transform;
     transform: translateZ(0);
 }
 
-
-/* PAINEL DE VIDRO */
 .glass-ui {
     position: relative;
-
     z-index: 2;
-
     width: 90vw;
     height: 80vh;
-
-    background: rgba(255, 255, 255, 0.05);
-
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 4vw;
+    box-shadow: 0 4vh 10vh rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px) saturate(160%);
     -webkit-backdrop-filter: blur(10px) saturate(160%);
-
-    border-radius: 4vw;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-
-    box-shadow: 0 4vh 10vh rgba(0, 0, 0, 0.5);
-
-    display: flex;
-    align-items: center;
 }
 
-
-/* ORGANIZAÇÃO DO CLIMA */
 .weather-layout {
-    display: flex;
-
     width: 100%;
     height: 100%;
-
-    flex-direction: row;
+    display: flex;
     align-items: center;
-    justify-content: space-around;
 }
 
-
-/* LADOS DO PAINEL */
 .clock-side,
 .info-side {
     flex: 1;
-
+    height: 60%;
     display: flex;
     flex-direction: column;
-
-    justify-content: center;
     align-items: center;
-
+    justify-content: center;
     padding: 2vw;
-
-    text-shadow: 0 0.5vh 2vh rgba(0, 0, 0, 0.6);
+    text-shadow: 0 0.5vh 2vh rgba(0, 0, 0, 0.65);
 }
 
 .clock-side {
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-
-/* RELÓGIO */
 #relogio {
     font-size: 9vw;
     font-weight: 700;
-
-    letter-spacing: -0.5vw;
     line-height: 1;
+    letter-spacing: -0.5vw;
 }
 
-
-/* DATA */
 #data-extenso {
+    margin-top: 2vh;
     font-size: 2vw;
     font-weight: 300;
-
-    margin-top: 2vh;
-
+    text-align: center;
     text-transform: capitalize;
-
-    opacity: 0.8;
+    opacity: 0.85;
 }
 
+#cidade {
+    margin-bottom: 2vh;
+    font-size: 1.8vw;
+    font-weight: 500;
+    letter-spacing: 1.2vw;
+}
 
-/* TEMPERATURA */
 #temp-valor {
     font-size: 11vw;
     font-weight: 700;
-
     line-height: 1;
 }
 
-
-/* CIDADE */
-#cidade {
-    font-size: 1.8vw;
-    font-weight: 400;
-
-    letter-spacing: 1.2vw;
-
-    margin-bottom: 2vh;
-
-    opacity: 0.9;
-}
-
-
-/* CONDIÇÃO DO CLIMA */
 #condicao {
+    margin-bottom: 3vh;
     font-size: 2.2vw;
     font-weight: 300;
-
-    margin-bottom: 3vh;
 }
 
-
-/* TEMPERATURA MÁXIMA E MÍNIMA */
 .temp-range {
-    font-size: 1.8vw;
-
-    background: rgba(0, 0, 0, 0.3);
-
-    padding: 1.5vh 4vw;
-
-    border-radius: 5vw;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-
     display: flex;
+    align-items: center;
     gap: 2vw;
+    padding: 1.5vh 4vw;
+    background: rgba(0, 0, 0, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 5vw;
+    font-size: 1.8vw;
 }
 
 .divider {
-    opacity: 0.3;
+    opacity: 0.35;
 }
 
+/* CRÉDITO */
 
-/* CRÉDITO DO DESENVOLVEDOR */
-#credito-desenvolvedor {
+.credito-desenvolvedor {
     position: absolute;
-
-    bottom: 2.5vh;
     left: 50%;
-
+    bottom: 1.2vh;
+    z-index: 20;
     transform: translateX(-50%);
-
-    z-index: 3;
-
-    font-size: 1.2vw;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: clamp(12px, 1vw, 19px);
     font-weight: 300;
-
-    letter-spacing: 0.08em;
-
-    color: rgba(255, 255, 255, 0.75);
-
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-
+    letter-spacing: 0.04em;
     white-space: nowrap;
-
-    pointer-events: none;
+    text-shadow: 0 2px 7px rgba(0, 0, 0, 0.8);
 }
 
-#credito-desenvolvedor span {
+.credito-desenvolvedor span {
+    color: #fff;
+    font-weight: 700;
+}
+
+/* EVENTO */
+
+.tela-evento {
+    --evento-cor-principal: #ffb000;
+    --evento-cor-secundaria: #ee2b0b;
+    --evento-cor-destaque: #ffd400;
+    --evento-cor-texto: #ffffff;
+    --evento-cor-destaque-texto: #171717;
+    color: var(--evento-cor-texto);
+    background: linear-gradient(135deg, var(--evento-cor-principal), var(--evento-cor-secundaria));
+}
+
+.evento-fundo {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.24), transparent 27%),
+        radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.13), transparent 34%);
+}
+
+.evento-fundo::before {
+    content: "";
+    position: absolute;
+    right: -20vw;
+    bottom: -38vw;
+    width: 60vw;
+    height: 60vw;
+    border: 8vw solid rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+}
+
+.evento-card {
+    position: relative;
+    z-index: 2;
+    width: 91vw;
+    height: 82vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 25vw, 400px);
+    gap: clamp(20px, 3vw, 58px);
+    padding: clamp(22px, 3vw, 58px);
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.23);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: clamp(24px, 3vw, 55px);
+    box-shadow: 0 5vh 12vh rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.evento-conteudo {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.evento-etiqueta {
+    align-self: flex-start;
+    margin-bottom: clamp(8px, 1.5vh, 20px);
+    padding: clamp(6px, 0.7vw, 12px) clamp(14px, 1.8vw, 30px);
+    color: var(--evento-cor-principal);
+    background: var(--evento-cor-texto);
+    border-radius: 100px;
+    font-size: clamp(11px, 1.1vw, 21px);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+}
+
+.evento-titulo {
+    max-width: 100%;
+    color: var(--evento-cor-texto);
+    font-size: clamp(31px, 4.1vw, 80px);
+    font-weight: 900;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+}
+
+.evento-informacoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(10px, 1.5vw, 25px);
+    margin-top: clamp(14px, 2.5vh, 30px);
+}
+
+.evento-informacao {
+    min-width: 105px;
+    display: flex;
+    flex-direction: column;
+    padding-right: clamp(12px, 2vw, 30px);
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.evento-informacao:last-child {
+    border-right: 0;
+}
+
+.evento-informacao span {
+    margin-bottom: 3px;
+    color: var(--evento-cor-texto);
+    font-size: clamp(9px, 0.85vw, 16px);
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    opacity: 0.72;
+}
+
+.evento-informacao strong {
+    color: var(--evento-cor-texto);
+    font-size: clamp(15px, 1.5vw, 29px);
+    font-weight: 800;
+}
+
+.evento-local {
+    flex: 1;
+}
+
+.evento-chamada {
+    align-self: flex-start;
+    margin-top: clamp(12px, 2.2vh, 26px);
+    padding: clamp(8px, 1vh, 14px) clamp(15px, 2vw, 32px);
+    color: var(--evento-cor-destaque-texto);
+    background: var(--evento-cor-destaque);
+    border-radius: 100px;
+    font-size: clamp(13px, 1.35vw, 25px);
+    font-weight: 900;
+}
+
+/* CONTAGEM */
+
+.evento-contagem {
+    margin-top: clamp(12px, 2.2vh, 28px);
+}
+
+.evento-contagem-titulo {
+    margin-bottom: clamp(6px, 1vh, 12px);
+    color: var(--evento-cor-destaque);
+    font-size: clamp(10px, 0.9vw, 17px);
+    font-weight: 800;
+    letter-spacing: 0.15em;
+}
+
+.contador {
+    display: flex;
+    align-items: center;
+    gap: clamp(5px, 0.8vw, 14px);
+}
+
+.contador-bloco {
+    min-width: clamp(52px, 6.2vw, 110px);
+    padding: clamp(6px, 1vh, 12px) clamp(7px, 0.8vw, 14px);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.27);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: clamp(10px, 1.2vw, 22px);
+}
+
+.contador-bloco strong {
+    display: block;
+    color: var(--evento-cor-texto);
+    font-size: clamp(24px, 3vw, 58px);
+    font-weight: 900;
+    line-height: 1;
+}
+
+.contador-bloco span {
+    display: block;
+    margin-top: 4px;
+    color: var(--evento-cor-texto);
+    font-size: clamp(8px, 0.7vw, 13px);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    opacity: 0.75;
+}
+
+.contador-separador {
+    color: var(--evento-cor-texto);
+    font-size: clamp(20px, 2.5vw, 45px);
+    font-weight: 800;
+    opacity: 0.75;
+}
+
+/* LATERAL, QR E LOGO */
+
+.evento-lateral {
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(18px, 2.5vh, 30px);
+}
+
+.evento-acao {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(22px, 2.2vw, 38px);
+    color: #171717;
+    background: #fff;
+    border-radius: clamp(20px, 2.5vw, 42px);
+    box-shadow: 0 3vh 7vh rgba(0, 0, 0, 0.25);
+}
+
+.evento-qr-titulo {
+    margin-bottom: clamp(8px, 1.2vh, 16px);
+    color: var(--evento-cor-principal);
+    font-size: clamp(11px, 1.1vw, 21px);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-align: center;
+}
+
+.evento-qr-code {
+    width: clamp(190px, 17vw, 270px);
+    height: clamp(190px, 17vw, 270px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: clamp(7px, 0.7vw, 12px);
+    background: #fff;
+    border: 3px solid #171717;
+    border-radius: clamp(10px, 1vw, 18px);
+}
+
+.evento-qr-code img,
+.evento-qr-code canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.evento-qr-texto {
+    margin-top: clamp(8px, 1.2vh, 16px);
+    font-size: clamp(11px, 1vw, 18px);
+    font-weight: 800;
+    text-align: center;
+}
+
+.evento-dominio {
+    max-width: 100%;
+    margin-top: 4px;
+    color: #777;
+    font-size: clamp(9px, 0.75vw, 14px);
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.evento-logo {
+    display: block;
+    width: clamp(220px, 21vw, 350px);
+    max-width: 100%;
+    height: auto;
+    max-height: 110px;
+    margin: 0 auto;
+    object-fit: contain;
+    object-position: center;
+    background: transparent;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+}
+
+/* COMUNICADOS */
+
+.tela-comunicado {
+    background: #000;
+}
+
+.imagem-comunicado {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    background: #000;
+}
+
+/* TELAS 480P */
+
+@media (max-width: 1000px) {
+    .evento-card {
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: 18px;
+        padding: 20px 25px;
+    }
+
+    .evento-titulo {
+        font-size: clamp(29px, 4vw, 38px);
+    }
+
+    .evento-lateral {
+        gap: 12px;
+    }
+
+    .evento-acao {
+        padding: 15px;
+    }
+
+    .evento-qr-code {
+        width: 160px;
+        height: 160px;
+    }
+
+    .evento-logo {
+        width: 210px;
+        max-height: 65px;
+    }
+
+    .contador {
+        gap: 5px;
+    }
+
+    .contador-bloco {
+        min-width: 52px;
+    }
+}
+
+@media (max-height: 600px) {
+    .evento-card {
+        height: 86vh;
+        padding-top: 18px;
+        padding-bottom: 18px;
+    }
+
+    .evento-etiqueta {
+        margin-bottom: 8px;
+    }
+
+    .evento-informacoes {
+        margin-top: 11px;
+    }
+
+    .evento-chamada,
+    .evento-contagem {
+        margin-top: 10px;
+    }
+
+    .evento-lateral {
+        gap: 12px;
+    }
+
+    .evento-acao {
+        padding-top: 14px;
+        padding-bottom: 14px;
+    }
+
+    .evento-logo {
+        max-height: 70px;
+    }
+}
+
+@media (orientation: portrait) {
+    .weather-layout {
+        flex-direction: column;
+    }
+
+    .clock-side {
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    #relogio {
+        font-size: 15vw;
+    }
+
+    #temp-valor {
+        font-size: 18vw;
+    }
+
+    #data-extenso,
+    #condicao {
+        font-size: 4vw;
+    }
+
+    #cidade,
+    .temp-range {
+        font-size: 3vw;
+    }
+
+    .evento-card {
+        width: 90vw;
+        height: 90vh;
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+    }
+
+    .evento-lateral {
+        height: auto;
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .evento-acao {
+        width: auto;
+    }
+
+    .evento-qr-code {
+        width: 105px;
+        height: 105px;
+    }
+
+    .evento-logo {
+        width: 180px;
+        max-height: 65px;
+    }
+
+    .evento-qr-texto,
+    .evento-dominio {
+        display: none;
+    }
 }
