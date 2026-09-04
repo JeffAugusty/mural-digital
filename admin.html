@@ -253,17 +253,17 @@
 </head>
 <body>
     <section id="login-tela" class="login-tela">
-        <form id="login-form" class="login-card">
+        <form id="login-form" class="login-card" autocomplete="off">
             <h1>Painel do Mural</h1>
             <p>Entre para administrar os eventos exibidos na TV.</p>
             <div id="login-mensagem" class="mensagem mensagem-erro oculto"></div>
             <div class="campo">
                 <label for="login-email">E-mail</label>
-                <input id="login-email" type="email" autocomplete="username" required>
+                <input id="login-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false" required>
             </div>
             <div class="campo" style="margin-top:14px">
                 <label for="login-senha">Senha</label>
-                <input id="login-senha" type="password" autocomplete="current-password" required>
+                <input id="login-senha" type="password" autocomplete="new-password" required>
             </div>
             <button id="login-botao" class="botao botao-primario" style="width:100%;margin-top:20px" type="submit">Entrar</button>
         </form>
@@ -417,7 +417,8 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
         import {
-            getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+            getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+            setPersistence, browserSessionPersistence
         } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
         import {
             getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
@@ -437,6 +438,12 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        try {
+            await setPersistence(auth, browserSessionPersistence);
+        } catch (erro) {
+            console.error('Não foi possível limitar a sessão à aba:', erro);
+        }
+
         const TEMAS = {
             Laranja: ['#FFB000', '#EE2B0B', '#FFD400', '#FFFFFF'],
             'Verde-água': ['#20B2AA', '#48D1CC', '#7FFFD4', '#FFFFFF'],
@@ -448,13 +455,57 @@
             Verde: ['#176B45', '#2E8B57', '#A7F3D0', '#FFFFFF']
         };
 
+        const TEMPO_INATIVIDADE = 10 * 60 * 1000;
+
         let eventos = [];
         let pararEscuta = null;
+        let timerInatividade = null;
 
         const $ = seletor => document.querySelector(seletor);
         const loginTela = $('#login-tela');
         const adminApp = $('#admin-app');
         const form = $('#evento-form');
+        const loginForm = $('#login-form');
+
+        function limparCamposLogin() {
+            loginForm.reset();
+            $('#login-email').value = '';
+            $('#login-senha').value = '';
+
+            window.setTimeout(() => {
+                $('#login-email').value = '';
+                $('#login-senha').value = '';
+            }, 100);
+        }
+
+        function pararTimerInatividade() {
+            window.clearTimeout(timerInatividade);
+            timerInatividade = null;
+        }
+
+        function reiniciarTimerInatividade() {
+            if (!auth.currentUser) return;
+
+            pararTimerInatividade();
+
+            timerInatividade = window.setTimeout(async () => {
+                try {
+                    await signOut(auth);
+                } finally {
+                    limparCamposLogin();
+                    mostrarMensagem(
+                        $('#login-mensagem'),
+                        'Sessão encerrada após 10 minutos sem atividade.'
+                    );
+                }
+            }, TEMPO_INATIVIDADE);
+        }
+
+        ['click', 'keydown', 'input', 'mousemove', 'touchstart'].forEach(tipo => {
+            document.addEventListener(tipo, reiniciarTimerInatividade, {
+                passive: true
+            });
+        });
 
         function mostrarMensagem(elemento, texto, tipo = 'erro') {
             elemento.textContent = texto;
@@ -672,6 +723,7 @@
             botao.textContent = 'Entrando...';
             try {
                 await signInWithEmailAndPassword(auth, $('#login-email').value.trim(), $('#login-senha').value);
+                $('#login-senha').value = '';
             } catch (erro) {
                 mostrarMensagem($('#login-mensagem'), 'E-mail ou senha incorretos.');
             } finally {
@@ -722,7 +774,11 @@
         });
 
         $('#cancelar-botao').addEventListener('click', limparFormulario);
-        $('#sair-botao').addEventListener('click', () => signOut(auth));
+        $('#sair-botao').addEventListener('click', async () => {
+            pararTimerInatividade();
+            await signOut(auth);
+            limparCamposLogin();
+        });
         form.addEventListener('input', atualizarPreview);
 
         onAuthStateChanged(auth, usuario => {
@@ -731,10 +787,13 @@
                 adminApp.classList.remove('oculto');
                 $('#usuario-email').textContent = usuario.email;
                 iniciarEscuta();
+                reiniciarTimerInatividade();
             } else {
+                pararTimerInatividade();
                 if (pararEscuta) pararEscuta();
                 adminApp.classList.add('oculto');
                 loginTela.classList.remove('oculto');
+                limparCamposLogin();
             }
         });
 
