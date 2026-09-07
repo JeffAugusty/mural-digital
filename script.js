@@ -37,6 +37,8 @@ const CHAVE_CACHE_COMUNICADOS = 'mural-comunicados-firebase-v1';
 const CHAVE_CACHE_MIDIAS_YOUTUBE = 'mural-midias-youtube-firebase-v1';
 const ID_CONFIGURACAO_IMAGENS = 'configuracao-imagens-mural';
 const ID_CONFIGURACAO_MIDIAS_YOUTUBE = 'configuracao-videos-mural';
+const MODO_PREVIA_ADMIN =
+    new URLSearchParams(window.location.search).get('previewAdmin') === '1';
 
 let telas = [];
 let step = 0;
@@ -47,6 +49,7 @@ let promessaApiYoutube = null;
 let liveFixaId = '';
 let assinaturaMidiasYoutube = '';
 let geracaoMidiasYoutube = 0;
+let somPreviaAdminAtivo = false;
 
 
 // ======================================================
@@ -1055,7 +1058,10 @@ function mostrarAvisoSom(section, mostrar) {
 
 
 function configurarSomYoutube(registro, forcarSilencio = false) {
-    const deveTerSom = registro.item.comSom === true && !forcarSilencio;
+    const deveTerSom =
+        registro.item.comSom === true &&
+        !forcarSilencio &&
+        (!MODO_PREVIA_ADMIN || somPreviaAdminAtivo);
 
     try {
         if (deveTerSom) {
@@ -1073,6 +1079,35 @@ function configurarSomYoutube(registro, forcarSilencio = false) {
         console.warn('Não foi possível ajustar o áudio do YouTube:', erro);
     }
 }
+
+
+function aplicarSomPreviaAdmin() {
+    if (!MODO_PREVIA_ADMIN) return;
+
+    document.querySelectorAll('video, audio').forEach(elemento => {
+        elemento.muted = !somPreviaAdminAtivo;
+        if (somPreviaAdminAtivo) elemento.volume = 1;
+    });
+
+    playersYoutube.forEach(registro => {
+        configurarSomYoutube(registro, !somPreviaAdminAtivo);
+    });
+}
+
+
+window.addEventListener('message', evento => {
+    if (
+        !MODO_PREVIA_ADMIN ||
+        evento.source !== window.parent ||
+        evento.origin !== window.location.origin ||
+        evento.data?.tipo !== 'mural-preview-audio'
+    ) {
+        return;
+    }
+
+    somPreviaAdminAtivo = evento.data.ativo === true;
+    aplicarSomPreviaAdmin();
+});
 
 
 function agendarSegurancaYoutube(registro) {
@@ -1867,7 +1902,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '9.0-youtube'
+        '9.1-preview-audio'
     );
 
     atualizarRelogio();
