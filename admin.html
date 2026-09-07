@@ -594,6 +594,294 @@
             box-shadow: 0 4px 13px rgba(0,0,0,.35);
         }
 
+        /* NOVO LAYOUT DO PAINEL ADMINISTRATIVO */
+        #admin-app {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 258px minmax(0, 1fr);
+            background: var(--fundo);
+        }
+        #admin-app.oculto { display: none !important; }
+
+        .menu-lateral {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px 18px;
+            color: #fff;
+            background: linear-gradient(180deg, #073f70 0%, #042c54 100%);
+            box-shadow: 8px 0 28px rgba(18, 46, 76, .12);
+        }
+        .menu-marca {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 2px 10px 25px;
+            border-bottom: 1px solid rgba(255,255,255,.12);
+        }
+        .menu-marca-icone {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 auto;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            color: #073f70;
+            background: #fff;
+        }
+        .menu-marca-icone svg { width: 25px; height: 25px; }
+        .menu-marca strong {
+            display: block;
+            font-size: 17px;
+            line-height: 1.1;
+        }
+        .menu-marca small {
+            display: block;
+            margin-top: 4px;
+            color: rgba(255,255,255,.68);
+            font-size: 11px;
+        }
+        .menu-titulo {
+            margin: 25px 12px 9px;
+            color: rgba(255,255,255,.48);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .menu-navegacao { display: grid; gap: 7px; }
+        .menu-item {
+            width: 100%;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 13px;
+            border: 0;
+            border-radius: 11px;
+            color: rgba(255,255,255,.78);
+            background: transparent;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: left;
+            transition: background .18s ease, color .18s ease, transform .18s ease;
+        }
+        .menu-item:hover {
+            color: #fff;
+            background: rgba(255,255,255,.09);
+        }
+        .menu-item.ativo {
+            color: #073f70;
+            background: #fff;
+            box-shadow: 0 9px 24px rgba(0,0,0,.16);
+        }
+        .menu-item svg,
+        .menu-abrir-mural svg,
+        .menu-sair svg {
+            width: 20px;
+            height: 20px;
+            flex: 0 0 auto;
+        }
+        .menu-rodape {
+            display: grid;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255,255,255,.12);
+        }
+        .menu-abrir-mural,
+        .menu-sair {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 10px;
+            color: #fff;
+            background: rgba(255,255,255,.08);
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .menu-abrir-mural:hover,
+        .menu-sair:hover { background: rgba(255,255,255,.15); }
+        .menu-sair { width: 100%; }
+        .menu-usuario {
+            min-width: 0;
+            padding: 8px 4px 2px;
+            text-align: center;
+        }
+        .menu-usuario span {
+            display: block;
+            margin-bottom: 4px;
+            color: rgba(255,255,255,.55);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .menu-usuario p {
+            overflow: hidden;
+            margin: 0;
+            color: rgba(255,255,255,.78);
+            font-size: 11px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .admin-conteudo { min-width: 0; }
+        .topo {
+            min-height: 94px;
+            padding: 22px clamp(22px, 3vw, 46px);
+            color: var(--texto);
+            background: #fff;
+            border-bottom: 1px solid var(--borda);
+        }
+        .topo h1 { font-size: clamp(22px, 2vw, 29px); }
+        .topo p {
+            margin: 6px 0 0;
+            color: #667085;
+            font-size: 13px;
+            opacity: 1;
+        }
+        .topo-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 13px;
+            border-radius: 999px;
+            color: #146c38;
+            background: #e5f7ec;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .topo-status::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #20a15a;
+        }
+
+        .painel-secao {
+            display: none;
+            padding: 26px clamp(18px, 3vw, 42px) 50px;
+        }
+        .painel-secao.ativo { display: block; }
+        .pagina {
+            width: 100%;
+            margin: 0;
+        }
+        .painel-imagens {
+            width: 100%;
+            margin: 0;
+        }
+        .painel-midias-youtube { margin-bottom: 0; }
+
+        .resumo-grade {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        .resumo-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            border: 1px solid var(--borda);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 7px 25px rgba(23,32,51,.05);
+        }
+        .resumo-icone {
+            width: 48px;
+            height: 48px;
+            flex: 0 0 auto;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            color: var(--azul);
+            background: #e6f2fc;
+        }
+        .resumo-icone svg { width: 23px; height: 23px; }
+        .resumo-card strong {
+            display: block;
+            font-size: 25px;
+            line-height: 1;
+        }
+        .resumo-card span {
+            display: block;
+            margin-top: 5px;
+            color: #667085;
+            font-size: 12px;
+        }
+        .visao-grade {
+            display: grid;
+            grid-template-columns: minmax(520px, 1.45fr) minmax(290px, .55fr);
+            gap: 24px;
+            align-items: start;
+        }
+        .tv-cabecalho-texto p { margin: 6px 0 0; }
+        .tv-moldura {
+            overflow: hidden;
+            padding: 10px;
+            border-radius: 17px;
+            background: #151b24;
+            box-shadow: 0 18px 38px rgba(10, 21, 37, .2);
+        }
+        .tv-moldura iframe {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            display: block;
+            border: 0;
+            border-radius: 10px;
+            background: #000;
+        }
+        .atalhos { display: grid; gap: 12px; }
+        .atalho-item {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            padding: 14px;
+            border: 1px solid var(--borda);
+            border-radius: 12px;
+            color: var(--texto);
+            background: #fff;
+            text-align: left;
+        }
+        .atalho-item:hover { border-color: #87a9c7; background: #f8fbfe; }
+        .atalho-icone {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 11px;
+            color: var(--azul);
+            background: #eaf3fb;
+        }
+        .atalho-icone svg,
+        .atalho-seta { width: 19px; height: 19px; }
+        .atalho-item strong { display: block; font-size: 14px; }
+        .atalho-item small {
+            display: block;
+            margin-top: 4px;
+            color: #667085;
+            font-size: 11px;
+        }
+        .atalho-seta { color: #98a2b3; }
+
+        @media (max-width: 1180px) {
+            #admin-app { grid-template-columns: 224px minmax(0, 1fr); }
+            .visao-grade { grid-template-columns: 1fr; }
+        }
+
         @media (max-width: 1000px) {
             .pagina { grid-template-columns: 1fr; }
             .imagem-layout { grid-template-columns: 1fr; }
@@ -643,13 +931,35 @@
             .login-card-cabecalho h1 { font-size: 36px; }
             .login-card-cabecalho p { font-size: 16px; }
             .login-credito { bottom: 15px; font-size: 12px; }
-            .topo { align-items: flex-start; flex-direction: column; }
-            .pagina { width: min(100% - 20px, 1460px); margin-top: 10px; }
+            #admin-app { grid-template-columns: 76px minmax(0, 1fr); }
+            .menu-lateral { padding: 16px 8px 12px; }
+            .menu-marca { justify-content: center; padding: 0 0 18px; }
+            .menu-marca-texto,
+            .menu-titulo,
+            .menu-item span,
+            .menu-abrir-mural span,
+            .menu-sair span,
+            .menu-usuario { display: none; }
+            .menu-item,
+            .menu-abrir-mural,
+            .menu-sair { justify-content: center; padding: 11px; }
+            .menu-rodape { gap: 8px; }
+            .topo {
+                min-height: 82px;
+                align-items: center;
+                flex-direction: row;
+                padding: 18px 16px;
+            }
+            .topo h1 { font-size: 20px; }
+            .topo p { display: none; }
+            .topo-status { display: none; }
+            .painel-secao { padding: 14px 10px 32px; }
+            .pagina { width: 100%; margin-top: 0; }
             .card { padding: 17px; border-radius: 14px; }
             .grade, .cores { grid-template-columns: 1fr; }
             .evento-item { grid-template-columns: 6px 1fr; }
             .evento-acoes { grid-column: 2; justify-content: flex-start; }
-            .painel-imagens { width: min(100% - 20px, 1460px); }
+            .painel-imagens { width: 100%; }
             .imagem-item { grid-template-columns: 105px minmax(0, 1fr); }
             .imagem-acoes {
                 grid-column: 1 / -1;
@@ -658,6 +968,10 @@
             }
             .botoes { flex-direction: column-reverse; }
             .botao { width: 100%; }
+            .resumo-grade { grid-template-columns: 1fr; gap: 10px; }
+            .resumo-card { padding: 14px; }
+            .visao-grade { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+            .tv-moldura { padding: 5px; border-radius: 12px; }
         }
     </style>
 </head>
@@ -715,18 +1029,126 @@
     </section>
 
     <main id="admin-app" class="oculto">
-        <header class="topo">
-            <div>
-                <h1>Painel do Mural Digital</h1>
-                <p id="usuario-email"></p>
+        <aside class="menu-lateral" aria-label="Navegação do painel">
+            <div class="menu-marca">
+                <div class="menu-marca-icone" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M8 21h8M12 17v4M7 8h4v4H7V8Zm7 0h3M14 11h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="menu-marca-texto">
+                    <strong>Mural Digital</strong>
+                    <small>Painel administrativo</small>
+                </div>
             </div>
-            <div class="topo-acoes">
-                <a class="botao botao-topo" href="index.html" target="_blank" style="text-decoration:none">Abrir mural</a>
-                <button id="sair-botao" class="botao botao-topo" type="button">Sair</button>
-            </div>
-        </header>
 
-        <div class="pagina">
+            <div class="menu-titulo">Navegação</div>
+            <nav class="menu-navegacao">
+                <button class="menu-item ativo" type="button" data-secao="visao-geral" aria-label="Visão geral">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>
+                    <span>Visão geral</span>
+                </button>
+                <button class="menu-item" type="button" data-secao="eventos" aria-label="Eventos">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 3v4m10-4v4M3 10h18M8 14h3m2 0h3m-8 3h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    <span>Eventos</span>
+                </button>
+                <button class="menu-item" type="button" data-secao="imagens" aria-label="Imagens">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="9" r="1.5" stroke="currentColor" stroke-width="1.8"/><path d="m4 17 5-5 4 4 2-2 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span>Imagens</span>
+                </button>
+                <button class="menu-item" type="button" data-secao="midias" aria-label="Vídeos e lives">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m10 9 5 3-5 3V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                    <span>Vídeos e lives</span>
+                </button>
+            </nav>
+
+            <div class="menu-rodape">
+                <a class="menu-abrir-mural" href="index.html" target="_blank" rel="noopener" aria-label="Abrir mural">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    <span>Abrir mural</span>
+                </a>
+                <div class="menu-usuario">
+                    <span>Usuário conectado</span>
+                    <p id="usuario-email"></p>
+                </div>
+                <button id="sair-botao" class="menu-sair" type="button" aria-label="Sair">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4M14 8l4 4-4 4m4-4H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span>Sair</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="admin-conteudo">
+            <header class="topo">
+                <div>
+                    <h1 id="secao-titulo">Visão geral</h1>
+                    <p id="secao-descricao">Acompanhe o mural e acesse rapidamente cada tipo de conteúdo.</p>
+                </div>
+                <div class="topo-status">Sistema conectado</div>
+            </header>
+
+            <section class="painel-secao ativo" data-painel="visao-geral">
+                <div class="resumo-grade">
+                    <article class="resumo-card">
+                        <div class="resumo-icone" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 3v4m10-4v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                        </div>
+                        <div><strong id="resumo-eventos">0</strong><span>Eventos cadastrados</span></div>
+                    </article>
+                    <article class="resumo-card">
+                        <div class="resumo-icone" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m4 17 5-5 4 4 2-2 5 5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div><strong id="resumo-imagens">0</strong><span>Imagens cadastradas</span></div>
+                    </article>
+                    <article class="resumo-card">
+                        <div class="resumo-icone" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m10 9 5 3-5 3V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div><strong id="resumo-midias">0</strong><span>Vídeos e lives</span></div>
+                    </article>
+                </div>
+
+                <div class="visao-grade">
+                    <section class="card">
+                        <div class="card-cabecalho">
+                            <div class="tv-cabecalho-texto">
+                                <h2>Prévia da TV</h2>
+                                <p class="imagem-ajuda">Visualização ao vivo do conteúdo exibido no mural.</p>
+                            </div>
+                            <a class="botao botao-secundario" href="index.html" target="_blank" rel="noopener" style="text-decoration:none">Abrir em tela cheia</a>
+                        </div>
+                        <div class="tv-moldura">
+                            <iframe src="index.html" title="Prévia ao vivo do mural digital" loading="lazy" allow="autoplay; encrypted-media"></iframe>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-cabecalho"><h2>Gerenciar conteúdo</h2></div>
+                        <div class="atalhos">
+                            <button class="atalho-item" type="button" data-ir-secao="eventos">
+                                <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 3v4m10-4v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                                <span><strong>Eventos</strong><small>Cadastrar e organizar eventos</small></span>
+                                <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button class="atalho-item" type="button" data-ir-secao="imagens">
+                                <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m4 17 5-5 4 4 2-2 5 5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+                                <span><strong>Imagens</strong><small>Enviar comunicados para a TV</small></span>
+                                <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button class="atalho-item" type="button" data-ir-secao="midias">
+                                <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m10 9 5 3-5 3V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+                                <span><strong>Vídeos e lives</strong><small>Controlar YouTube e transmissões</small></span>
+                                <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="painel-secao" data-painel="eventos">
+                <div class="pagina">
             <div class="coluna">
                 <section class="card">
                     <div class="card-cabecalho">
@@ -855,10 +1277,12 @@
                         <div class="vazio">Carregando eventos...</div>
                     </div>
                 </section>
-            </div>
-        </div>
+                    </div>
+                </div>
+            </section>
 
-        <section class="card painel-imagens">
+            <section class="painel-secao" data-painel="imagens">
+                <section class="card painel-imagens">
             <div class="card-cabecalho">
                 <div>
                     <h2>Imagens do mural</h2>
@@ -933,9 +1357,11 @@
                     </div>
                 </div>
             </div>
-        </section>
+                </section>
+            </section>
 
-        <section class="card painel-imagens painel-midias-youtube">
+            <section class="painel-secao" data-painel="midias">
+                <section class="card painel-imagens painel-midias-youtube">
             <div class="card-cabecalho">
                 <div>
                     <h2>Vídeos e transmissões do YouTube</h2>
@@ -1032,7 +1458,9 @@
                     </div>
                 </div>
             </div>
-        </section>
+                </section>
+            </section>
+        </div>
     </main>
 
     <script type="module">
@@ -1100,6 +1528,41 @@
         const loginForm = $('#login-form');
         const imagemForm = $('#imagem-form');
         const midiaForm = $('#midia-form');
+
+        const SECOES_ADMIN = {
+            'visao-geral': {
+                titulo: 'Visão geral',
+                descricao: 'Acompanhe o mural e acesse rapidamente cada tipo de conteúdo.'
+            },
+            eventos: {
+                titulo: 'Eventos',
+                descricao: 'Cadastre eventos, defina datas, cores, QR Code e tempo de exibição.'
+            },
+            imagens: {
+                titulo: 'Imagens',
+                descricao: 'Envie e controle os comunicados que entram na programação da TV.'
+            },
+            midias: {
+                titulo: 'Vídeos e lives',
+                descricao: 'Gerencie anúncios em vídeo e transmissões ao vivo do YouTube.'
+            }
+        };
+
+        function abrirSecaoAdmin(nome) {
+            if (!SECOES_ADMIN[nome]) return;
+
+            document.querySelectorAll('[data-secao]').forEach(botao => {
+                botao.classList.toggle('ativo', botao.dataset.secao === nome);
+            });
+
+            document.querySelectorAll('[data-painel]').forEach(painel => {
+                painel.classList.toggle('ativo', painel.dataset.painel === nome);
+            });
+
+            $('#secao-titulo').textContent = SECOES_ADMIN[nome].titulo;
+            $('#secao-descricao').textContent = SECOES_ADMIN[nome].descricao;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         function limparCamposLogin() {
             loginForm.reset();
@@ -1313,6 +1776,7 @@
                 String(a.data || '').localeCompare(String(b.data || ''))
             );
             $('#total-eventos').textContent = `${ordenados.length} evento${ordenados.length === 1 ? '' : 's'}`;
+            $('#resumo-eventos').textContent = ordenados.length;
 
             if (!ordenados.length) {
                 lista.innerHTML = '<div class="vazio">Nenhum evento cadastrado. Use o formulário para criar o primeiro.</div>';
@@ -1442,6 +1906,7 @@
             );
 
             $('#total-imagens').textContent = `${ordenadas.length} imagem${ordenadas.length === 1 ? '' : 'ns'}`;
+            $('#resumo-imagens').textContent = ordenadas.length;
 
             if (!ordenadas.length) {
                 lista.innerHTML = '<div class="vazio">Nenhuma imagem cadastrada. Envie a primeira pelo formulário.</div>';
@@ -1846,6 +2311,7 @@
             );
 
             $('#total-midias').textContent = `${ordenadas.length} mídia${ordenadas.length === 1 ? '' : 's'}`;
+            $('#resumo-midias').textContent = ordenadas.length;
 
             if (!ordenadas.length) {
                 lista.innerHTML = '<div class="vazio">Nenhum vídeo ou live cadastrado.</div>';
@@ -2227,6 +2693,14 @@
             }
         });
 
+        document.querySelectorAll('[data-secao]').forEach(botao => {
+            botao.addEventListener('click', () => abrirSecaoAdmin(botao.dataset.secao));
+        });
+
+        document.querySelectorAll('[data-ir-secao]').forEach(botao => {
+            botao.addEventListener('click', () => abrirSecaoAdmin(botao.dataset.irSecao));
+        });
+
         $('#lista-eventos').addEventListener('click', evento => {
             const botao = evento.target.closest('button[data-acao]');
             if (!botao) return;
@@ -2268,6 +2742,7 @@
                 loginTela.classList.add('oculto');
                 adminApp.classList.remove('oculto');
                 $('#usuario-email').textContent = usuario.email;
+                abrirSecaoAdmin('visao-geral');
                 iniciarEscuta();
                 iniciarEscutaImagens();
                 iniciarEscutaMidias();
