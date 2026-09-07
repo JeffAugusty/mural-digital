@@ -1,6 +1,6 @@
 // ======================================================
 // MURAL DIGITAL - FIREBASE COMPATÍVEL
-// Mantém: clima, eventos, QR Code, contagem e Google Drive
+// Mantém: clima, eventos, QR Code, contagem e imagens do painel
 // ======================================================
 
 const firebaseConfig = {
@@ -26,9 +26,6 @@ try {
     console.error('Erro ao iniciar o Firebase:', erro);
 }
 
-const URL_API_DRIVE =
-    'https://script.google.com/macros/s/AKfycbwt1akQ3NLHgea6VPNo_XdFjP0-ncBeve1ATsRbabLgq_djN3qYCn3Uuzl5K7EWDoSS/exec';
-
 const LAT = '-18.98';
 const LON = '-49.46';
 
@@ -36,7 +33,8 @@ const TEMPO_CLIMA = 25000;
 const TEMPO_EVENTO = 25000;
 const TEMPO_COMUNICADO = 15000;
 const CHAVE_CACHE_EVENTOS = 'mural-eventos-firebase-v1';
-const CHAVE_CACHE_COMUNICADOS = 'mural-comunicados-drive-v1';
+const CHAVE_CACHE_COMUNICADOS = 'mural-comunicados-firebase-v1';
+const ID_CONFIGURACAO_IMAGENS = '__imagens_mural__';
 
 let telas = [];
 let step = 0;
@@ -706,10 +704,15 @@ function iniciarEventosFirebase() {
 
     db.collection('eventos').onSnapshot(
         snapshot => {
-            const eventos = snapshot.docs.map(documento => ({
-                id: documento.id,
-                ...documento.data()
-            }));
+            const eventos = snapshot.docs
+                .map(documento => ({
+                    id: documento.id,
+                    ...documento.data()
+                }))
+                .filter(evento =>
+                    evento.id !== ID_CONFIGURACAO_IMAGENS &&
+                    evento.tipo !== 'configuracao-imagens'
+                );
 
             salvarCacheEventos(eventos);
             renderizarEventos(eventos);
@@ -842,7 +845,7 @@ function atualizarContagens() {
 
 
 // ======================================================
-// COMUNICADOS DO GOOGLE DRIVE
+// IMAGENS ENVIADAS PELO PAINEL
 // ======================================================
 
 function carregarCacheComunicados() {
@@ -873,8 +876,42 @@ function salvarCacheComunicados(imagens) {
 }
 
 
+function comunicadoEstaVisivel(item) {
+    if (item.ativo === false) {
+        return false;
+    }
+
+    const agora = Date.now();
+    const inicio = item.exibirDesde
+        ? converterData(item.exibirDesde)
+        : null;
+    const fim = item.exibirAte
+        ? converterData(item.exibirAte, '00:00:00', true)
+        : null;
+
+    if (inicio !== null && agora < inicio) {
+        return false;
+    }
+
+    if (fim !== null && agora > fim) {
+        return false;
+    }
+
+    return Boolean(validarLink(item.url));
+}
+
+
 function renderizarComunicados(imagens) {
-    const novasTelas = imagens.map((item, index) => {
+    const idAtivo = obterIdTelaAtiva();
+
+    const visiveis = imagens
+        .filter(comunicadoEstaVisivel)
+        .sort((a, b) =>
+            (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
+            String(a.nome || '').localeCompare(String(b.nome || ''))
+        );
+
+    const novasTelas = visiveis.map((item, index) => {
         const section =
             document.createElement('section');
 
@@ -882,10 +919,12 @@ function renderizarComunicados(imagens) {
             'tela tela-comunicado';
 
         section.id =
-            `tela-drive-${index}`;
+            `tela-imagem-${item.id || index}`;
 
         section.dataset.duration =
-            String(TEMPO_COMUNICADO);
+            String(
+                Math.max(5, Number(item.duracao || 15)) * 1000
+            );
 
         const imagem =
             document.createElement('img');
@@ -895,6 +934,13 @@ function renderizarComunicados(imagens) {
         imagem.className = 'imagem-comunicado';
         imagem.decoding = 'async';
 
+        imagem.addEventListener('error', () => {
+            console.error(
+                'Não foi possível exibir a imagem:',
+                item.nome || item.id
+            );
+        });
+
         section.appendChild(imagem);
 
         return section;
@@ -903,36 +949,55 @@ function renderizarComunicados(imagens) {
     document
         .getElementById('container-imagens-dinamicas')
         .replaceChildren(...novasTelas);
+
+    sincronizarTelas(idAtivo);
+    agendarRotacao();
 }
 
-async function carregarImagensDoDrive() {
-    try {
-        const resposta = await fetch(
-            `${URL_API_DRIVE}?atualizacao=${Date.now()}`,
-            {
-                cache: 'no-store'
+function iniciarComunicadosFirebase() {
+    const cache = carregarCacheComunicados();
+
+    if (cache.length) {
+        renderizarComunicados(cache);
+    }
+
+    if (!db) {
+        console.error(
+            'Firebase indisponível para carregar as imagens do mural.'
+        );
+        return;
+    }
+
+    db.collection('eventos')
+        .doc(ID_CONFIGURACAO_IMAGENS)
+        .onSnapshot(
+            documento => {
+                const dados = documento.exists
+                    ? documento.data()
+                    : {};
+
+                const imagens = Array.isArray(dados.imagens)
+                    ? dados.imagens
+                    : [];
+
+                salvarCacheComunicados(imagens);
+                renderizarComunicados(imagens);
+
+                console.info(
+                    `${imagens.length} imagem(ns) recebida(s) do painel.`
+                );
+            },
+            erro => {
+                console.error(
+                    'Erro ao receber imagens do Firebase:',
+                    erro
+                );
+
+                if (!cache.length) {
+                    renderizarComunicados([]);
+                }
             }
         );
-
-        if (!resposta.ok) {
-            throw new Error(`Erro HTTP ${resposta.status}`);
-        }
-
-        const imagens = await resposta.json();
-
-        if (!Array.isArray(imagens)) {
-            throw new Error('Formato de imagens inválido');
-        }
-
-        salvarCacheComunicados(imagens);
-        renderizarComunicados(imagens);
-
-    } catch (erro) {
-        console.error(
-            'Erro ao carregar imagens do Drive:',
-            erro
-        );
-    }
 }
 
 
@@ -1033,24 +1098,14 @@ function controlarVideoClima() {
 }
 
 
-async function atualizarComunicados() {
-    const idAtivo = obterIdTelaAtiva();
-
-    await carregarImagensDoDrive();
-
-    sincronizarTelas(idAtivo);
-    agendarRotacao();
-}
-
-
 // ======================================================
 // INICIALIZAÇÃO
 // ======================================================
 
-async function iniciarMural() {
+function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '7.2-rotacao-cache'
+        '8.0-upload-painel'
     );
 
     atualizarRelogio();
@@ -1072,34 +1127,13 @@ async function iniciarMural() {
     );
 
     iniciarEventosFirebase();
-
-    const comunicadosEmCache =
-        carregarCacheComunicados();
-
-    if (comunicadosEmCache.length) {
-        renderizarComunicados(
-            comunicadosEmCache
-        );
-    }
+    iniciarComunicadosFirebase();
 
     sincronizarTelas(
         obterIdTelaAtiva()
     );
 
     agendarRotacao();
-
-    await carregarImagensDoDrive();
-
-    sincronizarTelas(
-        obterIdTelaAtiva()
-    );
-
-    agendarRotacao();
-
-    window.setInterval(
-        atualizarComunicados,
-        1800000
-    );
 }
 
 

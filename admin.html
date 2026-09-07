@@ -203,7 +203,7 @@
 
         .pagina {
             width: min(1460px, calc(100% - 32px));
-            margin: 26px auto 60px;
+            margin: 26px auto 24px;
             display: grid;
             grid-template-columns: minmax(480px, 1fr) minmax(380px, .8fr);
             gap: 24px;
@@ -379,8 +379,127 @@
         .status-inativo { color: #8a4b00; background: #fff0d5; }
         .vazio { padding: 30px 10px; color: #667085; text-align: center; }
 
+        .painel-imagens {
+            width: min(1460px, calc(100% - 32px));
+            margin: 0 auto 60px;
+        }
+        .imagem-layout {
+            display: grid;
+            grid-template-columns: minmax(330px, .72fr) minmax(480px, 1.28fr);
+            gap: 24px;
+            align-items: start;
+        }
+        .imagem-formulario {
+            padding: 20px;
+            border: 1px solid var(--borda);
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+        .imagem-formulario h3,
+        .imagem-listagem h3 {
+            margin: 0 0 16px;
+            font-size: 17px;
+        }
+        .imagem-ajuda {
+            margin: 7px 0 0;
+            color: #667085;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .imagem-arquivo {
+            padding: 13px;
+            border: 1px dashed #91a7bd;
+            border-radius: 11px;
+            background: #fff;
+        }
+        .imagem-preview {
+            aspect-ratio: 16 / 9;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid #d7e0ea;
+            border-radius: 12px;
+            color: #667085;
+            background: #eaf0f6;
+            text-align: center;
+        }
+        .imagem-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #101010;
+        }
+        .imagem-listagem { min-width: 0; }
+        .imagem-lista {
+            display: grid;
+            gap: 12px;
+            max-height: 650px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .imagem-item {
+            display: grid;
+            grid-template-columns: 150px minmax(0, 1fr) auto;
+            gap: 15px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--borda);
+            border-radius: 13px;
+            background: #fff;
+        }
+        .imagem-miniatura {
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            border-radius: 9px;
+            background: #111;
+        }
+        .imagem-miniatura img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .imagem-dados { min-width: 0; }
+        .imagem-dados h4 {
+            overflow: hidden;
+            margin: 0 0 7px;
+            font-size: 15px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .imagem-dados p {
+            margin: 3px 0;
+            color: #667085;
+            font-size: 12px;
+        }
+        .imagem-acoes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 6px;
+            max-width: 190px;
+        }
+        .imagem-acoes button {
+            border: 0;
+            padding: 7px 9px;
+            border-radius: 8px;
+            color: #344054;
+            background: #eaf0f6;
+        }
+        .imagem-acoes .excluir {
+            color: #a32121;
+            background: #fde9e9;
+        }
+        .imagem-status-linha {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
         @media (max-width: 1000px) {
             .pagina { grid-template-columns: 1fr; }
+            .imagem-layout { grid-template-columns: 1fr; }
         }
         @media (max-width: 900px) {
             .login-tela {
@@ -433,6 +552,13 @@
             .grade, .cores { grid-template-columns: 1fr; }
             .evento-item { grid-template-columns: 6px 1fr; }
             .evento-acoes { grid-column: 2; justify-content: flex-start; }
+            .painel-imagens { width: min(100% - 20px, 1460px); }
+            .imagem-item { grid-template-columns: 105px minmax(0, 1fr); }
+            .imagem-acoes {
+                grid-column: 1 / -1;
+                justify-content: flex-start;
+                max-width: none;
+            }
             .botoes { flex-direction: column-reverse; }
             .botao { width: 100%; }
         }
@@ -634,6 +760,84 @@
                 </section>
             </div>
         </div>
+
+        <section class="card painel-imagens">
+            <div class="card-cabecalho">
+                <div>
+                    <h2>Imagens do mural</h2>
+                    <p class="imagem-ajuda">Envie e controle os comunicados exibidos na TV. As alterações são atualizadas automaticamente.</p>
+                </div>
+                <span id="total-imagens">0 imagens</span>
+            </div>
+
+            <div id="imagem-mensagem" class="mensagem oculto"></div>
+
+            <div class="imagem-layout">
+                <form id="imagem-form" class="imagem-formulario">
+                    <input id="imagem-id" type="hidden">
+                    <input id="imagem-caminho-atual" type="hidden">
+                    <input id="imagem-url-atual" type="hidden">
+
+                    <h3 id="imagem-form-titulo">Nova imagem</h3>
+
+                    <div id="imagem-preview" class="imagem-preview">
+                        <span>Prévia da imagem<br>1920 × 1080 recomendado</span>
+                    </div>
+
+                    <div class="grade">
+                        <div class="campo campo-largo">
+                            <label for="imagem-arquivo">Arquivo da imagem</label>
+                            <input id="imagem-arquivo" class="imagem-arquivo" type="file" accept="image/jpeg,image/png,image/webp">
+                            <p class="imagem-ajuda">JPG, PNG ou WebP, com no máximo 8 MB. Ao editar, escolha outro arquivo somente se quiser substituir a imagem.</p>
+                        </div>
+
+                        <div class="campo campo-largo">
+                            <label for="imagem-nome">Nome para identificação</label>
+                            <input id="imagem-nome" maxlength="100" placeholder="Ex.: Comunicado de matrícula" required>
+                        </div>
+
+                        <div class="campo campo-largo">
+                            <label class="linha-check">
+                                <input id="imagem-ativa" type="checkbox" checked>
+                                Exibir esta imagem no mural
+                            </label>
+                        </div>
+
+                        <div class="campo">
+                            <label for="imagem-exibir-desde">Exibir desde (opcional)</label>
+                            <input id="imagem-exibir-desde" type="date">
+                        </div>
+
+                        <div class="campo">
+                            <label for="imagem-exibir-ate">Exibir até (opcional)</label>
+                            <input id="imagem-exibir-ate" type="date">
+                        </div>
+
+                        <div class="campo">
+                            <label for="imagem-duracao">Tempo na TV (segundos)</label>
+                            <input id="imagem-duracao" type="number" min="5" max="300" value="15" required>
+                        </div>
+
+                        <div class="campo">
+                            <label for="imagem-ordem">Ordem de exibição</label>
+                            <input id="imagem-ordem" type="number" min="0" max="999" value="0" required>
+                        </div>
+                    </div>
+
+                    <div class="botoes">
+                        <button id="imagem-cancelar-botao" class="botao botao-secundario oculto" type="button">Cancelar edição</button>
+                        <button id="imagem-salvar-botao" class="botao botao-primario" type="submit">Enviar imagem</button>
+                    </div>
+                </form>
+
+                <div class="imagem-listagem">
+                    <h3>Imagens cadastradas</h3>
+                    <div id="lista-imagens" class="imagem-lista">
+                        <div class="vazio">Carregando imagens...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script type="module">
@@ -644,8 +848,11 @@
         } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
         import {
             getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
-            onSnapshot, serverTimestamp
+            onSnapshot, serverTimestamp, setDoc
         } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
+        import {
+            getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject
+        } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js';
 
         const firebaseConfig = {
             apiKey: 'AIzaSyBxD5x__EVbG06U4_wz4VRil_e1t-cB3EY',
@@ -659,6 +866,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         try {
             await setPersistence(auth, browserSessionPersistence);
@@ -678,16 +886,23 @@
         };
 
         const TEMPO_INATIVIDADE = 10 * 60 * 1000;
+        const ID_CONFIGURACAO_IMAGENS = '__imagens_mural__';
+        const TAMANHO_MAXIMO_IMAGEM = 8 * 1024 * 1024;
+        const TIPOS_IMAGEM_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
 
         let eventos = [];
+        let imagens = [];
         let pararEscuta = null;
+        let pararEscutaImagens = null;
         let timerInatividade = null;
+        let urlPreviewImagem = '';
 
         const $ = seletor => document.querySelector(seletor);
         const loginTela = $('#login-tela');
         const adminApp = $('#admin-app');
         const form = $('#evento-form');
         const loginForm = $('#login-form');
+        const imagemForm = $('#imagem-form');
 
         function limparCamposLogin() {
             loginForm.reset();
@@ -930,11 +1145,225 @@
         function iniciarEscuta() {
             if (pararEscuta) pararEscuta();
             pararEscuta = onSnapshot(collection(db, 'eventos'), snapshot => {
-                eventos = snapshot.docs.map(documento => ({ id: documento.id, ...documento.data() }));
+                eventos = snapshot.docs
+                    .map(documento => ({ id: documento.id, ...documento.data() }))
+                    .filter(evento =>
+                        evento.id !== ID_CONFIGURACAO_IMAGENS &&
+                        evento.tipo !== 'configuracao-imagens'
+                    );
                 renderizarEventos();
             }, erro => {
                 $('#lista-eventos').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar eventos: ${escaparHTML(erro.message)}</div>`;
             });
+        }
+
+        function criarIdImagem() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return window.crypto.randomUUID();
+            }
+
+            return `imagem-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        }
+
+        function nomeSeguroArquivo(nome) {
+            const partes = String(nome || 'imagem').split('.');
+            const extensao = partes.length > 1 ? `.${partes.pop().toLowerCase()}` : '';
+            const base = partes.join('.')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-zA-Z0-9_-]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .slice(0, 70) || 'imagem';
+
+            return `${base}${extensao}`;
+        }
+
+        function validarArquivoImagem(arquivo) {
+            if (!arquivo) return '';
+            if (!TIPOS_IMAGEM_PERMITIDOS.includes(arquivo.type)) {
+                return 'Utilize uma imagem JPG, PNG ou WebP.';
+            }
+            if (arquivo.size > TAMANHO_MAXIMO_IMAGEM) {
+                return 'A imagem deve ter no máximo 8 MB.';
+            }
+            return '';
+        }
+
+        function liberarPreviewImagem() {
+            if (urlPreviewImagem.startsWith('blob:')) {
+                URL.revokeObjectURL(urlPreviewImagem);
+            }
+            urlPreviewImagem = '';
+        }
+
+        function mostrarPreviewImagem(url, nome = 'Prévia da imagem') {
+            liberarPreviewImagem();
+            urlPreviewImagem = url || '';
+
+            const area = $('#imagem-preview');
+            if (!url) {
+                area.innerHTML = '<span>Prévia da imagem<br>1920 × 1080 recomendado</span>';
+                return;
+            }
+
+            const imagem = document.createElement('img');
+            imagem.src = url;
+            imagem.alt = nome;
+            area.replaceChildren(imagem);
+        }
+
+        function limparFormularioImagem() {
+            imagemForm.reset();
+            $('#imagem-id').value = '';
+            $('#imagem-caminho-atual').value = '';
+            $('#imagem-url-atual').value = '';
+            $('#imagem-ativa').checked = true;
+            $('#imagem-duracao').value = 15;
+            $('#imagem-ordem').value = 0;
+            $('#imagem-form-titulo').textContent = 'Nova imagem';
+            $('#imagem-salvar-botao').textContent = 'Enviar imagem';
+            $('#imagem-cancelar-botao').classList.add('oculto');
+            mostrarPreviewImagem('');
+        }
+
+        function periodoImagem(item) {
+            const inicio = item.exibirDesde
+                ? formatarData(item.exibirDesde)
+                : 'sem data inicial';
+            const fim = item.exibirAte
+                ? formatarData(item.exibirAte)
+                : 'sem data final';
+            return `${inicio} até ${fim}`;
+        }
+
+        function renderizarImagens() {
+            const lista = $('#lista-imagens');
+            const ordenadas = [...imagens].sort((a, b) =>
+                (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
+                String(a.nome || '').localeCompare(String(b.nome || ''))
+            );
+
+            $('#total-imagens').textContent = `${ordenadas.length} imagem${ordenadas.length === 1 ? '' : 'ns'}`;
+
+            if (!ordenadas.length) {
+                lista.innerHTML = '<div class="vazio">Nenhuma imagem cadastrada. Envie a primeira pelo formulário.</div>';
+                return;
+            }
+
+            lista.innerHTML = ordenadas.map(item => `
+                <article class="imagem-item">
+                    <div class="imagem-miniatura">
+                        <img src="${escaparHTML(item.url)}" alt="${escaparHTML(item.nome || 'Imagem do mural')}" loading="lazy">
+                    </div>
+                    <div class="imagem-dados">
+                        <h4>${escaparHTML(item.nome || 'Imagem sem nome')}</h4>
+                        <div class="imagem-status-linha">
+                            <span class="status ${item.ativo !== false ? 'status-ativo' : 'status-inativo'}">
+                                ${item.ativo !== false ? 'Ativa' : 'Inativa'}
+                            </span>
+                            <span class="status">Ordem ${Number(item.ordem || 0)}</span>
+                        </div>
+                        <p>${Number(item.duracao || 15)} segundos na TV</p>
+                        <p>${escaparHTML(periodoImagem(item))}</p>
+                    </div>
+                    <div class="imagem-acoes">
+                        <button type="button" data-acao-imagem="editar" data-id="${item.id}">Editar/Substituir</button>
+                        <button type="button" data-acao-imagem="alternar" data-id="${item.id}">
+                            ${item.ativo !== false ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button type="button" class="excluir" data-acao-imagem="excluir" data-id="${item.id}">Excluir</button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        async function salvarListaImagens(novaLista) {
+            await setDoc(
+                doc(db, 'eventos', ID_CONFIGURACAO_IMAGENS),
+                {
+                    tipo: 'configuracao-imagens',
+                    imagens: novaLista,
+                    atualizadoEm: serverTimestamp()
+                },
+                { merge: true }
+            );
+        }
+
+        async function removerArquivoStorage(caminho) {
+            if (!caminho) return;
+            try {
+                await deleteObject(storageRef(storage, caminho));
+            } catch (erro) {
+                if (erro.code !== 'storage/object-not-found') {
+                    console.warn('Não foi possível remover o arquivo antigo:', erro);
+                }
+            }
+        }
+
+        function iniciarEscutaImagens() {
+            if (pararEscutaImagens) pararEscutaImagens();
+
+            pararEscutaImagens = onSnapshot(
+                doc(db, 'eventos', ID_CONFIGURACAO_IMAGENS),
+                documento => {
+                    const dados = documento.exists() ? documento.data() : {};
+                    imagens = Array.isArray(dados.imagens) ? dados.imagens : [];
+                    renderizarImagens();
+                },
+                erro => {
+                    $('#lista-imagens').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar imagens: ${escaparHTML(erro.message)}</div>`;
+                }
+            );
+        }
+
+        function editarImagem(id) {
+            const item = imagens.find(imagem => imagem.id === id);
+            if (!item) return;
+
+            $('#imagem-id').value = item.id;
+            $('#imagem-caminho-atual').value = item.caminho || '';
+            $('#imagem-url-atual').value = item.url || '';
+            $('#imagem-nome').value = item.nome || '';
+            $('#imagem-ativa').checked = item.ativo !== false;
+            $('#imagem-exibir-desde').value = item.exibirDesde || '';
+            $('#imagem-exibir-ate').value = item.exibirAte || '';
+            $('#imagem-duracao').value = item.duracao || 15;
+            $('#imagem-ordem').value = item.ordem || 0;
+            $('#imagem-arquivo').value = '';
+            $('#imagem-form-titulo').textContent = 'Editar ou substituir imagem';
+            $('#imagem-salvar-botao').textContent = 'Salvar alterações';
+            $('#imagem-cancelar-botao').classList.remove('oculto');
+            mostrarPreviewImagem(item.url, item.nome);
+            $('#imagem-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function alternarImagem(id) {
+            const novaLista = imagens.map(item =>
+                item.id === id
+                    ? { ...item, ativo: item.ativo === false }
+                    : item
+            );
+
+            try {
+                await salvarListaImagens(novaLista);
+                mostrarMensagem($('#imagem-mensagem'), 'Situação da imagem atualizada.', 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#imagem-mensagem'), `Não foi possível atualizar: ${erro.message}`);
+            }
+        }
+
+        async function excluirImagem(id) {
+            const item = imagens.find(imagem => imagem.id === id);
+            if (!item || !window.confirm(`Excluir definitivamente a imagem “${item.nome}”?`)) return;
+
+            try {
+                await salvarListaImagens(imagens.filter(imagem => imagem.id !== id));
+                await removerArquivoStorage(item.caminho);
+                if ($('#imagem-id').value === id) limparFormularioImagem();
+                mostrarMensagem($('#imagem-mensagem'), 'Imagem excluída com sucesso.', 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#imagem-mensagem'), `Não foi possível excluir: ${erro.message}`);
+            }
         }
 
         $('#login-form').addEventListener('submit', async evento => {
@@ -987,6 +1416,140 @@
             }
         });
 
+        $('#imagem-arquivo').addEventListener('change', evento => {
+            const arquivo = evento.target.files[0];
+            const erro = validarArquivoImagem(arquivo);
+
+            if (erro) {
+                mostrarMensagem($('#imagem-mensagem'), erro);
+                evento.target.value = '';
+                mostrarPreviewImagem(
+                    $('#imagem-url-atual').value,
+                    $('#imagem-nome').value
+                );
+                return;
+            }
+
+            esconderMensagem($('#imagem-mensagem'));
+            if (!arquivo) {
+                mostrarPreviewImagem(
+                    $('#imagem-url-atual').value,
+                    $('#imagem-nome').value
+                );
+                return;
+            }
+
+            if (!$('#imagem-nome').value.trim()) {
+                $('#imagem-nome').value = arquivo.name.replace(/\.[^.]+$/, '');
+            }
+
+            mostrarPreviewImagem(
+                URL.createObjectURL(arquivo),
+                arquivo.name
+            );
+        });
+
+        imagemForm.addEventListener('submit', async evento => {
+            evento.preventDefault();
+            esconderMensagem($('#imagem-mensagem'));
+
+            const idAtual = $('#imagem-id').value;
+            const itemAtual = imagens.find(item => item.id === idAtual);
+            const arquivo = $('#imagem-arquivo').files[0];
+            const nome = $('#imagem-nome').value.trim();
+            const exibirDesde = $('#imagem-exibir-desde').value;
+            const exibirAte = $('#imagem-exibir-ate').value;
+            const erroArquivo = validarArquivoImagem(arquivo);
+
+            if (!nome) {
+                mostrarMensagem($('#imagem-mensagem'), 'Informe um nome para identificar a imagem.');
+                return;
+            }
+            if (!itemAtual && !arquivo) {
+                mostrarMensagem($('#imagem-mensagem'), 'Escolha uma imagem para enviar.');
+                return;
+            }
+            if (erroArquivo) {
+                mostrarMensagem($('#imagem-mensagem'), erroArquivo);
+                return;
+            }
+            if (exibirDesde && exibirAte && exibirDesde > exibirAte) {
+                mostrarMensagem($('#imagem-mensagem'), 'A data “Exibir desde” não pode ser posterior a “Exibir até”.');
+                return;
+            }
+
+            const botao = $('#imagem-salvar-botao');
+            const id = itemAtual ? itemAtual.id : criarIdImagem();
+            const caminhoAnterior = itemAtual ? itemAtual.caminho || '' : '';
+            let caminho = itemAtual ? itemAtual.caminho || '' : '';
+            let url = itemAtual ? itemAtual.url || '' : '';
+            let caminhoNovo = '';
+
+            botao.disabled = true;
+            botao.textContent = arquivo ? 'Enviando...' : 'Salvando...';
+
+            try {
+                if (arquivo) {
+                    caminhoNovo = `mural-imagens/${id}/${Date.now()}-${nomeSeguroArquivo(arquivo.name)}`;
+                    const referencia = storageRef(storage, caminhoNovo);
+                    const resultado = await uploadBytes(referencia, arquivo, {
+                        contentType: arquivo.type,
+                        cacheControl: 'public,max-age=3600',
+                        customMetadata: {
+                            enviadoPor: auth.currentUser ? auth.currentUser.uid : 'admin'
+                        }
+                    });
+
+                    caminho = resultado.metadata.fullPath;
+                    url = await getDownloadURL(resultado.ref);
+                }
+
+                const agora = new Date().toISOString();
+                const novoItem = {
+                    id,
+                    nome,
+                    url,
+                    caminho,
+                    ativo: $('#imagem-ativa').checked,
+                    exibirDesde,
+                    exibirAte,
+                    duracao: Math.max(5, Number($('#imagem-duracao').value) || 15),
+                    ordem: Math.max(0, Number($('#imagem-ordem').value) || 0),
+                    criadoEm: itemAtual && itemAtual.criadoEm ? itemAtual.criadoEm : agora,
+                    atualizadoEm: agora
+                };
+
+                const novaLista = itemAtual
+                    ? imagens.map(item => item.id === id ? novoItem : item)
+                    : [...imagens, novoItem];
+
+                await salvarListaImagens(novaLista);
+
+                if (caminhoNovo && caminhoAnterior && caminhoAnterior !== caminhoNovo) {
+                    await removerArquivoStorage(caminhoAnterior);
+                }
+
+                limparFormularioImagem();
+                mostrarMensagem(
+                    $('#imagem-mensagem'),
+                    itemAtual ? 'Imagem atualizada com sucesso.' : 'Imagem enviada com sucesso.',
+                    'sucesso'
+                );
+            } catch (erro) {
+                if (caminhoNovo) {
+                    await removerArquivoStorage(caminhoNovo);
+                }
+
+                const mensagem = erro.code === 'storage/unauthorized'
+                    ? 'O Firebase Storage não autorizou o envio. Verifique se o armazenamento está habilitado para usuários autenticados.'
+                    : `Não foi possível salvar a imagem: ${erro.message}`;
+                mostrarMensagem($('#imagem-mensagem'), mensagem);
+            } finally {
+                botao.disabled = false;
+                botao.textContent = $('#imagem-id').value ? 'Salvar alterações' : 'Enviar imagem';
+            }
+        });
+
         $('#lista-eventos').addEventListener('click', evento => {
             const botao = evento.target.closest('button[data-acao]');
             if (!botao) return;
@@ -995,7 +1558,16 @@
             if (botao.dataset.acao === 'excluir') excluirEvento(botao.dataset.id, botao.dataset.titulo);
         });
 
+        $('#lista-imagens').addEventListener('click', evento => {
+            const botao = evento.target.closest('button[data-acao-imagem]');
+            if (!botao) return;
+            if (botao.dataset.acaoImagem === 'editar') editarImagem(botao.dataset.id);
+            if (botao.dataset.acaoImagem === 'alternar') alternarImagem(botao.dataset.id);
+            if (botao.dataset.acaoImagem === 'excluir') excluirImagem(botao.dataset.id);
+        });
+
         $('#cancelar-botao').addEventListener('click', limparFormulario);
+        $('#imagem-cancelar-botao').addEventListener('click', limparFormularioImagem);
         $('#sair-botao').addEventListener('click', async () => {
             pararTimerInatividade();
             await signOut(auth);
@@ -1009,10 +1581,12 @@
                 adminApp.classList.remove('oculto');
                 $('#usuario-email').textContent = usuario.email;
                 iniciarEscuta();
+                iniciarEscutaImagens();
                 reiniciarTimerInatividade();
             } else {
                 pararTimerInatividade();
                 if (pararEscuta) pararEscuta();
+                if (pararEscutaImagens) pararEscutaImagens();
                 adminApp.classList.add('oculto');
                 loginTela.classList.remove('oculto');
                 limparCamposLogin();
@@ -1021,6 +1595,7 @@
 
         montarTemas();
         limparFormulario();
+        limparFormularioImagem();
     </script>
 </body>
 </html>
