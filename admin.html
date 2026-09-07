@@ -1142,7 +1142,7 @@
                             </div>
                         </div>
                         <div class="tv-moldura">
-                            <iframe id="preview-mural-iframe" src="index.html" title="Prévia ao vivo do mural digital" loading="lazy" allow="autoplay; encrypted-media"></iframe>
+                            <iframe id="preview-mural-iframe" src="index.html?previewAdmin=1" title="Prévia ao vivo do mural digital" loading="lazy" allow="autoplay; encrypted-media"></iframe>
                         </div>
                     </section>
 
@@ -1589,42 +1589,15 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function enviarComandoSomYoutube(iframe, comando, argumentos = []) {
-            try {
-                iframe.contentWindow?.postMessage(
-                    JSON.stringify({
-                        event: 'command',
-                        func: comando,
-                        args: argumentos
-                    }),
-                    '*'
-                );
-            } catch {
-                // O player pode estar sendo recriado durante a troca de telas.
-            }
-        }
-
         function aplicarSomNaPrevia() {
             try {
-                const documentoPrevia = previewMuralIframe.contentDocument;
-                if (!documentoPrevia) return;
-
-                documentoPrevia.querySelectorAll('video, audio').forEach(elemento => {
-                    elemento.muted = !previewSomAtivo;
-                    if (previewSomAtivo) elemento.volume = 1;
-                });
-
-                documentoPrevia.querySelectorAll('iframe').forEach(iframeYoutube => {
-                    const origem = iframeYoutube.getAttribute('src') || '';
-                    if (!/youtube(?:-nocookie)?\.com\/embed/i.test(origem)) return;
-
-                    if (previewSomAtivo) {
-                        enviarComandoSomYoutube(iframeYoutube, 'unMute');
-                        enviarComandoSomYoutube(iframeYoutube, 'setVolume', [100]);
-                    } else {
-                        enviarComandoSomYoutube(iframeYoutube, 'mute');
-                    }
-                });
+                previewMuralIframe.contentWindow?.postMessage(
+                    {
+                        tipo: 'mural-preview-audio',
+                        ativo: previewSomAtivo
+                    },
+                    window.location.origin
+                );
             } catch {
                 // A prévia ainda pode estar terminando de carregar.
             }
@@ -2783,8 +2756,6 @@
             atualizarBotaoSomPreview();
             window.setTimeout(aplicarSomNaPrevia, 800);
         });
-
-        window.setInterval(aplicarSomNaPrevia, 1000);
 
         $('#lista-eventos').addEventListener('click', evento => {
             const botao = evento.target.closest('button[data-acao]');
