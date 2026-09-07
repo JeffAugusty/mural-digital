@@ -827,6 +827,17 @@
             align-items: start;
         }
         .tv-cabecalho-texto p { margin: 6px 0 0; }
+        .tv-acoes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .botao-som-preview {
+            color: #fff;
+            background: var(--azul);
+        }
+        .botao-som-preview:hover { background: #00538f; }
         .tv-moldura {
             overflow: hidden;
             padding: 10px;
@@ -971,6 +982,14 @@
             .resumo-grade { grid-template-columns: 1fr; gap: 10px; }
             .resumo-card { padding: 14px; }
             .visao-grade { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+            .tv-card .card-cabecalho {
+                align-items: stretch;
+                flex-direction: column;
+            }
+            .tv-acoes {
+                flex-direction: column;
+                justify-content: stretch;
+            }
             .tv-moldura { padding: 5px; border-radius: 12px; }
         }
     </style>
@@ -1111,16 +1130,19 @@
                 </div>
 
                 <div class="visao-grade">
-                    <section class="card">
+                    <section class="card tv-card">
                         <div class="card-cabecalho">
                             <div class="tv-cabecalho-texto">
                                 <h2>Prévia da TV</h2>
                                 <p class="imagem-ajuda">Visualização ao vivo do conteúdo exibido no mural.</p>
                             </div>
-                            <a class="botao botao-secundario" href="index.html" target="_blank" rel="noopener" style="text-decoration:none">Abrir em tela cheia</a>
+                            <div class="tv-acoes">
+                                <button id="preview-som-botao" class="botao botao-som-preview" type="button" aria-pressed="false">Ativar som</button>
+                                <a class="botao botao-secundario" href="index.html" target="_blank" rel="noopener" style="text-decoration:none">Abrir em tela cheia</a>
+                            </div>
                         </div>
                         <div class="tv-moldura">
-                            <iframe src="index.html" title="Prévia ao vivo do mural digital" loading="lazy" allow="autoplay; encrypted-media"></iframe>
+                            <iframe id="preview-mural-iframe" src="index.html" title="Prévia ao vivo do mural digital" loading="lazy" allow="autoplay; encrypted-media"></iframe>
                         </div>
                     </section>
 
@@ -1528,6 +1550,9 @@
         const loginForm = $('#login-form');
         const imagemForm = $('#imagem-form');
         const midiaForm = $('#midia-form');
+        const previewMuralIframe = $('#preview-mural-iframe');
+        const previewSomBotao = $('#preview-som-botao');
+        let previewSomAtivo = false;
 
         const SECOES_ADMIN = {
             'visao-geral': {
@@ -1562,6 +1587,53 @@
             $('#secao-titulo').textContent = SECOES_ADMIN[nome].titulo;
             $('#secao-descricao').textContent = SECOES_ADMIN[nome].descricao;
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function enviarComandoSomYoutube(iframe, comando, argumentos = []) {
+            try {
+                iframe.contentWindow?.postMessage(
+                    JSON.stringify({
+                        event: 'command',
+                        func: comando,
+                        args: argumentos
+                    }),
+                    '*'
+                );
+            } catch {
+                // O player pode estar sendo recriado durante a troca de telas.
+            }
+        }
+
+        function aplicarSomNaPrevia() {
+            try {
+                const documentoPrevia = previewMuralIframe.contentDocument;
+                if (!documentoPrevia) return;
+
+                documentoPrevia.querySelectorAll('video, audio').forEach(elemento => {
+                    elemento.muted = !previewSomAtivo;
+                    if (previewSomAtivo) elemento.volume = 1;
+                });
+
+                documentoPrevia.querySelectorAll('iframe').forEach(iframeYoutube => {
+                    const origem = iframeYoutube.getAttribute('src') || '';
+                    if (!/youtube(?:-nocookie)?\.com\/embed/i.test(origem)) return;
+
+                    if (previewSomAtivo) {
+                        enviarComandoSomYoutube(iframeYoutube, 'unMute');
+                        enviarComandoSomYoutube(iframeYoutube, 'setVolume', [100]);
+                    } else {
+                        enviarComandoSomYoutube(iframeYoutube, 'mute');
+                    }
+                });
+            } catch {
+                // A prévia ainda pode estar terminando de carregar.
+            }
+        }
+
+        function atualizarBotaoSomPreview() {
+            previewSomBotao.textContent = previewSomAtivo ? 'Mutar áudio' : 'Ativar som';
+            previewSomBotao.setAttribute('aria-pressed', String(previewSomAtivo));
+            aplicarSomNaPrevia();
         }
 
         function limparCamposLogin() {
@@ -2700,6 +2772,19 @@
         document.querySelectorAll('[data-ir-secao]').forEach(botao => {
             botao.addEventListener('click', () => abrirSecaoAdmin(botao.dataset.irSecao));
         });
+
+        previewSomBotao.addEventListener('click', () => {
+            previewSomAtivo = !previewSomAtivo;
+            atualizarBotaoSomPreview();
+        });
+
+        previewMuralIframe.addEventListener('load', () => {
+            previewSomAtivo = false;
+            atualizarBotaoSomPreview();
+            window.setTimeout(aplicarSomNaPrevia, 800);
+        });
+
+        window.setInterval(aplicarSomNaPrevia, 1000);
 
         $('#lista-eventos').addEventListener('click', evento => {
             const botao = evento.target.closest('button[data-acao]');
