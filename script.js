@@ -1105,7 +1105,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '8.0-upload-painel'
+        '8.0.1-upload-painel'
     );
 
     atualizarRelogio();
