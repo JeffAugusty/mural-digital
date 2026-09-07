@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>Painel do Mural Digital</title>
+    <link rel="icon" type="image/png" href="/logo-mural-digital.png?v=1">
+    <link rel="apple-touch-icon" href="/logo-mural-digital.png?v=1">
     <style>
         :root {
             --azul: #0067b9;
@@ -72,6 +74,20 @@
         .login-apresentacao {
             max-width: 730px;
             color: #fff;
+        }
+        .login-logo-oficial {
+            width: min(500px, 88%);
+            margin: 0 auto;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,.78);
+            border-radius: 26px;
+            background: #fff;
+            box-shadow: 0 28px 75px rgba(0,20,55,.3);
+        }
+        .login-logo-oficial img {
+            display: block;
+            width: 100%;
+            height: auto;
         }
         .login-marca {
             display: flex;
@@ -623,16 +639,24 @@
             border-bottom: 1px solid rgba(255,255,255,.12);
         }
         .menu-marca-icone {
+            position: relative;
             width: 42px;
             height: 42px;
             flex: 0 0 auto;
-            display: grid;
-            place-items: center;
+            overflow: hidden;
             border-radius: 12px;
             color: #073f70;
             background: #fff;
         }
-        .menu-marca-icone svg { width: 25px; height: 25px; }
+        .menu-marca-icone img {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 65px;
+            max-width: none;
+            height: 65px;
+            transform: translateX(-50%);
+        }
         .menu-marca strong {
             display: block;
             font-size: 17px;
@@ -930,6 +954,10 @@
             .login-marca { gap: 15px; }
             .login-marca-icone { width: 68px; }
             .login-marca h1 { font-size: clamp(35px, 11vw, 48px); }
+            .login-logo-oficial {
+                width: min(320px, 92%);
+                border-radius: 20px;
+            }
             .login-descricao {
                 max-width: 360px;
                 font-size: 17px;
@@ -998,20 +1026,9 @@
     <section id="login-tela" class="login-tela">
         <div class="login-conteudo">
             <div class="login-apresentacao">
-                <div class="login-marca">
-                    <div class="login-marca-icone" aria-hidden="true">
-                        <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="13" y="19" width="114" height="79" rx="10" stroke="white" stroke-width="8"/>
-                            <rect x="28" y="35" width="34" height="29" rx="3" fill="#0875D1"/>
-                            <path d="M75 39H111M75 51H111M75 63H103" stroke="#9DCEFF" stroke-width="7" stroke-linecap="round"/>
-                            <path d="M34 79H59" stroke="#FFD13D" stroke-width="7" stroke-linecap="round"/>
-                            <path d="M70 100V117M45 121H95" stroke="white" stroke-width="8" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                    <h1>Mural Digital</h1>
+                <div class="login-logo-oficial">
+                    <img src="/logo-mural-digital.png?v=1" alt="Mural Digital — Comunica, Exibe, Conecta">
                 </div>
-                <div class="login-detalhe"></div>
-                <p class="login-descricao">Comunicação institucional de forma simples, rápida e organizada.</p>
             </div>
 
             <form id="login-form" class="login-card" autocomplete="off">
@@ -1051,10 +1068,7 @@
         <aside class="menu-lateral" aria-label="Navegação do painel">
             <div class="menu-marca">
                 <div class="menu-marca-icone" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <rect x="3" y="4" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                        <path d="M8 21h8M12 17v4M7 8h4v4H7V8Zm7 0h3M14 11h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <img src="/logo-mural-digital.png?v=1" alt="">
                 </div>
                 <div class="menu-marca-texto">
                     <strong>Mural Digital</strong>
