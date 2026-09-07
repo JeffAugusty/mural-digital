@@ -21,6 +21,7 @@
         body {
             margin: 0;
             min-height: 100vh;
+            overflow-x: hidden;
             font-family: Arial, Helvetica, sans-serif;
             color: var(--texto);
             background: var(--fundo);
@@ -612,10 +613,12 @@
 
         /* NOVO LAYOUT DO PAINEL ADMINISTRATIVO */
         #admin-app {
-            min-height: 100vh;
+            height: 100vh;
             display: grid;
-            grid-template-columns: 258px minmax(0, 1fr);
+            grid-template-columns: 224px minmax(0, 1fr);
+            overflow: hidden;
             background: var(--fundo);
+            font-size: 14px;
         }
         #admin-app.oculto { display: none !important; }
 
@@ -626,7 +629,9 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 24px 16px 18px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 20px 12px 16px;
             color: #fff;
             background: linear-gradient(180deg, #073f70 0%, #042c54 100%);
             box-shadow: 8px 0 28px rgba(18, 46, 76, .12);
@@ -634,33 +639,31 @@
         .menu-marca {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 2px 10px 25px;
+            gap: 8px;
+            padding: 0 5px 20px;
             border-bottom: 1px solid rgba(255,255,255,.12);
         }
         .menu-marca-icone {
             position: relative;
-            width: 42px;
-            height: 42px;
+            width: 62px;
+            height: 50px;
             flex: 0 0 auto;
             overflow: hidden;
-            border-radius: 12px;
-            color: #073f70;
-            background: #fff;
+            background: transparent;
         }
         .menu-marca-icone img {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 54px;
+            width: 76px;
             max-width: none;
-            height: 54px;
+            height: 76px;
             object-fit: contain;
             transform: translate(-50%, -50%);
         }
         .menu-marca strong {
             display: block;
-            font-size: 17px;
+            font-size: 16px;
             line-height: 1.1;
         }
         .menu-marca small {
@@ -758,15 +761,20 @@
             white-space: nowrap;
         }
 
-        .admin-conteudo { min-width: 0; }
+        .admin-conteudo {
+            min-width: 0;
+            height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
         .topo {
-            min-height: 94px;
-            padding: 22px clamp(22px, 3vw, 46px);
+            min-height: 76px;
+            padding: 16px clamp(20px, 2.5vw, 36px);
             color: var(--texto);
             background: #fff;
             border-bottom: 1px solid var(--borda);
         }
-        .topo h1 { font-size: clamp(22px, 2vw, 29px); }
+        .topo h1 { font-size: clamp(20px, 1.8vw, 26px); }
         .topo p {
             margin: 6px 0 0;
             color: #667085;
@@ -793,19 +801,52 @@
         }
 
         .painel-secao {
+            width: 100%;
+            max-width: 1600px;
             display: none;
-            padding: 26px clamp(18px, 3vw, 42px) 50px;
+            margin: 0 auto;
+            padding: 18px clamp(16px, 2.2vw, 30px) 32px;
         }
         .painel-secao.ativo { display: block; }
         .pagina {
             width: 100%;
             margin: 0;
+            gap: 18px;
         }
         .painel-imagens {
             width: 100%;
             margin: 0;
         }
         .painel-midias-youtube { margin-bottom: 0; }
+        .painel-secao .card {
+            padding: 18px;
+            border-radius: 15px;
+        }
+        .painel-secao .card-cabecalho { margin-bottom: 15px; }
+        .painel-secao .card h2 { font-size: 18px; }
+        .painel-secao .imagem-layout {
+            grid-template-columns: minmax(300px, .76fr) minmax(0, 1.24fr);
+            gap: 18px;
+        }
+        .painel-secao .imagem-formulario {
+            padding: 16px;
+            border-radius: 12px;
+        }
+        .painel-secao .grade { gap: 12px 14px; }
+        .painel-secao .campo { gap: 5px; }
+        .painel-secao input,
+        .painel-secao textarea,
+        .painel-secao select { padding: 9px 10px; }
+        .painel-secao .botoes { margin-top: 16px; }
+        .painel-secao .imagem-preview,
+        .painel-secao .midia-preview {
+            height: 160px;
+            aspect-ratio: auto;
+            margin-bottom: 13px;
+        }
+        .painel-secao .imagem-lista {
+            max-height: calc(100vh - 175px);
+        }
 
         .resumo-grade {
             display: grid;
@@ -914,13 +955,63 @@
         .atalho-seta { color: #98a2b3; }
 
         @media (max-width: 1180px) {
-            #admin-app { grid-template-columns: 224px minmax(0, 1fr); }
+            #admin-app { grid-template-columns: 82px minmax(0, 1fr); }
+            .menu-lateral { padding: 16px 9px 13px; }
+            .menu-marca { justify-content: center; padding: 0 0 18px; }
+            .menu-marca-icone { width: 62px; height: 48px; }
+            .menu-marca-icone img { width: 74px; height: 74px; }
+            .menu-marca-texto,
+            .menu-titulo,
+            .menu-item span,
+            .menu-abrir-mural span,
+            .menu-sair span,
+            .menu-usuario { display: none; }
+            .menu-item,
+            .menu-abrir-mural,
+            .menu-sair { justify-content: center; padding: 11px; }
+            .menu-rodape { gap: 8px; }
             .visao-grade { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 1000px) {
             .pagina { grid-template-columns: 1fr; }
             .imagem-layout { grid-template-columns: 1fr; }
+            .painel-secao .imagem-layout { grid-template-columns: 1fr; }
+            .painel-secao .imagem-lista { max-height: none; }
+        }
+
+        @media (max-height: 800px) and (min-width: 1001px) {
+            .topo {
+                min-height: 68px;
+                padding-top: 12px;
+                padding-bottom: 12px;
+            }
+            .painel-secao { padding-top: 13px; }
+            .painel-secao .card { padding: 15px; }
+            .painel-secao .card-cabecalho { margin-bottom: 12px; }
+            .painel-secao .imagem-formulario { padding: 13px; }
+            .painel-secao .grade { gap: 9px 12px; }
+            .painel-secao input,
+            .painel-secao textarea,
+            .painel-secao select { padding: 8px 9px; }
+            .painel-secao .imagem-preview,
+            .painel-secao .midia-preview {
+                height: 132px;
+                margin-bottom: 10px;
+            }
+            .painel-secao .botoes { margin-top: 12px; }
+        }
+
+        @media (max-height: 650px) {
+            .menu-lateral { padding-top: 10px; padding-bottom: 10px; }
+            .menu-marca { padding-bottom: 10px; }
+            .menu-titulo { margin-top: 13px; margin-bottom: 6px; }
+            .menu-navegacao { gap: 4px; }
+            .menu-item { min-height: 40px; padding-top: 8px; padding-bottom: 8px; }
+            .menu-rodape { gap: 6px; padding-top: 9px; }
+            .menu-abrir-mural,
+            .menu-sair { min-height: 38px; }
+            .menu-usuario { padding-top: 3px; }
         }
         @media (max-width: 900px) {
             .login-tela {
