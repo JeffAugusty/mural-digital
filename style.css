@@ -433,6 +433,165 @@ body {
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
 }
 
+/* YOUTUBE: VÍDEOS E TRANSMISSÕES */
+
+.tela-youtube {
+    --midia-cor-principal: #004a8f;
+    --midia-cor-secundaria: #0077c8;
+    color: #fff;
+    background: linear-gradient(135deg, var(--midia-cor-principal), var(--midia-cor-secundaria));
+}
+
+.youtube-fundo {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.22), transparent 27%),
+        radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.12), transparent 34%);
+}
+
+.youtube-fundo::before {
+    content: "";
+    position: absolute;
+    right: -20vw;
+    bottom: -38vw;
+    width: 60vw;
+    height: 60vw;
+    border: 8vw solid rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+}
+
+.youtube-card {
+    position: relative;
+    z-index: 2;
+    width: min(91vw, 145.78vh);
+    aspect-ratio: 16 / 9;
+    max-height: 82vh;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: clamp(24px, 3vw, 55px);
+    box-shadow: 0 5vh 12vh rgba(0, 0, 0, 0.38);
+}
+
+.youtube-player {
+    position: absolute;
+    inset: 0;
+}
+
+.youtube-player iframe {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+    pointer-events: none;
+}
+
+.youtube-carregando {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    color: rgba(255, 255, 255, 0.72);
+    background: #050505;
+    font-size: clamp(16px, 1.5vw, 28px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.youtube-selo {
+    position: absolute;
+    top: clamp(16px, 2vw, 34px);
+    left: clamp(16px, 2vw, 34px);
+    z-index: 5;
+    padding: clamp(7px, 0.7vw, 12px) clamp(13px, 1.2vw, 22px);
+    color: #fff;
+    background: rgba(14, 18, 28, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 100px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    font-size: clamp(11px, 0.95vw, 18px);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.youtube-selo-live {
+    background: rgba(205, 20, 36, 0.94);
+}
+
+.youtube-selo-live::before {
+    content: "";
+    display: inline-block;
+    width: 0.62em;
+    height: 0.62em;
+    margin-right: 0.55em;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.65);
+    animation: youtube-pulso 1.7s infinite;
+}
+
+@keyframes youtube-pulso {
+    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.62); }
+    70% { box-shadow: 0 0 0 0.55em rgba(255, 255, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.youtube-titulo {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    padding: clamp(45px, 8vh, 100px) clamp(18px, 2.4vw, 44px) clamp(18px, 2.4vw, 38px);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.84), transparent);
+    color: #fff;
+    font-size: clamp(19px, 2vw, 38px);
+    font-weight: 800;
+    line-height: 1.1;
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.85);
+}
+
+.youtube-aviso-som {
+    position: absolute;
+    right: clamp(16px, 2vw, 34px);
+    top: clamp(16px, 2vw, 34px);
+    z-index: 6;
+    display: none;
+    max-width: 42%;
+    padding: 8px 13px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.78);
+    border-radius: 100px;
+    font-size: clamp(10px, 0.8vw, 15px);
+    font-weight: 700;
+    text-align: center;
+}
+
+.youtube-aviso-som.visivel {
+    display: block;
+}
+
+.youtube-logo {
+    position: absolute;
+    right: 4.8vw;
+    bottom: 1.2vh;
+    z-index: 10;
+    width: clamp(135px, 14vw, 260px);
+    height: 5.5vh;
+    object-fit: contain;
+    object-position: right center;
+    background: transparent;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
+}
+
 /* COMUNICADOS */
 
 .tela-comunicado {
@@ -485,6 +644,10 @@ body {
 
     .contador-bloco {
         min-width: 52px;
+    }
+
+    .youtube-card {
+        max-height: 84vh;
     }
 }
 
@@ -581,5 +744,16 @@ body {
     .evento-qr-texto,
     .evento-dominio {
         display: none;
+    }
+
+    .youtube-card {
+        width: 90vw;
+        max-height: 70vh;
+        border-radius: 6vw;
+    }
+
+    .youtube-logo {
+        right: 5vw;
+        width: 30vw;
     }
 }

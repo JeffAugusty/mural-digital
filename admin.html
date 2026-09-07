@@ -381,7 +381,11 @@
 
         .painel-imagens {
             width: min(1460px, calc(100% - 32px));
-            margin: 0 auto 60px;
+            margin: 0 auto 24px;
+        }
+
+        .painel-midias-youtube {
+            margin-bottom: 60px;
         }
         .imagem-layout {
             display: grid;
@@ -495,6 +499,99 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 6px;
+        }
+
+        .midia-preview {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            margin-bottom: 16px;
+            color: rgba(255,255,255,.72);
+            background: linear-gradient(135deg, #004a8f, #0077c8);
+            border: 1px solid #d7e0ea;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .midia-preview::after {
+            content: "";
+            position: absolute;
+            inset: 7%;
+            border: 1px solid rgba(255,255,255,.28);
+            border-radius: 10%;
+            background: rgba(0,0,0,.3);
+        }
+        .midia-preview img {
+            position: absolute;
+            inset: 7%;
+            z-index: 1;
+            width: 86%;
+            height: 86%;
+            object-fit: cover;
+            border-radius: 10%;
+            background: #050505;
+        }
+        .midia-preview-placeholder {
+            position: relative;
+            z-index: 2;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .midia-preview-selo {
+            position: absolute;
+            top: 11%;
+            left: 11%;
+            z-index: 3;
+            padding: 5px 9px;
+            color: #fff;
+            background: rgba(15,23,42,.86);
+            border-radius: 999px;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .08em;
+        }
+        .midia-preview-selo.live { background: #cc1628; }
+        .midia-preview-titulo {
+            position: absolute;
+            right: 11%;
+            bottom: 11%;
+            left: 11%;
+            z-index: 3;
+            overflow: hidden;
+            color: #fff;
+            font-size: clamp(11px, 1.2vw, 18px);
+            font-weight: 800;
+            text-align: left;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 2px 7px #000;
+        }
+        #midia-cor-principal,
+        #midia-cor-secundaria {
+            height: 48px;
+            padding: 4px;
+            cursor: pointer;
+        }
+        .midia-miniatura {
+            position: relative;
+        }
+        .midia-miniatura::after {
+            content: "▶";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: grid;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            background: rgba(204, 22, 40, .92);
+            border-radius: 50%;
+            font-size: 14px;
+            box-shadow: 0 4px 13px rgba(0,0,0,.35);
         }
 
         @media (max-width: 1000px) {
@@ -837,6 +934,105 @@
                 </div>
             </div>
         </section>
+
+        <section class="card painel-imagens painel-midias-youtube">
+            <div class="card-cabecalho">
+                <div>
+                    <h2>Vídeos e transmissões do YouTube</h2>
+                    <p class="imagem-ajuda">Anúncios entram na rotação e tocam até o fim. Uma live ativa permanece fixa na TV.</p>
+                </div>
+                <span id="total-midias">0 mídias</span>
+            </div>
+
+            <div id="midia-mensagem" class="mensagem oculto"></div>
+
+            <div class="imagem-layout">
+                <form id="midia-form" class="imagem-formulario">
+                    <input id="midia-id" type="hidden">
+
+                    <h3 id="midia-form-titulo">Novo vídeo ou live</h3>
+
+                    <div id="midia-preview" class="midia-preview">
+                        <span class="midia-preview-placeholder">Prévia do YouTube</span>
+                        <span id="midia-preview-selo" class="midia-preview-selo">VÍDEO</span>
+                        <strong id="midia-preview-titulo" class="midia-preview-titulo">Título da mídia</strong>
+                    </div>
+
+                    <div class="grade">
+                        <div class="campo campo-largo">
+                            <label class="linha-check">
+                                <input id="midia-ativa" type="checkbox" checked>
+                                Exibir esta mídia no mural
+                            </label>
+                        </div>
+
+                        <div class="campo campo-largo">
+                            <label for="midia-titulo">Título</label>
+                            <input id="midia-titulo" maxlength="120" required placeholder="Ex.: Expopec 2026 ou Transmissão do evento">
+                        </div>
+
+                        <div class="campo campo-largo">
+                            <label for="midia-url">Link do YouTube</label>
+                            <input id="midia-url" type="url" required placeholder="https://www.youtube.com/watch?v=...">
+                            <p class="imagem-ajuda">Aceita links de vídeos, Shorts e transmissões ao vivo do YouTube.</p>
+                        </div>
+
+                        <div class="campo">
+                            <label for="midia-tipo">Tipo de conteúdo</label>
+                            <select id="midia-tipo">
+                                <option value="video">Anúncio / vídeo</option>
+                                <option value="live">Transmissão ao vivo</option>
+                            </select>
+                        </div>
+
+                        <div class="campo">
+                            <label for="midia-ordem">Ordem de exibição</label>
+                            <input id="midia-ordem" type="number" min="0" max="999" value="0" required>
+                        </div>
+
+                        <div class="campo campo-largo">
+                            <label class="linha-check">
+                                <input id="midia-com-som" type="checkbox">
+                                Reproduzir com som
+                            </label>
+                            <p class="imagem-ajuda">Para anúncios, recomendamos deixar sem som. Em uma live, marque esta opção quando precisar do áudio na TV.</p>
+                        </div>
+
+                        <div class="campo">
+                            <label for="midia-inicio">Exibir a partir de (opcional)</label>
+                            <input id="midia-inicio" type="datetime-local">
+                        </div>
+
+                        <div class="campo">
+                            <label for="midia-fim">Exibir até (opcional)</label>
+                            <input id="midia-fim" type="datetime-local">
+                        </div>
+
+                        <div class="campo">
+                            <label for="midia-cor-principal">Cor principal</label>
+                            <input id="midia-cor-principal" type="color" value="#004a8f">
+                        </div>
+
+                        <div class="campo">
+                            <label for="midia-cor-secundaria">Cor secundária</label>
+                            <input id="midia-cor-secundaria" type="color" value="#0077c8">
+                        </div>
+                    </div>
+
+                    <div class="botoes">
+                        <button id="midia-cancelar-botao" class="botao botao-secundario oculto" type="button">Cancelar edição</button>
+                        <button id="midia-salvar-botao" class="botao botao-primario" type="submit">Salvar mídia</button>
+                    </div>
+                </form>
+
+                <div class="imagem-listagem">
+                    <h3>Vídeos e lives cadastrados</h3>
+                    <div id="lista-midias" class="imagem-lista">
+                        <div class="vazio">Carregando vídeos e lives...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script type="module">
@@ -882,6 +1078,7 @@
 
         const TEMPO_INATIVIDADE = 10 * 60 * 1000;
         const ID_CONFIGURACAO_IMAGENS = 'configuracao-imagens-mural';
+        const ID_CONFIGURACAO_MIDIAS_YOUTUBE = 'configuracao-videos-mural';
         const TAMANHO_MAXIMO_IMAGEM = 8 * 1024 * 1024;
         const TIPOS_IMAGEM_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
         const LARGURA_MAXIMA_IMAGEM = 1920;
@@ -889,8 +1086,10 @@
 
         let eventos = [];
         let imagens = [];
+        let midiasYoutube = [];
         let pararEscuta = null;
         let pararEscutaImagens = null;
+        let pararEscutaMidias = null;
         let timerInatividade = null;
         let urlPreviewImagem = '';
 
@@ -900,6 +1099,7 @@
         const form = $('#evento-form');
         const loginForm = $('#login-form');
         const imagemForm = $('#imagem-form');
+        const midiaForm = $('#midia-form');
 
         function limparCamposLogin() {
             loginForm.reset();
@@ -1146,7 +1346,9 @@
                     .map(documento => ({ id: documento.id, ...documento.data() }))
                     .filter(evento =>
                         evento.id !== ID_CONFIGURACAO_IMAGENS &&
-                        evento.tipo !== 'configuracao-imagens'
+                        evento.id !== ID_CONFIGURACAO_MIDIAS_YOUTUBE &&
+                        evento.tipo !== 'configuracao-imagens' &&
+                        evento.tipo !== 'configuracao-videos'
                     );
                 renderizarEventos();
             }, erro => {
@@ -1534,6 +1736,237 @@
             }
         }
 
+        function extrairIdYoutube(valor) {
+            const texto = String(valor || '').trim();
+
+            if (/^[a-zA-Z0-9_-]{11}$/.test(texto)) {
+                return texto;
+            }
+
+            try {
+                const url = new URL(texto);
+                const dominio = url.hostname.replace(/^www\./, '').toLowerCase();
+                let id = '';
+
+                if (dominio === 'youtu.be') {
+                    id = url.pathname.split('/').filter(Boolean)[0] || '';
+                } else if (
+                    dominio === 'youtube.com' ||
+                    dominio === 'm.youtube.com' ||
+                    dominio === 'music.youtube.com'
+                ) {
+                    id = url.searchParams.get('v') || '';
+
+                    if (!id) {
+                        const partes = url.pathname.split('/').filter(Boolean);
+                        if (['embed', 'live', 'shorts'].includes(partes[0])) {
+                            id = partes[1] || '';
+                        }
+                    }
+                }
+
+                return /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : '';
+            } catch {
+                return '';
+            }
+        }
+
+        function criarIdMidia() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return window.crypto.randomUUID();
+            }
+
+            return `youtube-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        }
+
+        function formatarDataHoraMidia(valor) {
+            if (!valor || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(valor)) {
+                return '';
+            }
+
+            const [data, hora] = valor.split('T');
+            return `${formatarData(data)} às ${hora.slice(0, 5)}`;
+        }
+
+        function periodoMidia(item) {
+            const inicio = formatarDataHoraMidia(item.inicio) || 'sem início definido';
+            const fim = formatarDataHoraMidia(item.fim) || 'sem encerramento definido';
+            return `${inicio} até ${fim}`;
+        }
+
+        function atualizarPreviewMidia() {
+            const area = $('#midia-preview');
+            const videoId = extrairIdYoutube($('#midia-url').value);
+            const tipo = $('#midia-tipo').value === 'live' ? 'live' : 'video';
+            const imagemAnterior = area.querySelector('img');
+
+            if (imagemAnterior) {
+                imagemAnterior.remove();
+            }
+
+            area.style.background = `linear-gradient(135deg, ${$('#midia-cor-principal').value}, ${$('#midia-cor-secundaria').value})`;
+            $('#midia-preview-selo').textContent = tipo === 'live' ? 'AO VIVO' : 'VÍDEO';
+            $('#midia-preview-selo').classList.toggle('live', tipo === 'live');
+            $('#midia-preview-titulo').textContent = $('#midia-titulo').value.trim() || 'Título da mídia';
+
+            if (videoId) {
+                const imagem = document.createElement('img');
+                imagem.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+                imagem.alt = 'Prévia do vídeo do YouTube';
+                area.prepend(imagem);
+            }
+
+            const placeholder = area.querySelector('.midia-preview-placeholder');
+            if (placeholder) {
+                placeholder.style.display = videoId ? 'none' : '';
+            }
+        }
+
+        function limparFormularioMidia() {
+            midiaForm.reset();
+            $('#midia-id').value = '';
+            $('#midia-ativa').checked = true;
+            $('#midia-com-som').checked = false;
+            $('#midia-tipo').value = 'video';
+            $('#midia-ordem').value = 0;
+            $('#midia-cor-principal').value = '#004a8f';
+            $('#midia-cor-secundaria').value = '#0077c8';
+            $('#midia-form-titulo').textContent = 'Novo vídeo ou live';
+            $('#midia-salvar-botao').textContent = 'Salvar mídia';
+            $('#midia-cancelar-botao').classList.add('oculto');
+            esconderMensagem($('#midia-mensagem'));
+            atualizarPreviewMidia();
+        }
+
+        function renderizarMidiasYoutube() {
+            const lista = $('#lista-midias');
+            const ordenadas = [...midiasYoutube].sort((a, b) =>
+                (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
+                String(a.titulo || '').localeCompare(String(b.titulo || ''))
+            );
+
+            $('#total-midias').textContent = `${ordenadas.length} mídia${ordenadas.length === 1 ? '' : 's'}`;
+
+            if (!ordenadas.length) {
+                lista.innerHTML = '<div class="vazio">Nenhum vídeo ou live cadastrado.</div>';
+                return;
+            }
+
+            lista.innerHTML = ordenadas.map(item => {
+                const videoId = extrairIdYoutube(item.url || item.link);
+                const miniatura = videoId
+                    ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+                    : '';
+                const tipo = item.tipo === 'live' ? 'Live' : 'Anúncio';
+
+                return `
+                    <article class="imagem-item">
+                        <div class="imagem-miniatura midia-miniatura">
+                            ${miniatura ? `<img src="${miniatura}" alt="${escaparHTML(item.titulo || 'Vídeo do YouTube')}" loading="lazy">` : ''}
+                        </div>
+                        <div class="imagem-dados">
+                            <h4>${escaparHTML(item.titulo || 'Mídia sem título')}</h4>
+                            <div class="imagem-status-linha">
+                                <span class="status ${item.ativo !== false ? 'status-ativo' : 'status-inativo'}">
+                                    ${item.ativo !== false ? 'Ativa' : 'Inativa'}
+                                </span>
+                                <span class="status">${tipo}</span>
+                                <span class="status">${item.comSom === true ? 'Com som' : 'Sem som'}</span>
+                                <span class="status">Ordem ${Number(item.ordem || 0)}</span>
+                            </div>
+                            <p>${escaparHTML(periodoMidia(item))}</p>
+                        </div>
+                        <div class="imagem-acoes">
+                            <button type="button" data-acao-midia="editar" data-id="${item.id}">Editar</button>
+                            <button type="button" data-acao-midia="alternar" data-id="${item.id}">
+                                ${item.ativo !== false ? 'Desativar' : 'Ativar'}
+                            </button>
+                            <button type="button" class="excluir" data-acao-midia="excluir" data-id="${item.id}">Excluir</button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function salvarListaMidias(novaLista) {
+            await setDoc(
+                doc(db, 'eventos', ID_CONFIGURACAO_MIDIAS_YOUTUBE),
+                {
+                    tipo: 'configuracao-videos',
+                    midias: novaLista,
+                    atualizadoEm: serverTimestamp()
+                },
+                { merge: true }
+            );
+        }
+
+        function iniciarEscutaMidias() {
+            if (pararEscutaMidias) pararEscutaMidias();
+
+            pararEscutaMidias = onSnapshot(
+                doc(db, 'eventos', ID_CONFIGURACAO_MIDIAS_YOUTUBE),
+                documento => {
+                    const dados = documento.exists() ? documento.data() : {};
+                    midiasYoutube = Array.isArray(dados.midias) ? dados.midias : [];
+                    renderizarMidiasYoutube();
+                },
+                erro => {
+                    $('#lista-midias').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar vídeos e lives: ${escaparHTML(erro.message)}</div>`;
+                }
+            );
+        }
+
+        function editarMidia(id) {
+            const item = midiasYoutube.find(midia => midia.id === id);
+            if (!item) return;
+
+            $('#midia-id').value = item.id;
+            $('#midia-ativa').checked = item.ativo !== false;
+            $('#midia-titulo').value = item.titulo || '';
+            $('#midia-url').value = item.url || item.link || '';
+            $('#midia-tipo').value = item.tipo === 'live' ? 'live' : 'video';
+            $('#midia-com-som').checked = item.comSom === true;
+            $('#midia-inicio').value = item.inicio || '';
+            $('#midia-fim').value = item.fim || '';
+            $('#midia-ordem').value = item.ordem || 0;
+            $('#midia-cor-principal').value = (item.corPrincipal || '#004A8F').toLowerCase();
+            $('#midia-cor-secundaria').value = (item.corSecundaria || '#0077C8').toLowerCase();
+            $('#midia-form-titulo').textContent = 'Editar vídeo ou live';
+            $('#midia-salvar-botao').textContent = 'Salvar alterações';
+            $('#midia-cancelar-botao').classList.remove('oculto');
+            atualizarPreviewMidia();
+            midiaForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function alternarMidia(id) {
+            const agora = new Date().toISOString();
+            const novaLista = midiasYoutube.map(item =>
+                item.id === id
+                    ? { ...item, ativo: item.ativo === false, atualizadoEm: agora }
+                    : item
+            );
+
+            try {
+                await salvarListaMidias(novaLista);
+                mostrarMensagem($('#midia-mensagem'), 'Situação da mídia atualizada.', 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#midia-mensagem'), `Não foi possível atualizar: ${erro.message}`);
+            }
+        }
+
+        async function excluirMidia(id) {
+            const item = midiasYoutube.find(midia => midia.id === id);
+            if (!item || !window.confirm(`Excluir definitivamente “${item.titulo}”?`)) return;
+
+            try {
+                await salvarListaMidias(midiasYoutube.filter(midia => midia.id !== id));
+                if ($('#midia-id').value === id) limparFormularioMidia();
+                mostrarMensagem($('#midia-mensagem'), 'Mídia excluída com sucesso.', 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#midia-mensagem'), `Não foi possível excluir: ${erro.message}`);
+            }
+        }
+
         $('#login-form').addEventListener('submit', async evento => {
             evento.preventDefault();
             esconderMensagem($('#login-mensagem'));
@@ -1724,6 +2157,76 @@
             }
         });
 
+        midiaForm.addEventListener('submit', async evento => {
+            evento.preventDefault();
+            esconderMensagem($('#midia-mensagem'));
+
+            const idAtual = $('#midia-id').value;
+            const itemAtual = midiasYoutube.find(item => item.id === idAtual);
+            const titulo = $('#midia-titulo').value.trim();
+            const url = $('#midia-url').value.trim();
+            const youtubeId = extrairIdYoutube(url);
+            const inicio = $('#midia-inicio').value;
+            const fim = $('#midia-fim').value;
+
+            if (!titulo) {
+                mostrarMensagem($('#midia-mensagem'), 'Informe o título do vídeo ou da live.');
+                return;
+            }
+
+            if (!youtubeId) {
+                mostrarMensagem($('#midia-mensagem'), 'Informe um link válido de vídeo ou live do YouTube.');
+                return;
+            }
+
+            if (inicio && fim && inicio > fim) {
+                mostrarMensagem($('#midia-mensagem'), 'O início da exibição não pode ser posterior ao encerramento.');
+                return;
+            }
+
+            const botao = $('#midia-salvar-botao');
+            const agora = new Date().toISOString();
+            const id = itemAtual ? itemAtual.id : criarIdMidia();
+            const novoItem = {
+                id,
+                titulo,
+                url,
+                youtubeId,
+                tipo: $('#midia-tipo').value === 'live' ? 'live' : 'video',
+                comSom: $('#midia-com-som').checked,
+                ativo: $('#midia-ativa').checked,
+                inicio,
+                fim,
+                ordem: Math.max(0, Number($('#midia-ordem').value) || 0),
+                corPrincipal: $('#midia-cor-principal').value.toUpperCase(),
+                corSecundaria: $('#midia-cor-secundaria').value.toUpperCase(),
+                criadoEm: itemAtual?.criadoEm || agora,
+                atualizadoEm: agora
+            };
+
+            const novaLista = itemAtual
+                ? midiasYoutube.map(item => item.id === id ? novoItem : item)
+                : [...midiasYoutube, novoItem];
+
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+
+            try {
+                await salvarListaMidias(novaLista);
+                limparFormularioMidia();
+                mostrarMensagem(
+                    $('#midia-mensagem'),
+                    itemAtual ? 'Mídia atualizada com sucesso.' : 'Mídia salva com sucesso.',
+                    'sucesso'
+                );
+            } catch (erro) {
+                mostrarMensagem($('#midia-mensagem'), `Não foi possível salvar: ${erro.message}`);
+            } finally {
+                botao.disabled = false;
+                botao.textContent = $('#midia-id').value ? 'Salvar alterações' : 'Salvar mídia';
+            }
+        });
+
         $('#lista-eventos').addEventListener('click', evento => {
             const botao = evento.target.closest('button[data-acao]');
             if (!botao) return;
@@ -1740,14 +2243,25 @@
             if (botao.dataset.acaoImagem === 'excluir') excluirImagem(botao.dataset.id);
         });
 
+        $('#lista-midias').addEventListener('click', evento => {
+            const botao = evento.target.closest('button[data-acao-midia]');
+            if (!botao) return;
+            if (botao.dataset.acaoMidia === 'editar') editarMidia(botao.dataset.id);
+            if (botao.dataset.acaoMidia === 'alternar') alternarMidia(botao.dataset.id);
+            if (botao.dataset.acaoMidia === 'excluir') excluirMidia(botao.dataset.id);
+        });
+
         $('#cancelar-botao').addEventListener('click', limparFormulario);
         $('#imagem-cancelar-botao').addEventListener('click', limparFormularioImagem);
+        $('#midia-cancelar-botao').addEventListener('click', limparFormularioMidia);
         $('#sair-botao').addEventListener('click', async () => {
             pararTimerInatividade();
             await signOut(auth);
             limparCamposLogin();
         });
         form.addEventListener('input', atualizarPreview);
+        midiaForm.addEventListener('input', atualizarPreviewMidia);
+        midiaForm.addEventListener('change', atualizarPreviewMidia);
 
         onAuthStateChanged(auth, usuario => {
             if (usuario) {
@@ -1756,11 +2270,13 @@
                 $('#usuario-email').textContent = usuario.email;
                 iniciarEscuta();
                 iniciarEscutaImagens();
+                iniciarEscutaMidias();
                 reiniciarTimerInatividade();
             } else {
                 pararTimerInatividade();
                 if (pararEscuta) pararEscuta();
                 if (pararEscutaImagens) pararEscutaImagens();
+                if (pararEscutaMidias) pararEscutaMidias();
                 adminApp.classList.add('oculto');
                 loginTela.classList.remove('oculto');
                 limparCamposLogin();
@@ -1770,6 +2286,7 @@
         montarTemas();
         limparFormulario();
         limparFormularioImagem();
+        limparFormularioMidia();
     </script>
 </body>
 </html>
