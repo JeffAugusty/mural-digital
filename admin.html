@@ -775,7 +775,6 @@
             <div class="imagem-layout">
                 <form id="imagem-form" class="imagem-formulario">
                     <input id="imagem-id" type="hidden">
-                    <input id="imagem-caminho-atual" type="hidden">
                     <input id="imagem-url-atual" type="hidden">
 
                     <h3 id="imagem-form-titulo">Nova imagem</h3>
@@ -788,7 +787,7 @@
                         <div class="campo campo-largo">
                             <label for="imagem-arquivo">Arquivo da imagem</label>
                             <input id="imagem-arquivo" class="imagem-arquivo" type="file" accept="image/jpeg,image/png,image/webp">
-                            <p class="imagem-ajuda">JPG, PNG ou WebP, com no máximo 8 MB. Ao editar, escolha outro arquivo somente se quiser substituir a imagem.</p>
+                            <p class="imagem-ajuda">JPG, PNG ou WebP, com no máximo 8 MB. O painel otimiza automaticamente a imagem para a TV antes do envio.</p>
                         </div>
 
                         <div class="campo campo-largo">
@@ -850,9 +849,6 @@
             getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
             onSnapshot, serverTimestamp, setDoc
         } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
-        import {
-            getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject
-        } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js';
 
         const firebaseConfig = {
             apiKey: 'AIzaSyBxD5x__EVbG06U4_wz4VRil_e1t-cB3EY',
@@ -866,7 +862,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
         try {
             await setPersistence(auth, browserSessionPersistence);
@@ -889,6 +884,8 @@
         const ID_CONFIGURACAO_IMAGENS = 'configuracao-imagens-mural';
         const TAMANHO_MAXIMO_IMAGEM = 8 * 1024 * 1024;
         const TIPOS_IMAGEM_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
+        const LARGURA_MAXIMA_IMAGEM = 1920;
+        const ALTURA_MAXIMA_IMAGEM = 1080;
 
         let eventos = [];
         let imagens = [];
@@ -1215,7 +1212,6 @@
         function limparFormularioImagem() {
             imagemForm.reset();
             $('#imagem-id').value = '';
-            $('#imagem-caminho-atual').value = '';
             $('#imagem-url-atual').value = '';
             $('#imagem-ativa').checked = true;
             $('#imagem-duracao').value = 15;
@@ -1289,15 +1285,180 @@
             );
         }
 
-        async function removerArquivoStorage(caminho) {
-            if (!caminho) return;
+        async function chamarApiDato(dados, tempoLimite = 20000) {
+            if (!auth.currentUser) {
+                throw new Error('Sua sessão expirou. Entre novamente no painel.');
+            }
+
+            const controlador = new AbortController();
+            const timer = window.setTimeout(() => controlador.abort(), tempoLimite);
+
             try {
-                await deleteObject(storageRef(storage, caminho));
+                const token = await auth.currentUser.getIdToken();
+                const resposta = await fetch('/api/dato-imagens', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados),
+                    signal: controlador.signal
+                });
+
+                const retorno = await resposta.json().catch(() => ({}));
+                if (!resposta.ok) {
+                    throw new Error(retorno.erro || `Falha no servidor (${resposta.status}).`);
+                }
+
+                return retorno;
             } catch (erro) {
-                if (erro.code !== 'storage/object-not-found') {
-                    console.warn('Não foi possível remover o arquivo antigo:', erro);
+                if (erro.name === 'AbortError') {
+                    throw new Error('A operação demorou demais. Tente novamente.');
+                }
+                throw erro;
+            } finally {
+                window.clearTimeout(timer);
+            }
+        }
+
+        function esperar(milissegundos) {
+            return new Promise(resolve => window.setTimeout(resolve, milissegundos));
+        }
+
+        async function carregarImagemNoNavegador(arquivo) {
+            if (typeof createImageBitmap === 'function') {
+                return createImageBitmap(arquivo);
+            }
+
+            const url = URL.createObjectURL(arquivo);
+            try {
+                const imagem = new Image();
+                imagem.src = url;
+                await imagem.decode();
+                return imagem;
+            } finally {
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function canvasParaBlob(canvas) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob(
+                    blob => blob ? resolve(blob) : reject(new Error('Não foi possível otimizar a imagem.')),
+                    'image/webp',
+                    0.84
+                );
+            });
+        }
+
+        async function otimizarImagemParaTv(arquivo) {
+            const imagem = await carregarImagemNoNavegador(arquivo);
+            const larguraOriginal = imagem.naturalWidth || imagem.width;
+            const alturaOriginal = imagem.naturalHeight || imagem.height;
+
+            if (!larguraOriginal || !alturaOriginal) {
+                throw new Error('Não foi possível identificar as dimensões da imagem.');
+            }
+            const escala = Math.min(
+                1,
+                LARGURA_MAXIMA_IMAGEM / larguraOriginal,
+                ALTURA_MAXIMA_IMAGEM / alturaOriginal
+            );
+            const largura = Math.max(1, Math.round(larguraOriginal * escala));
+            const altura = Math.max(1, Math.round(alturaOriginal * escala));
+            const canvas = document.createElement('canvas');
+            canvas.width = largura;
+            canvas.height = altura;
+
+            const contexto = canvas.getContext('2d', { alpha: true });
+            if (!contexto) {
+                throw new Error('O navegador não conseguiu preparar a imagem para envio.');
+            }
+            contexto.imageSmoothingEnabled = true;
+            contexto.imageSmoothingQuality = 'high';
+            contexto.drawImage(imagem, 0, 0, largura, altura);
+
+            if (typeof imagem.close === 'function') {
+                imagem.close();
+            }
+
+            const blob = await canvasParaBlob(canvas);
+            const base = nomeSeguroArquivo(arquivo.name).replace(/\.[^.]+$/, '') || 'imagem';
+
+            return new File([blob], `${base}.webp`, {
+                type: 'image/webp',
+                lastModified: Date.now()
+            });
+        }
+
+        async function enviarBinarioParaDato(url, headers, arquivo) {
+            const controlador = new AbortController();
+            const timer = window.setTimeout(() => controlador.abort(), 90000);
+
+            try {
+                const cabecalhos = new Headers(headers || {});
+                cabecalhos.set('Content-Type', arquivo.type);
+
+                const resposta = await fetch(url, {
+                    method: 'PUT',
+                    headers: cabecalhos,
+                    body: arquivo,
+                    signal: controlador.signal
+                });
+
+                if (!resposta.ok) {
+                    throw new Error(`O armazenamento recusou a imagem (${resposta.status}).`);
+                }
+            } catch (erro) {
+                if (erro.name === 'AbortError') {
+                    throw new Error('O envio da imagem demorou demais. Verifique a conexão e tente novamente.');
+                }
+                throw erro;
+            } finally {
+                window.clearTimeout(timer);
+            }
+        }
+
+        async function enviarImagemParaDato(arquivo, nome) {
+            const permissao = await chamarApiDato({
+                acao: 'solicitar-upload',
+                nomeArquivo: arquivo.name,
+                tipo: arquivo.type
+            });
+
+            await enviarBinarioParaDato(
+                permissao.urlUpload,
+                permissao.headers,
+                arquivo
+            );
+
+            const finalizacao = await chamarApiDato({
+                acao: 'finalizar-upload',
+                caminho: permissao.caminho,
+                nome
+            });
+
+            for (let tentativa = 0; tentativa < 20; tentativa += 1) {
+                await esperar(1200);
+                const consulta = await chamarApiDato({
+                    acao: 'consultar-upload',
+                    jobId: finalizacao.jobId
+                });
+
+                if (!consulta.processando && consulta.arquivo) {
+                    return consulta.arquivo;
                 }
             }
+
+            throw new Error('O DatoCMS demorou demais para processar a imagem. Tente novamente.');
+        }
+
+        async function excluirArquivoDato(uploadId) {
+            if (!uploadId) return;
+            await chamarApiDato({
+                acao: 'excluir-upload',
+                uploadId
+            });
         }
 
         function iniciarEscutaImagens() {
@@ -1321,7 +1482,6 @@
             if (!item) return;
 
             $('#imagem-id').value = item.id;
-            $('#imagem-caminho-atual').value = item.caminho || '';
             $('#imagem-url-atual').value = item.url || '';
             $('#imagem-nome').value = item.nome || '';
             $('#imagem-ativa').checked = item.ativo !== false;
@@ -1358,7 +1518,15 @@
 
             try {
                 await salvarListaImagens(imagens.filter(imagem => imagem.id !== id));
-                await removerArquivoStorage(item.caminho);
+
+                if (item.datoId) {
+                    try {
+                        await excluirArquivoDato(item.datoId);
+                    } catch (erroExclusao) {
+                        console.warn('A imagem saiu do mural, mas o arquivo não foi removido do DatoCMS:', erroExclusao);
+                    }
+                }
+
                 if ($('#imagem-id').value === id) limparFormularioImagem();
                 mostrarMensagem($('#imagem-mensagem'), 'Imagem excluída com sucesso.', 'sucesso');
             } catch (erro) {
@@ -1480,28 +1648,24 @@
 
             const botao = $('#imagem-salvar-botao');
             const id = itemAtual ? itemAtual.id : criarIdImagem();
-            const caminhoAnterior = itemAtual ? itemAtual.caminho || '' : '';
-            let caminho = itemAtual ? itemAtual.caminho || '' : '';
+            const dadoAnteriorId = itemAtual ? itemAtual.datoId || '' : '';
+            let datoId = dadoAnteriorId;
+            let datoPath = itemAtual ? itemAtual.datoPath || '' : '';
             let url = itemAtual ? itemAtual.url || '' : '';
-            let caminhoNovo = '';
+            let novoArquivoDato = null;
 
             botao.disabled = true;
-            botao.textContent = arquivo ? 'Enviando...' : 'Salvando...';
+            botao.textContent = arquivo ? 'Otimizando...' : 'Salvando...';
 
             try {
                 if (arquivo) {
-                    caminhoNovo = `mural-imagens/${id}/${Date.now()}-${nomeSeguroArquivo(arquivo.name)}`;
-                    const referencia = storageRef(storage, caminhoNovo);
-                    const resultado = await uploadBytes(referencia, arquivo, {
-                        contentType: arquivo.type,
-                        cacheControl: 'public,max-age=3600',
-                        customMetadata: {
-                            enviadoPor: auth.currentUser ? auth.currentUser.uid : 'admin'
-                        }
-                    });
-
-                    caminho = resultado.metadata.fullPath;
-                    url = await getDownloadURL(resultado.ref);
+                    const arquivoOtimizado = await otimizarImagemParaTv(arquivo);
+                    botao.textContent = 'Enviando...';
+                    novoArquivoDato = await enviarImagemParaDato(arquivoOtimizado, nome);
+                    botao.textContent = 'Salvando...';
+                    datoId = novoArquivoDato.id;
+                    datoPath = novoArquivoDato.caminho;
+                    url = novoArquivoDato.url;
                 }
 
                 const agora = new Date().toISOString();
@@ -1509,7 +1673,9 @@
                     id,
                     nome,
                     url,
-                    caminho,
+                    provedor: datoId ? 'datocms' : (itemAtual?.provedor || 'legado'),
+                    datoId,
+                    datoPath,
                     ativo: $('#imagem-ativa').checked,
                     exibirDesde,
                     exibirAte,
@@ -1525,8 +1691,12 @@
 
                 await salvarListaImagens(novaLista);
 
-                if (caminhoNovo && caminhoAnterior && caminhoAnterior !== caminhoNovo) {
-                    await removerArquivoStorage(caminhoAnterior);
+                if (novoArquivoDato && dadoAnteriorId && dadoAnteriorId !== novoArquivoDato.id) {
+                    try {
+                        await excluirArquivoDato(dadoAnteriorId);
+                    } catch (erroExclusao) {
+                        console.warn('A imagem antiga não pôde ser removida do DatoCMS:', erroExclusao);
+                    }
                 }
 
                 limparFormularioImagem();
@@ -1536,14 +1706,18 @@
                     'sucesso'
                 );
             } catch (erro) {
-                if (caminhoNovo) {
-                    await removerArquivoStorage(caminhoNovo);
+                if (novoArquivoDato?.id) {
+                    try {
+                        await excluirArquivoDato(novoArquivoDato.id);
+                    } catch (erroLimpeza) {
+                        console.warn('Não foi possível limpar o envio incompleto:', erroLimpeza);
+                    }
                 }
 
-                const mensagem = erro.code === 'storage/unauthorized'
-                    ? 'O Firebase Storage não autorizou o envio. Verifique se o armazenamento está habilitado para usuários autenticados.'
-                    : `Não foi possível salvar a imagem: ${erro.message}`;
-                mostrarMensagem($('#imagem-mensagem'), mensagem);
+                mostrarMensagem(
+                    $('#imagem-mensagem'),
+                    `Não foi possível salvar a imagem: ${erro.message}`
+                );
             } finally {
                 botao.disabled = false;
                 botao.textContent = $('#imagem-id').value ? 'Salvar alterações' : 'Enviar imagem';
