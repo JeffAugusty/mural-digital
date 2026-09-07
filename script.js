@@ -34,7 +34,7 @@ const TEMPO_EVENTO = 25000;
 const TEMPO_COMUNICADO = 15000;
 const CHAVE_CACHE_EVENTOS = 'mural-eventos-firebase-v1';
 const CHAVE_CACHE_COMUNICADOS = 'mural-comunicados-firebase-v1';
-const ID_CONFIGURACAO_IMAGENS = '__imagens_mural__';
+const ID_CONFIGURACAO_IMAGENS = 'configuracao-imagens-mural';
 
 let telas = [];
 let step = 0;
