@@ -1152,9 +1152,8 @@ body {
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
 }
 
-.musica-video-tv,
-.musica-video-alvo,
-.musica-video-alvo iframe {
+.musica-imagem-tv,
+.musica-imagem-tv img {
     position: absolute;
     inset: 0;
     width: 100% !important;
@@ -1162,23 +1161,21 @@ body {
     border: 0;
 }
 
-.musica-video-tv {
+.musica-imagem-tv {
     z-index: 1;
     overflow: hidden;
     background: #050505;
 }
 
-.musica-video-alvo iframe {
+.musica-imagem-tv img {
     display: block;
-    transform: scale(1.025);
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.002);
 }
 
-.musica-video-carregando {
-    z-index: 2;
-    color: rgba(255, 255, 255, 0.74);
-    background:
-        linear-gradient(135deg, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.48)),
-        var(--midia-cor-principal);
+.musica-audio {
+    display: none;
 }
 
 .musica-video-sombra {
@@ -1190,6 +1187,27 @@ body {
         linear-gradient(90deg, rgba(0, 0, 0, 0.34), transparent 48%),
         linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 23%, transparent 58%),
         linear-gradient(180deg, rgba(0, 0, 0, 0.26), transparent 24%);
+}
+
+.musica-aviso-audio {
+    position: absolute;
+    z-index: 8;
+    top: clamp(20px, 3vw, 46px);
+    right: clamp(20px, 3vw, 46px);
+    display: none;
+    max-width: min(460px, 70%);
+    padding: 11px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.68);
+    font-size: clamp(11px, 0.9vw, 15px);
+    text-align: center;
+    backdrop-filter: blur(12px);
+}
+
+.tela-musica.audio-bloqueado .musica-aviso-audio {
+    display: block;
 }
 
 .tela-musica .musica-marca {

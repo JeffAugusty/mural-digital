@@ -1,6 +1,15 @@
 const DATO_API = 'https://site-api.datocms.com';
 const FIREBASE_API_KEY = 'AIzaSyBxD5x__EVbG06U4_wz4VRil_e1t-cB3EY';
-const TIPOS_PERMITIDOS = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const TIPOS_PERMITIDOS = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'audio/mpeg',
+    'audio/mp4',
+    'audio/x-m4a',
+    'audio/wav',
+    'audio/x-wav'
+]);
 
 function responder(res, status, dados) {
     res.setHeader('Cache-Control', 'no-store');
@@ -76,12 +85,12 @@ async function chamarDato(caminho, opcoes = {}) {
 }
 
 function nomeSeguro(nome) {
-    return String(nome || 'imagem.webp')
+    return String(nome || 'arquivo')
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-zA-Z0-9._-]+/g, '-')
         .replace(/^-+|-+$/g, '')
-        .slice(0, 100) || 'imagem.webp';
+        .slice(0, 100) || 'arquivo';
 }
 
 function idSeguro(valor) {
@@ -110,7 +119,7 @@ module.exports = async function handler(req, res) {
         if (acao === 'solicitar-upload') {
             const tipo = String(corpo.tipo || '');
             if (!TIPOS_PERMITIDOS.has(tipo)) {
-                responder(res, 400, { erro: 'Formato de imagem não permitido.' });
+                responder(res, 400, { erro: 'Formato de arquivo não permitido.' });
                 return;
             }
 
@@ -142,7 +151,8 @@ module.exports = async function handler(req, res) {
 
         if (acao === 'finalizar-upload') {
             const caminho = String(corpo.caminho || '');
-            const nome = String(corpo.nome || 'Imagem do mural').trim().slice(0, 100);
+            const nome = String(corpo.nome || 'Arquivo do mural').trim().slice(0, 100);
+            const categoria = corpo.categoria === 'audio' ? 'audio' : 'imagem';
 
             if (!caminho.startsWith('/') || caminho.length > 500) {
                 responder(res, 400, { erro: 'Caminho temporário inválido.' });
@@ -157,8 +167,8 @@ module.exports = async function handler(req, res) {
                         attributes: {
                             path: caminho,
                             author: usuario.email || 'Administrador do mural',
-                            notes: `Imagem do mural: ${nome}`,
-                            tags: ['mural-digital']
+                            notes: `${categoria === 'audio' ? 'Áudio' : 'Imagem'} do mural: ${nome}`,
+                            tags: ['mural-digital', categoria]
                         }
                     }
                 })
@@ -166,7 +176,7 @@ module.exports = async function handler(req, res) {
 
             if (!resposta.ok) {
                 responder(res, resposta.status, {
-                    erro: mensagemDoDato(dados, 'O DatoCMS não conseguiu processar a imagem.')
+                    erro: mensagemDoDato(dados, 'O DatoCMS não conseguiu processar o arquivo.')
                 });
                 return;
             }
@@ -194,7 +204,7 @@ module.exports = async function handler(req, res) {
                 responder(res, resposta.status, {
                     erro: mensagemDoDato(
                         payloadErro,
-                        'O DatoCMS não conseguiu concluir o processamento da imagem.'
+                        'O DatoCMS não conseguiu concluir o processamento do arquivo.'
                     )
                 });
                 return;
@@ -204,7 +214,7 @@ module.exports = async function handler(req, res) {
             const atributos = upload?.attributes || {};
 
             if (!upload?.id || !atributos.url) {
-                responder(res, 502, { erro: 'O DatoCMS concluiu o envio sem retornar a imagem.' });
+                responder(res, 502, { erro: 'O DatoCMS concluiu o envio sem retornar o arquivo.' });
                 return;
             }
 
@@ -225,7 +235,7 @@ module.exports = async function handler(req, res) {
         if (acao === 'excluir-upload') {
             const uploadId = idSeguro(corpo.uploadId);
             if (!uploadId) {
-                responder(res, 400, { erro: 'Identificador da imagem inválido.' });
+                responder(res, 400, { erro: 'Identificador do arquivo inválido.' });
                 return;
             }
 
@@ -235,7 +245,7 @@ module.exports = async function handler(req, res) {
 
             if (!resposta.ok && resposta.status !== 404) {
                 responder(res, resposta.status, {
-                    erro: mensagemDoDato(dados, 'Não foi possível excluir a imagem do DatoCMS.')
+                    erro: mensagemDoDato(dados, 'Não foi possível excluir o arquivo do DatoCMS.')
                 });
                 return;
             }
