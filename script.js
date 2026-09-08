@@ -2051,54 +2051,43 @@ function renderizarMidiasYoutube(lista, forcar = false) {
                 </div>
 
                 <div class="musica-card">
-                    <div class="musica-capa-area">
-                        <div class="musica-capa-fallback" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="6" cy="18" r="3" fill="currentColor"/>
-                                <circle cx="16" cy="16" r="3" fill="currentColor"/>
-                            </svg>
-                        </div>
-                        <img class="musica-capa-imagem carregada" src="${escaparHTML(capaMusica)}" alt="Capa de ${escaparHTML(item.titulo || 'música')}">
+                    <div class="musica-video-tv">
+                        <div class="youtube-carregando musica-video-carregando">Preparando música...</div>
+                        <div class="youtube-player-alvo musica-video-alvo"></div>
                     </div>
 
-                    <div class="musica-painel">
-                        <div class="musica-topo">
-                            <div class="spotify-identidade" aria-label="YouTube Music">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
-                                    <path d="m10 8 6 4-6 4V8Z" fill="currentColor"/>
+                    <div class="musica-video-sombra"></div>
+
+                    <img src="/logo-mural-digital.png?v=2" class="musica-marca" alt="Mural Digital">
+
+                    <div class="musica-info-tv">
+                        <div class="musica-capa-area">
+                            <div class="musica-capa-fallback" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="6" cy="18" r="3" fill="currentColor"/>
+                                    <circle cx="16" cy="16" r="3" fill="currentColor"/>
                                 </svg>
-                                <span>YouTube Music</span>
                             </div>
-
-                            <img src="/logo-mural-digital.png?v=2" class="musica-marca" alt="Mural Digital">
+                            <img class="musica-capa-imagem carregada" src="${escaparHTML(capaMusica)}" alt="Capa de ${escaparHTML(item.titulo || 'música')}">
                         </div>
 
-                        <div class="musica-selo">
-                            <span></span>
-                            Tocando agora
+                        <div class="musica-texto-tv">
+                            <div class="musica-selo">
+                                <span></span>
+                                Tocando agora
+                            </div>
+                            <h1 class="musica-titulo">${escaparHTML(item.titulo || 'Música')}</h1>
+                            <p class="musica-artista">${escaparHTML(item.artista || 'Artista não informado')}</p>
                         </div>
+                    </div>
 
-                        <h1 class="musica-titulo">${escaparHTML(item.titulo || 'Música')}</h1>
-                        <p class="musica-artista">${escaparHTML(item.artista || 'Artista não informado')}</p>
-
-                        <div class="musica-progresso" aria-hidden="true">
-                            <span class="musica-progresso-preenchimento"></span>
-                        </div>
-                        <div class="musica-tempos">
-                            <span class="musica-tempo-atual">0:00</span>
-                            <span class="musica-tempo-total">0:00</span>
-                        </div>
-
-                        <div class="musica-equalizador" aria-hidden="true">
-                            <span></span><span></span><span></span><span></span><span></span>
-                        </div>
-
-                        <div class="spotify-embed-oficial">
-                            <div class="youtube-carregando spotify-carregando">Preparando YouTube...</div>
-                            <div class="youtube-player-alvo spotify-embed-alvo"></div>
-                        </div>
+                    <div class="musica-progresso" aria-hidden="true">
+                        <span class="musica-progresso-preenchimento"></span>
+                    </div>
+                    <div class="musica-tempos">
+                        <span class="musica-tempo-atual">0:00</span>
+                        <span class="musica-tempo-total">0:00</span>
                     </div>
                 </div>
 
@@ -2617,7 +2606,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '9.5.0-musicas-youtube'
+        '9.6.0-musica-tv-imersiva'
     );
 
     atualizarRelogio();

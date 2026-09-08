@@ -1133,3 +1133,223 @@ body {
         display: none;
     }
 }
+
+
+/* ======================================================
+   MÚSICA — EXPERIÊNCIA IMERSIVA PARA TV
+   ====================================================== */
+
+.tela-musica .musica-card {
+    position: relative;
+    display: block;
+    width: min(94vw, 1800px);
+    height: min(90vh, 52.875vw, 950px);
+    max-height: none;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: clamp(22px, 3vw, 46px);
+    background: #050505;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
+}
+
+.musica-video-tv,
+.musica-video-alvo,
+.musica-video-alvo iframe {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+}
+
+.musica-video-tv {
+    z-index: 1;
+    overflow: hidden;
+    background: #050505;
+}
+
+.musica-video-alvo iframe {
+    display: block;
+    transform: scale(1.025);
+}
+
+.musica-video-carregando {
+    z-index: 2;
+    color: rgba(255, 255, 255, 0.74);
+    background:
+        linear-gradient(135deg, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.48)),
+        var(--midia-cor-principal);
+}
+
+.musica-video-sombra {
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.34), transparent 48%),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 23%, transparent 58%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.26), transparent 24%);
+}
+
+.tela-musica .musica-marca {
+    position: absolute;
+    z-index: 6;
+    top: clamp(20px, 3vw, 46px);
+    right: clamp(20px, 3vw, 46px);
+    display: block;
+    width: clamp(105px, 10vw, 170px);
+    max-height: 58px;
+    padding: 7px 11px;
+    border-radius: 12px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.93);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.musica-info-tv {
+    position: absolute;
+    z-index: 5;
+    left: clamp(28px, 4.2vw, 76px);
+    bottom: clamp(52px, 7vh, 92px);
+    display: flex;
+    align-items: center;
+    gap: clamp(16px, 2vw, 30px);
+    max-width: min(72%, 1050px);
+    pointer-events: none;
+}
+
+.tela-musica .musica-capa-area {
+    position: relative;
+    flex: 0 0 auto;
+    display: block;
+    width: clamp(76px, 8.5vw, 142px);
+    height: clamp(76px, 8.5vw, 142px);
+    padding: 0;
+    overflow: hidden;
+    border-radius: clamp(10px, 1.2vw, 18px);
+    background: rgba(18, 18, 18, 0.92);
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.48);
+}
+
+.tela-musica .musica-capa-fallback,
+.tela-musica .musica-capa-imagem {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+}
+
+.tela-musica .musica-capa-fallback svg {
+    width: 42%;
+    height: 42%;
+}
+
+.musica-texto-tv {
+    min-width: 0;
+    text-shadow: 0 3px 18px rgba(0, 0, 0, 0.92);
+}
+
+.tela-musica .musica-selo {
+    width: max-content;
+    margin-bottom: clamp(8px, 1vw, 14px);
+    padding: 5px 10px;
+    border-color: rgba(255, 255, 255, 0.28);
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(0, 0, 0, 0.34);
+    backdrop-filter: blur(8px);
+}
+
+.tela-musica .musica-titulo {
+    max-width: 100%;
+    margin: 0;
+    color: #fff;
+    font-size: clamp(28px, 3.25vw, 58px);
+    line-height: 1.02;
+    white-space: nowrap;
+}
+
+.tela-musica .musica-artista {
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: clamp(14px, 1.35vw, 24px);
+    white-space: nowrap;
+}
+
+.tela-musica .musica-progresso {
+    position: absolute;
+    z-index: 5;
+    left: clamp(28px, 4.2vw, 76px);
+    right: clamp(28px, 4.2vw, 76px);
+    bottom: clamp(24px, 3.2vh, 40px);
+    width: auto;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+}
+
+.tela-musica .musica-tempos {
+    position: absolute;
+    z-index: 5;
+    left: clamp(28px, 4.2vw, 76px);
+    right: clamp(28px, 4.2vw, 76px);
+    bottom: clamp(7px, 1.1vh, 14px);
+    margin: 0;
+    color: rgba(255, 255, 255, 0.68);
+    pointer-events: none;
+}
+
+@media (max-width: 700px) {
+    .tela-musica .musica-card {
+        width: 94vw;
+        height: 52.875vw;
+        min-height: 220px;
+        border-radius: 20px;
+    }
+
+    .tela-musica .musica-marca {
+        top: 14px;
+        right: 14px;
+        width: 82px;
+        padding: 5px 8px;
+        border-radius: 9px;
+    }
+
+    .musica-info-tv {
+        left: 18px;
+        bottom: 38px;
+        gap: 12px;
+        max-width: 78%;
+    }
+
+    .tela-musica .musica-capa-area {
+        width: 62px;
+        height: 62px;
+        border-radius: 9px;
+    }
+
+    .tela-musica .musica-selo {
+        display: none;
+    }
+
+    .tela-musica .musica-titulo {
+        font-size: clamp(18px, 5vw, 26px);
+    }
+
+    .tela-musica .musica-artista {
+        margin-top: 4px;
+        font-size: clamp(11px, 3vw, 15px);
+    }
+
+    .tela-musica .musica-progresso {
+        left: 18px;
+        right: 18px;
+        bottom: 20px;
+    }
+
+    .tela-musica .musica-tempos {
+        display: none;
+    }
+}
