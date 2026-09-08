@@ -50,6 +50,7 @@ let liveFixaId = '';
 let assinaturaMidiasYoutube = '';
 let geracaoMidiasYoutube = 0;
 let somPreviaAdminAtivo = false;
+let idMusicaDaRodada = '';
 
 
 // ======================================================
@@ -1262,6 +1263,7 @@ function pausarPlayersYoutubeExceto(idAtivo) {
 
         try {
             registro.player.pauseVideo();
+            registro.section.classList.remove('tocando');
         } catch {
             // O player ainda pode estar mudando de estado.
         }
@@ -1298,10 +1300,13 @@ function tratarEstadoYoutube(sectionId, estado) {
     }
 
     if (estado === window.YT.PlayerState.PLAYING) {
+        registro.section.classList.add('tocando');
         configurarLegendasYoutube(registro);
         agendarSegurancaYoutube(registro);
         return;
     }
+
+    registro.section.classList.remove('tocando');
 
     if (estado === window.YT.PlayerState.ENDED) {
         if (registro.item.tipo === 'live') {
@@ -1448,6 +1453,7 @@ function assinaturaYoutube(listaVisivel) {
             titulo: item.titulo,
             url: item.url || item.link,
             tipo: item.tipo,
+            artista: item.artista,
             comSom: item.comSom === true,
             comLegenda: item.comLegenda === true,
             ordem: Number(item.ordem || 0),
@@ -1493,8 +1499,19 @@ function renderizarMidiasYoutube(lista, forcar = false) {
     destruirPlayersYoutube();
 
     const live = visiveis.find(item => item.tipo === 'live');
+    const musicas = visiveis.filter(item => item.tipo === 'musica');
+    const musicaDaRodada =
+        musicas.find(item => criarIdTelaYoutube(item, 0) === idMusicaDaRodada) ||
+        musicas[0] ||
+        null;
+
+    idMusicaDaRodada = musicaDaRodada
+        ? criarIdTelaYoutube(musicaDaRodada, 0)
+        : '';
+
     const itensParaExibir = [
-        ...visiveis.filter(item => item.tipo !== 'live'),
+        ...visiveis.filter(item => item.tipo !== 'live' && item.tipo !== 'musica'),
+        ...musicas,
         ...(live ? [live] : [])
     ];
 
@@ -1503,16 +1520,78 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         const videoId = extrairIdYoutube(item.url || item.link);
         const principal = validarCor(item.corPrincipal, '#004A8F');
         const secundaria = validarCor(item.corSecundaria, '#0077C8');
-        const tipo = item.tipo === 'live' ? 'live' : 'video';
+        const tipo = item.tipo === 'live'
+            ? 'live'
+            : item.tipo === 'musica'
+                ? 'musica'
+                : 'video';
+        const musicaSelecionada =
+            tipo === 'musica' &&
+            item === musicaDaRodada;
 
-        section.className = 'tela tela-youtube';
+        section.className = tipo === 'musica'
+            ? `tela-youtube tela-musica${musicaSelecionada ? ' tela' : ' tela-musica-espera'}`
+            : 'tela tela-youtube';
         section.id = criarIdTelaYoutube(item, index);
         section.dataset.tipoMidia = tipo;
-        section.dataset.comSom = item.comSom === true ? 'true' : 'false';
+        section.dataset.comSom = tipo === 'musica' || item.comSom === true ? 'true' : 'false';
         section.style.setProperty('--midia-cor-principal', principal);
         section.style.setProperty('--midia-cor-secundaria', secundaria);
 
-        section.innerHTML = `
+        if (tipo === 'musica') {
+            section.innerHTML = `
+                <div class="musica-fundo"></div>
+
+                <div class="musica-card">
+                    <div class="musica-video">
+                        <div class="youtube-carregando">Preparando música...</div>
+                        <div class="youtube-player">
+                            <div class="youtube-player-alvo"></div>
+                        </div>
+                        <div class="musica-video-sombra"></div>
+                        <div class="youtube-aviso-som">Toque na tela para ativar o som</div>
+                    </div>
+
+                    <div class="musica-painel">
+                        <div class="musica-selo">
+                            <span></span>
+                            Tocando agora
+                        </div>
+
+                        <div class="musica-nota" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="6" cy="18" r="3" fill="currentColor"/>
+                                <circle cx="16" cy="16" r="3" fill="currentColor"/>
+                            </svg>
+                        </div>
+
+                        <p class="musica-playlist-label">Playlist do Mural Digital</p>
+                        <h1 class="musica-titulo">${escaparHTML(item.titulo || 'Música')}</h1>
+                        <p class="musica-artista">${escaparHTML(item.artista || 'Artista não informado')}</p>
+
+                        <div class="musica-progresso" aria-hidden="true">
+                            <span class="musica-progresso-preenchimento"></span>
+                        </div>
+                        <div class="musica-tempos">
+                            <span class="musica-tempo-atual">0:00</span>
+                            <span class="musica-tempo-total">0:00</span>
+                        </div>
+
+                        <div class="musica-equalizador" aria-hidden="true">
+                            <span></span><span></span><span></span><span></span><span></span>
+                        </div>
+
+                        <img src="/logo-mural-digital.png?v=2" class="musica-marca" alt="Mural Digital">
+                    </div>
+                </div>
+
+                <div class="credito-desenvolvedor">
+                    Desenvolvido por <span>Jeferson Augusto</span>
+                </div>
+            `;
+        } else {
+            section.innerHTML = `
             <div class="youtube-fundo"></div>
 
             <div class="youtube-card">
@@ -1543,13 +1622,15 @@ function renderizarMidiasYoutube(lista, forcar = false) {
             <div class="credito-desenvolvedor">
                 Desenvolvido por <span>Jeferson Augusto</span>
             </div>
-        `;
+            `;
+        }
 
         return {
             section,
             item: {
                 ...item,
-                tipo
+                tipo,
+                comSom: tipo === 'musica' ? true : item.comSom
             },
             videoId
         };
@@ -1557,10 +1638,22 @@ function renderizarMidiasYoutube(lista, forcar = false) {
 
     document
         .getElementById('container-midias-youtube')
-        .replaceChildren(...registros.map(registro => registro.section));
+        .replaceChildren(
+            ...registros
+                .filter(registro => registro.item.tipo !== 'musica')
+                .map(registro => registro.section)
+        );
+
+    document
+        .getElementById('container-musicas-youtube')
+        .replaceChildren(
+            ...registros
+                .filter(registro => registro.item.tipo === 'musica')
+                .map(registro => registro.section)
+        );
 
     liveFixaId = live
-        ? criarIdTelaYoutube(live, itensParaExibir.indexOf(live))
+        ? registros.find(registro => registro.item.tipo === 'live')?.section.id || ''
         : '';
 
     sincronizarTelas(
@@ -1636,6 +1729,76 @@ function tentarAtivarSomYoutube() {
     } catch {
         // Uma nova interação do usuário poderá liberar o áudio.
     }
+}
+
+
+function formatarTempoMusica(segundos) {
+    const total = Math.max(0, Math.floor(Number(segundos) || 0));
+    const minutos = Math.floor(total / 60);
+    const restante = total % 60;
+
+    return `${minutos}:${String(restante).padStart(2, '0')}`;
+}
+
+
+function atualizarProgressoMusica() {
+    const section = document.querySelector('.tela-musica.ativa');
+
+    if (!section) return;
+
+    const registro = playersYoutube.get(section.id);
+
+    if (!registro?.pronto) return;
+
+    try {
+        const atual = Math.max(0, Number(registro.player.getCurrentTime()) || 0);
+        const duracao = Math.max(0, Number(registro.player.getDuration()) || 0);
+        const percentual = duracao > 0
+            ? Math.min(100, (atual / duracao) * 100)
+            : 0;
+
+        section.querySelector('.musica-progresso-preenchimento')
+            ?.style.setProperty('width', `${percentual}%`);
+
+        const tempoAtual = section.querySelector('.musica-tempo-atual');
+        const tempoTotal = section.querySelector('.musica-tempo-total');
+
+        if (tempoAtual) tempoAtual.textContent = formatarTempoMusica(atual);
+        if (tempoTotal) tempoTotal.textContent = formatarTempoMusica(duracao);
+    } catch {
+        // O player pode estar trocando de faixa ou sendo reconstruído.
+    }
+}
+
+
+function selecionarProximaMusicaDaRodada() {
+    const musicas = Array.from(document.querySelectorAll('.tela-musica'));
+
+    if (!musicas.length) {
+        idMusicaDaRodada = '';
+        return;
+    }
+
+    const indiceEncontrado = musicas.findIndex(
+        section => section.id === idMusicaDaRodada
+    );
+    const atual = indiceEncontrado >= 0
+        ? indiceEncontrado
+        : -1;
+    const proximo = musicas.length > 1
+        ? (atual + 1) % musicas.length
+        : 0;
+
+    musicas.forEach((section, index) => {
+        section.classList.toggle('tela', index === proximo);
+        section.classList.toggle('tela-musica-espera', index !== proximo);
+    });
+
+    idMusicaDaRodada = musicas[proximo].id;
+
+    const ativa = document.querySelector('.tela.ativa');
+    telas = Array.from(document.querySelectorAll('.tela'));
+    step = Math.max(0, telas.findIndex(tela => tela === ativa));
 }
 
 
@@ -1891,7 +2054,10 @@ function rotacionarTela() {
         return;
     }
 
-    telas[step].classList.remove('ativa');
+    const telaAnterior = telas[step];
+    const terminouMusica = telaAnterior.classList.contains('tela-musica');
+
+    telaAnterior.classList.remove('ativa', 'tocando');
 
     step =
         (step + 1) % telas.length;
@@ -1899,6 +2065,11 @@ function rotacionarTela() {
     telas[step].classList.add('ativa');
 
     controlarVideoClima();
+
+    if (terminouMusica) {
+        selecionarProximaMusicaDaRodada();
+    }
+
     agendarRotacao();
 }
 
@@ -1934,7 +2105,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '9.1-preview-audio'
+        '9.3-player-musical'
     );
 
     atualizarRelogio();
@@ -1968,6 +2139,11 @@ function iniciarMural() {
     window.setInterval(
         () => renderizarMidiasYoutube(midiasYoutube),
         30000
+    );
+
+    window.setInterval(
+        atualizarProgressoMusica,
+        500
     );
 
     document.addEventListener(

@@ -611,6 +611,99 @@
             box-shadow: 0 4px 13px rgba(0,0,0,.35);
         }
 
+        .musica-preview-admin {
+            height: 180px;
+            display: grid;
+            grid-template-columns: 44% minmax(0, 1fr);
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid #1e293b;
+            border-radius: 13px;
+            color: #fff;
+            background: linear-gradient(135deg, #07111f, #0c1d32);
+        }
+        .musica-preview-capa {
+            position: relative;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            color: rgba(255,255,255,.66);
+            background: #05080d;
+        }
+        .musica-preview-capa img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .musica-preview-nota {
+            position: relative;
+            z-index: 2;
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: rgba(0,103,185,.82);
+            font-size: 24px;
+        }
+        .musica-preview-info {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 18px;
+            background: radial-gradient(circle at 90% 10%, rgba(0,119,200,.28), transparent 40%);
+        }
+        .musica-preview-info small {
+            color: #33e28b;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .musica-preview-info strong {
+            overflow: hidden;
+            margin-top: 13px;
+            font-size: 20px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .musica-preview-info > span {
+            overflow: hidden;
+            margin-top: 5px;
+            color: rgba(255,255,255,.65);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .musica-preview-barra {
+            height: 4px;
+            overflow: hidden;
+            margin-top: 22px;
+            border-radius: 99px;
+            background: rgba(255,255,255,.14);
+        }
+        .musica-preview-barra::before {
+            content: "";
+            display: block;
+            width: 38%;
+            height: 100%;
+            background: #33e28b;
+        }
+        #musica-cor-principal,
+        #musica-cor-secundaria {
+            height: 48px;
+            padding: 4px;
+            cursor: pointer;
+        }
+        .musica-miniatura::after {
+            content: "♪";
+            background: rgba(21, 128, 61, .92);
+            font-size: 20px;
+        }
+
         /* NOVO LAYOUT DO PAINEL ADMINISTRATIVO */
         #admin-app {
             height: 100vh;
@@ -850,7 +943,7 @@
 
         .resumo-grade {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 18px;
             margin-bottom: 24px;
         }
@@ -978,6 +1071,7 @@
             .imagem-layout { grid-template-columns: 1fr; }
             .painel-secao .imagem-layout { grid-template-columns: 1fr; }
             .painel-secao .imagem-lista { max-height: none; }
+            .resumo-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
 
         @media (max-height: 800px) and (min-width: 1001px) {
@@ -1186,6 +1280,10 @@
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m10 9 5 3-5 3V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
                     <span>Vídeos e lives</span>
                 </button>
+                <button class="menu-item" type="button" data-secao="musicas" aria-label="Músicas">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+                    <span>Músicas</span>
+                </button>
             </nav>
 
             <div class="menu-rodape">
@@ -1233,6 +1331,12 @@
                         </div>
                         <div><strong id="resumo-midias">0</strong><span>Vídeos e lives</span></div>
                     </article>
+                    <article class="resumo-card">
+                        <div class="resumo-icone" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+                        </div>
+                        <div><strong id="resumo-musicas">0</strong><span>Músicas na playlist</span></div>
+                    </article>
                 </div>
 
                 <div class="visao-grade">
@@ -1268,6 +1372,11 @@
                             <button class="atalho-item" type="button" data-ir-secao="midias">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m10 9 5 3-5 3V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
                                 <span><strong>Vídeos e lives</strong><small>Controlar YouTube e transmissões</small></span>
+                                <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button class="atalho-item" type="button" data-ir-secao="musicas">
+                                <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"/></svg></span>
+                                <span><strong>Músicas</strong><small>Organizar a playlist do mural</small></span>
                                 <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                         </div>
@@ -1596,6 +1705,109 @@
             </div>
                 </section>
             </section>
+
+            <section class="painel-secao" data-painel="musicas">
+                <section class="card painel-imagens painel-midias-youtube">
+                    <div class="card-cabecalho">
+                        <div>
+                            <h2>Playlist musical do mural</h2>
+                            <p class="imagem-ajuda">Uma música toca por completo depois de cada rodada dos avisos. Na rodada seguinte, o mural avança para a próxima faixa.</p>
+                        </div>
+                        <span id="total-musicas">0 músicas</span>
+                    </div>
+
+                    <div id="musica-mensagem" class="mensagem oculto"></div>
+
+                    <div class="imagem-layout">
+                        <form id="musica-form" class="imagem-formulario">
+                            <input id="musica-id" type="hidden">
+
+                            <h3 id="musica-form-titulo">Nova música</h3>
+
+                            <div id="musica-preview" class="musica-preview-admin">
+                                <div class="musica-preview-capa">
+                                    <span class="musica-preview-nota">♪</span>
+                                </div>
+                                <div class="musica-preview-info">
+                                    <small>Tocando agora</small>
+                                    <strong id="musica-preview-titulo">Nome da música</strong>
+                                    <span id="musica-preview-artista">Nome do artista</span>
+                                    <div class="musica-preview-barra"></div>
+                                </div>
+                            </div>
+
+                            <div class="grade">
+                                <div class="campo campo-largo">
+                                    <label class="linha-check">
+                                        <input id="musica-ativa" type="checkbox" checked>
+                                        Exibir esta música no mural
+                                    </label>
+                                </div>
+
+                                <div class="campo campo-largo">
+                                    <label for="musica-titulo">Nome da música</label>
+                                    <input id="musica-titulo" maxlength="120" required placeholder="Ex.: Viva La Vida">
+                                </div>
+
+                                <div class="campo campo-largo">
+                                    <label for="musica-artista">Artista</label>
+                                    <input id="musica-artista" maxlength="120" required placeholder="Ex.: Coldplay">
+                                </div>
+
+                                <div class="campo campo-largo">
+                                    <label for="musica-url">Link oficial do YouTube</label>
+                                    <input id="musica-url" type="url" required placeholder="https://www.youtube.com/watch?v=...">
+                                    <p class="imagem-ajuda">O vídeo permanecerá visível no player e a música tocará até o fim.</p>
+                                </div>
+
+                                <div class="campo">
+                                    <label for="musica-ordem">Ordem na playlist</label>
+                                    <input id="musica-ordem" type="number" min="0" max="999" value="0" required>
+                                </div>
+
+                                <div class="campo">
+                                    <label class="linha-check" style="margin-top:25px">
+                                        <input id="musica-com-legenda" type="checkbox">
+                                        Exibir legendas
+                                    </label>
+                                </div>
+
+                                <div class="campo">
+                                    <label for="musica-inicio">Exibir a partir de (opcional)</label>
+                                    <input id="musica-inicio" type="datetime-local">
+                                </div>
+
+                                <div class="campo">
+                                    <label for="musica-fim">Exibir até (opcional)</label>
+                                    <input id="musica-fim" type="datetime-local">
+                                </div>
+
+                                <div class="campo">
+                                    <label for="musica-cor-principal">Cor principal</label>
+                                    <input id="musica-cor-principal" type="color" value="#004a8f">
+                                </div>
+
+                                <div class="campo">
+                                    <label for="musica-cor-secundaria">Cor secundária</label>
+                                    <input id="musica-cor-secundaria" type="color" value="#0077c8">
+                                </div>
+                            </div>
+
+                            <div class="botoes">
+                                <button id="musica-cancelar-botao" class="botao botao-secundario oculto" type="button">Cancelar edição</button>
+                                <button id="musica-salvar-botao" class="botao botao-primario" type="submit">Adicionar à playlist</button>
+                            </div>
+                        </form>
+
+                        <div class="imagem-listagem">
+                            <h3>Músicas cadastradas</h3>
+                            <div id="lista-musicas" class="imagem-lista">
+                                <div class="vazio">Carregando playlist...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
         </div>
     </main>
 
@@ -1664,6 +1876,7 @@
         const loginForm = $('#login-form');
         const imagemForm = $('#imagem-form');
         const midiaForm = $('#midia-form');
+        const musicaForm = $('#musica-form');
         const previewMuralIframe = $('#preview-mural-iframe');
         const previewSomBotao = $('#preview-som-botao');
         let previewSomAtivo = false;
@@ -1684,6 +1897,10 @@
             midias: {
                 titulo: 'Vídeos e lives',
                 descricao: 'Gerencie anúncios em vídeo e transmissões ao vivo do YouTube.'
+            },
+            musicas: {
+                titulo: 'Músicas',
+                descricao: 'Organize as faixas que tocam depois de cada rodada dos avisos.'
             }
         };
 
@@ -2463,9 +2680,46 @@
             atualizarPreviewMidia();
         }
 
+        function atualizarPreviewMusica() {
+            const area = $('#musica-preview');
+            const capa = area.querySelector('.musica-preview-capa');
+            const videoId = extrairIdYoutube($('#musica-url').value);
+            const imagemAnterior = capa.querySelector('img');
+
+            if (imagemAnterior) imagemAnterior.remove();
+
+            area.style.background = `linear-gradient(135deg, ${$('#musica-cor-principal').value}, ${$('#musica-cor-secundaria').value})`;
+            $('#musica-preview-titulo').textContent = $('#musica-titulo').value.trim() || 'Nome da música';
+            $('#musica-preview-artista').textContent = $('#musica-artista').value.trim() || 'Nome do artista';
+
+            if (videoId) {
+                const imagem = document.createElement('img');
+                imagem.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+                imagem.alt = 'Prévia da música no YouTube';
+                capa.prepend(imagem);
+            }
+        }
+
+        function limparFormularioMusica() {
+            musicaForm.reset();
+            $('#musica-id').value = '';
+            $('#musica-ativa').checked = true;
+            $('#musica-com-legenda').checked = false;
+            $('#musica-ordem').value = 0;
+            $('#musica-cor-principal').value = '#004a8f';
+            $('#musica-cor-secundaria').value = '#0077c8';
+            $('#musica-form-titulo').textContent = 'Nova música';
+            $('#musica-salvar-botao').textContent = 'Adicionar à playlist';
+            $('#musica-cancelar-botao').classList.add('oculto');
+            esconderMensagem($('#musica-mensagem'));
+            atualizarPreviewMusica();
+        }
+
         function renderizarMidiasYoutube() {
             const lista = $('#lista-midias');
-            const ordenadas = [...midiasYoutube].sort((a, b) =>
+            const ordenadas = midiasYoutube
+                .filter(item => item.tipo !== 'musica')
+                .sort((a, b) =>
                 (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
                 String(a.titulo || '').localeCompare(String(b.titulo || ''))
             );
@@ -2515,6 +2769,58 @@
             }).join('');
         }
 
+        function renderizarMusicasYoutube() {
+            const lista = $('#lista-musicas');
+            const ordenadas = midiasYoutube
+                .filter(item => item.tipo === 'musica')
+                .sort((a, b) =>
+                    (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
+                    String(a.titulo || '').localeCompare(String(b.titulo || ''))
+                );
+
+            $('#total-musicas').textContent = `${ordenadas.length} música${ordenadas.length === 1 ? '' : 's'}`;
+            $('#resumo-musicas').textContent = ordenadas.length;
+
+            if (!ordenadas.length) {
+                lista.innerHTML = '<div class="vazio">Nenhuma música cadastrada na playlist.</div>';
+                return;
+            }
+
+            lista.innerHTML = ordenadas.map(item => {
+                const videoId = extrairIdYoutube(item.url || item.link);
+                const miniatura = videoId
+                    ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+                    : '';
+
+                return `
+                    <article class="imagem-item">
+                        <div class="imagem-miniatura midia-miniatura musica-miniatura">
+                            ${miniatura ? `<img src="${miniatura}" alt="${escaparHTML(item.titulo || 'Música')}" loading="lazy">` : ''}
+                        </div>
+                        <div class="imagem-dados">
+                            <h4>${escaparHTML(item.titulo || 'Música sem título')}</h4>
+                            <p>${escaparHTML(item.artista || 'Artista não informado')}</p>
+                            <div class="imagem-status-linha">
+                                <span class="status ${item.ativo !== false ? 'status-ativo' : 'status-inativo'}">
+                                    ${item.ativo !== false ? 'Ativa' : 'Inativa'}
+                                </span>
+                                <span class="status">Ordem ${Number(item.ordem || 0)}</span>
+                                <span class="status">${item.comLegenda === true ? 'Com legenda' : 'Sem legenda'}</span>
+                            </div>
+                            <p>${escaparHTML(periodoMidia(item))}</p>
+                        </div>
+                        <div class="imagem-acoes">
+                            <button type="button" data-acao-musica="editar" data-id="${item.id}">Editar</button>
+                            <button type="button" data-acao-musica="alternar" data-id="${item.id}">
+                                ${item.ativo !== false ? 'Desativar' : 'Ativar'}
+                            </button>
+                            <button type="button" class="excluir" data-acao-musica="excluir" data-id="${item.id}">Excluir</button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
         async function salvarListaMidias(novaLista) {
             await setDoc(
                 doc(db, 'eventos', ID_CONFIGURACAO_MIDIAS_YOUTUBE),
@@ -2536,9 +2842,11 @@
                     const dados = documento.exists() ? documento.data() : {};
                     midiasYoutube = Array.isArray(dados.midias) ? dados.midias : [];
                     renderizarMidiasYoutube();
+                    renderizarMusicasYoutube();
                 },
                 erro => {
                     $('#lista-midias').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar vídeos e lives: ${escaparHTML(erro.message)}</div>`;
+                    $('#lista-musicas').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar músicas: ${escaparHTML(erro.message)}</div>`;
                 }
             );
         }
@@ -2592,6 +2900,57 @@
                 mostrarMensagem($('#midia-mensagem'), 'Mídia excluída com sucesso.', 'sucesso');
             } catch (erro) {
                 mostrarMensagem($('#midia-mensagem'), `Não foi possível excluir: ${erro.message}`);
+            }
+        }
+
+        function editarMusica(id) {
+            const item = midiasYoutube.find(musica => musica.id === id && musica.tipo === 'musica');
+            if (!item) return;
+
+            $('#musica-id').value = item.id;
+            $('#musica-ativa').checked = item.ativo !== false;
+            $('#musica-titulo').value = item.titulo || '';
+            $('#musica-artista').value = item.artista || '';
+            $('#musica-url').value = item.url || item.link || '';
+            $('#musica-com-legenda').checked = item.comLegenda === true;
+            $('#musica-inicio').value = item.inicio || '';
+            $('#musica-fim').value = item.fim || '';
+            $('#musica-ordem').value = item.ordem || 0;
+            $('#musica-cor-principal').value = (item.corPrincipal || '#004A8F').toLowerCase();
+            $('#musica-cor-secundaria').value = (item.corSecundaria || '#0077C8').toLowerCase();
+            $('#musica-form-titulo').textContent = 'Editar música';
+            $('#musica-salvar-botao').textContent = 'Salvar alterações';
+            $('#musica-cancelar-botao').classList.remove('oculto');
+            atualizarPreviewMusica();
+            musicaForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function alternarMusica(id) {
+            const agora = new Date().toISOString();
+            const novaLista = midiasYoutube.map(item =>
+                item.id === id && item.tipo === 'musica'
+                    ? { ...item, ativo: item.ativo === false, atualizadoEm: agora }
+                    : item
+            );
+
+            try {
+                await salvarListaMidias(novaLista);
+                mostrarMensagem($('#musica-mensagem'), 'Situação da música atualizada.', 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#musica-mensagem'), `Não foi possível atualizar: ${erro.message}`);
+            }
+        }
+
+        async function excluirMusica(id) {
+            const item = midiasYoutube.find(musica => musica.id === id && musica.tipo === 'musica');
+            if (!item || !window.confirm(`Excluir definitivamente “${item.titulo}”?`)) return;
+
+            try {
+                await salvarListaMidias(midiasYoutube.filter(musica => musica.id !== id));
+                if ($('#musica-id').value === id) limparFormularioMusica();
+                mostrarMensagem($('#musica-mensagem'), 'Música excluída da playlist.', 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#musica-mensagem'), `Não foi possível excluir: ${erro.message}`);
             }
         }
 
@@ -2856,6 +3215,79 @@
             }
         });
 
+        musicaForm.addEventListener('submit', async evento => {
+            evento.preventDefault();
+            esconderMensagem($('#musica-mensagem'));
+
+            const idAtual = $('#musica-id').value;
+            const itemAtual = midiasYoutube.find(item => item.id === idAtual && item.tipo === 'musica');
+            const titulo = $('#musica-titulo').value.trim();
+            const artista = $('#musica-artista').value.trim();
+            const url = $('#musica-url').value.trim();
+            const youtubeId = extrairIdYoutube(url);
+            const inicio = $('#musica-inicio').value;
+            const fim = $('#musica-fim').value;
+
+            if (!titulo || !artista) {
+                mostrarMensagem($('#musica-mensagem'), 'Informe o nome da música e o artista.');
+                return;
+            }
+
+            if (!youtubeId) {
+                mostrarMensagem($('#musica-mensagem'), 'Informe um link válido do YouTube.');
+                return;
+            }
+
+            if (inicio && fim && inicio > fim) {
+                mostrarMensagem($('#musica-mensagem'), 'O início da exibição não pode ser posterior ao encerramento.');
+                return;
+            }
+
+            const botao = $('#musica-salvar-botao');
+            const agora = new Date().toISOString();
+            const id = itemAtual ? itemAtual.id : criarIdMidia();
+            const novaMusica = {
+                id,
+                titulo,
+                artista,
+                url,
+                youtubeId,
+                tipo: 'musica',
+                comSom: true,
+                comLegenda: $('#musica-com-legenda').checked,
+                ativo: $('#musica-ativa').checked,
+                inicio,
+                fim,
+                ordem: Math.max(0, Number($('#musica-ordem').value) || 0),
+                corPrincipal: $('#musica-cor-principal').value.toUpperCase(),
+                corSecundaria: $('#musica-cor-secundaria').value.toUpperCase(),
+                criadoEm: itemAtual?.criadoEm || agora,
+                atualizadoEm: agora
+            };
+
+            const novaLista = itemAtual
+                ? midiasYoutube.map(item => item.id === id ? novaMusica : item)
+                : [...midiasYoutube, novaMusica];
+
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+
+            try {
+                await salvarListaMidias(novaLista);
+                limparFormularioMusica();
+                mostrarMensagem(
+                    $('#musica-mensagem'),
+                    itemAtual ? 'Música atualizada com sucesso.' : 'Música adicionada à playlist.',
+                    'sucesso'
+                );
+            } catch (erro) {
+                mostrarMensagem($('#musica-mensagem'), `Não foi possível salvar: ${erro.message}`);
+            } finally {
+                botao.disabled = false;
+                botao.textContent = $('#musica-id').value ? 'Salvar alterações' : 'Adicionar à playlist';
+            }
+        });
+
         document.querySelectorAll('[data-secao]').forEach(botao => {
             botao.addEventListener('click', () => abrirSecaoAdmin(botao.dataset.secao));
         });
@@ -2899,9 +3331,18 @@
             if (botao.dataset.acaoMidia === 'excluir') excluirMidia(botao.dataset.id);
         });
 
+        $('#lista-musicas').addEventListener('click', evento => {
+            const botao = evento.target.closest('button[data-acao-musica]');
+            if (!botao) return;
+            if (botao.dataset.acaoMusica === 'editar') editarMusica(botao.dataset.id);
+            if (botao.dataset.acaoMusica === 'alternar') alternarMusica(botao.dataset.id);
+            if (botao.dataset.acaoMusica === 'excluir') excluirMusica(botao.dataset.id);
+        });
+
         $('#cancelar-botao').addEventListener('click', limparFormulario);
         $('#imagem-cancelar-botao').addEventListener('click', limparFormularioImagem);
         $('#midia-cancelar-botao').addEventListener('click', limparFormularioMidia);
+        $('#musica-cancelar-botao').addEventListener('click', limparFormularioMusica);
         $('#sair-botao').addEventListener('click', async () => {
             pararTimerInatividade();
             await signOut(auth);
@@ -2910,6 +3351,8 @@
         form.addEventListener('input', atualizarPreview);
         midiaForm.addEventListener('input', atualizarPreviewMidia);
         midiaForm.addEventListener('change', atualizarPreviewMidia);
+        musicaForm.addEventListener('input', atualizarPreviewMusica);
+        musicaForm.addEventListener('change', atualizarPreviewMusica);
 
         onAuthStateChanged(auth, usuario => {
             if (usuario) {
@@ -2936,6 +3379,7 @@
         limparFormulario();
         limparFormularioImagem();
         limparFormularioMidia();
+        limparFormularioMusica();
     </script>
 </body>
 </html>
