@@ -1058,6 +1058,202 @@
         }
         .atalho-seta { color: #98a2b3; }
 
+        .programacao-card {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+        .programacao-cabecalho {
+            align-items: flex-start;
+        }
+        .programacao-cabecalho p {
+            max-width: 680px;
+            margin: 7px 0 0;
+        }
+        .programacao-salvamento {
+            min-width: 132px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 13px;
+            border-radius: 999px;
+            color: #526173;
+            background: #edf2f7;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .programacao-salvamento::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #90a2b5;
+        }
+        .programacao-salvamento.salvando {
+            color: #8a5a00;
+            background: #fff2cf;
+        }
+        .programacao-salvamento.salvando::before { background: #e49a00; }
+        .programacao-salvamento.salvo {
+            color: #146c38;
+            background: #e5f7ec;
+        }
+        .programacao-salvamento.salvo::before { background: #20a15a; }
+        .programacao-salvamento.erro {
+            color: #a32121;
+            background: #fde9e9;
+        }
+        .programacao-salvamento.erro::before { background: #c62828; }
+        .programacao-aviso {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            margin-bottom: 16px;
+            padding: 13px 15px;
+            border: 1px solid #cfe2f4;
+            border-radius: 12px;
+            color: #31516f;
+            background: #f2f8fd;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .programacao-aviso svg {
+            width: 20px;
+            height: 20px;
+            flex: 0 0 auto;
+            color: var(--azul);
+        }
+        .programacao-lista {
+            display: grid;
+            gap: 10px;
+        }
+        .programacao-item {
+            display: grid;
+            grid-template-columns: 38px 46px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            min-height: 72px;
+            padding: 11px 13px;
+            border: 1px solid var(--borda);
+            border-radius: 13px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(23,32,51,.04);
+            transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease, opacity .15s ease;
+        }
+        .programacao-item.arrastando {
+            z-index: 3;
+            opacity: .62;
+            border-color: var(--azul);
+            box-shadow: 0 13px 30px rgba(0,103,185,.18);
+            transform: scale(.99);
+        }
+        .programacao-item-fixo {
+            grid-template-columns: 38px 46px minmax(0, 1fr) auto;
+            border-color: #ccd9e5;
+            background: #f5f8fb;
+            box-shadow: none;
+        }
+        .programacao-posicao {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            color: #526173;
+            background: #edf2f7;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .programacao-icone {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 12px;
+            color: var(--azul);
+            background: #e8f3fc;
+        }
+        .programacao-icone svg { width: 22px; height: 22px; }
+        .programacao-icone img,
+        .programacao-icone video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .programacao-icone-evento { color: #8b4d00; background: #fff2d6; }
+        .programacao-icone-imagem { color: #145d3b; background: #e5f6ed; }
+        .programacao-icone-midia { color: #8b2550; background: #fbe7ef; }
+        .programacao-icone-musica { color: #137839; background: #ddf6e7; }
+        .programacao-dados { min-width: 0; }
+        .programacao-dados strong {
+            display: block;
+            overflow: hidden;
+            color: #172033;
+            font-size: 14px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .programacao-dados span {
+            display: block;
+            margin-top: 4px;
+            color: #667085;
+            font-size: 12px;
+        }
+        .programacao-controles {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .programacao-mover,
+        .programacao-alca {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #d5dee8;
+            border-radius: 10px;
+            color: #526173;
+            background: #f8fafc;
+        }
+        .programacao-mover:hover,
+        .programacao-alca:hover {
+            color: var(--azul);
+            border-color: #91b7d6;
+            background: #eef7ff;
+        }
+        .programacao-mover:disabled {
+            cursor: not-allowed;
+            opacity: .35;
+        }
+        .programacao-mover svg,
+        .programacao-alca svg { width: 18px; height: 18px; }
+        .programacao-alca {
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+        .programacao-alca:active { cursor: grabbing; }
+        .programacao-fixo-selo {
+            padding: 6px 10px;
+            border-radius: 999px;
+            color: #526173;
+            background: #e5ebf1;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+        .programacao-vazia {
+            padding: 24px 15px;
+            border: 1px dashed #bac8d6;
+            border-radius: 13px;
+            color: #667085;
+            background: #fafcfe;
+            text-align: center;
+        }
+
         @media (max-width: 1180px) {
             #admin-app { grid-template-columns: 82px minmax(0, 1fr); }
             .menu-lateral { padding: 16px 9px 13px; }
@@ -1216,6 +1412,28 @@
                 justify-content: stretch;
             }
             .tv-moldura { padding: 5px; border-radius: 12px; }
+            .programacao-cabecalho { flex-direction: column; }
+            .programacao-salvamento { width: 100%; }
+            .programacao-item,
+            .programacao-item-fixo {
+                grid-template-columns: 32px 42px minmax(0, 1fr);
+                gap: 9px;
+                padding: 10px;
+            }
+            .programacao-posicao { width: 30px; height: 30px; }
+            .programacao-icone { width: 40px; height: 40px; }
+            .programacao-controles,
+            .programacao-fixo-selo {
+                grid-column: 2 / -1;
+                justify-self: stretch;
+            }
+            .programacao-controles {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .programacao-mover,
+            .programacao-alca { width: 100%; }
+            .programacao-fixo-selo { text-align: center; }
         }
     </style>
 </head>
@@ -1278,6 +1496,10 @@
                 <button class="menu-item ativo" type="button" data-secao="visao-geral" aria-label="Visão geral">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>
                     <span>Visão geral</span>
+                </button>
+                <button class="menu-item" type="button" data-secao="programacao" aria-label="Programação da TV">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="6" r="1.4" fill="currentColor"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="4" cy="18" r="1.4" fill="currentColor"/></svg>
+                    <span>Programação</span>
                 </button>
                 <button class="menu-item" type="button" data-secao="eventos" aria-label="Eventos">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 3v4m10-4v4M3 10h18M8 14h3m2 0h3m-8 3h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -1370,6 +1592,11 @@
                     <section class="card">
                         <div class="card-cabecalho"><h2>Gerenciar conteúdo</h2></div>
                         <div class="atalhos">
+                            <button class="atalho-item" type="button" data-ir-secao="programacao">
+                                <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="6" r="1.4" fill="currentColor"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="4" cy="18" r="1.4" fill="currentColor"/></svg></span>
+                                <span><strong>Programação da TV</strong><small>Arrastar e intercalar todos os conteúdos</small></span>
+                                <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
                             <button class="atalho-item" type="button" data-ir-secao="eventos">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 3v4m10-4v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
                                 <span><strong>Eventos</strong><small>Cadastrar e organizar eventos</small></span>
@@ -1393,6 +1620,43 @@
                         </div>
                     </section>
                 </div>
+            </section>
+
+            <section class="painel-secao" data-painel="programacao">
+                <section class="card programacao-card">
+                    <div class="card-cabecalho programacao-cabecalho">
+                        <div>
+                            <h2>Ordem de exibição da TV</h2>
+                            <p id="programacao-instrucao-arraste" class="imagem-ajuda">Arraste os blocos pela alça ou use as setas. A nova ordem é salva automaticamente e chega à TV sem precisar atualizar a página.</p>
+                        </div>
+                        <div id="programacao-salvamento" class="programacao-salvamento salvo" role="status" aria-live="polite">Ordem sincronizada</div>
+                    </div>
+
+                    <div class="programacao-aviso">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span>Relógio e clima sempre abrem a rodada. Uma música toca por completo no final; depois, o mural começa novamente e escolhe a próxima música.</span>
+                    </div>
+
+                    <div class="programacao-lista">
+                        <article class="programacao-item programacao-item-fixo">
+                            <span class="programacao-posicao">1</span>
+                            <span class="programacao-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span class="programacao-dados"><strong>Relógio, data e clima</strong><span>Primeira tela de toda rodada</span></span>
+                            <span class="programacao-fixo-selo">Posição fixa</span>
+                        </article>
+
+                        <div id="lista-programacao-conteudos" class="programacao-lista" aria-label="Conteúdos ordenáveis">
+                            <div class="programacao-vazia">Carregando a programação...</div>
+                        </div>
+
+                        <article class="programacao-item programacao-item-fixo">
+                            <span id="programacao-posicao-musica" class="programacao-posicao">2</span>
+                            <span class="programacao-icone programacao-icone-musica" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"/></svg></span>
+                            <span class="programacao-dados"><strong>Música da rodada</strong><span id="programacao-musica-resumo">A próxima música disponível toca até o final</span></span>
+                            <span class="programacao-fixo-selo">Posição fixa</span>
+                        </article>
+                    </div>
+                </section>
             </section>
 
             <section class="painel-secao" data-painel="eventos">
@@ -1461,7 +1725,7 @@
                                 <input id="duracao" type="number" min="5" max="300" value="25" required>
                             </div>
 
-                            <div class="campo">
+                            <div class="campo oculto" aria-hidden="true">
                                 <label for="ordem">Ordem de exibição</label>
                                 <input id="ordem" type="number" min="0" max="999" value="0" required>
                             </div>
@@ -1586,7 +1850,7 @@
                             <input id="imagem-duracao" type="number" min="5" max="300" value="15" required>
                         </div>
 
-                        <div class="campo">
+                        <div class="campo oculto" aria-hidden="true">
                             <label for="imagem-ordem">Ordem de exibição</label>
                             <input id="imagem-ordem" type="number" min="0" max="999" value="0" required>
                         </div>
@@ -1676,7 +1940,7 @@
                             </select>
                         </div>
 
-                        <div class="campo">
+                        <div class="campo oculto" aria-hidden="true">
                             <label for="midia-ordem">Ordem de exibição</label>
                             <input id="midia-ordem" type="number" min="0" max="999" value="0" required>
                         </div>
@@ -1886,6 +2150,7 @@
         const TEMPO_INATIVIDADE = 10 * 60 * 1000;
         const ID_CONFIGURACAO_IMAGENS = 'configuracao-imagens-mural';
         const ID_CONFIGURACAO_MIDIAS_YOUTUBE = 'configuracao-videos-mural';
+        const ID_CONFIGURACAO_PROGRAMACAO = 'configuracao-programacao-mural';
         const TAMANHO_MAXIMO_IMAGEM = 8 * 1024 * 1024;
         const TIPOS_IMAGEM_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
         const TAMANHO_MAXIMO_AUDIO = 30 * 1024 * 1024;
@@ -1904,9 +2169,13 @@
         let eventos = [];
         let imagens = [];
         let midiasYoutube = [];
+        let programacaoOrdem = [];
         let pararEscuta = null;
         let pararEscutaImagens = null;
         let pararEscutaMidias = null;
+        let pararEscutaProgramacao = null;
+        let filaSalvamentoProgramacao = Promise.resolve();
+        let arrasteProgramacao = null;
         let timerInatividade = null;
         let urlPreviewImagem = '';
         let urlPreviewVideoMidia = '';
@@ -1930,6 +2199,10 @@
             'visao-geral': {
                 titulo: 'Visão geral',
                 descricao: 'Acompanhe o mural e acesse rapidamente cada tipo de conteúdo.'
+            },
+            programacao: {
+                titulo: 'Programação da TV',
+                descricao: 'Defina a sequência dos eventos, imagens, vídeos e transmissões.'
             },
             eventos: {
                 titulo: 'Eventos',
@@ -2044,6 +2317,257 @@
             if (!/^\d{4}-\d{2}-\d{2}$/.test(data || '')) return data || '--';
             const [ano, mes, dia] = data.split('-');
             return `${dia}/${mes}/${ano}`;
+        }
+
+        function itensDisponiveisProgramacao() {
+            const itensEventos = eventos
+                .filter(item => item.ativo !== false)
+                .map(item => ({
+                    chave: `evento:${item.id}`,
+                    tipo: 'evento',
+                    titulo: item.titulo || 'Evento sem título',
+                    detalhe: `${formatarData(item.data)} às ${item.hora || '--'} • ${item.local || 'Local não informado'}`,
+                    ordem: Number(item.ordem || 0),
+                    miniatura: ''
+                }));
+
+            const itensImagens = imagens
+                .filter(item => item.ativo !== false)
+                .map(item => ({
+                    chave: `imagem:${item.id}`,
+                    tipo: 'imagem',
+                    titulo: item.nome || 'Imagem sem nome',
+                    detalhe: `${Math.max(5, Number(item.duracao || 15))} segundos na TV`,
+                    ordem: Number(item.ordem || 0),
+                    miniatura: item.url || ''
+                }));
+
+            const itensMidias = midiasYoutube
+                .filter(item => item.tipo !== 'musica' && item.ativo !== false)
+                .map(item => ({
+                    chave: `midia:${item.id}`,
+                    tipo: 'midia',
+                    titulo: item.titulo || (item.tipo === 'live' ? 'Transmissão ao vivo' : 'Vídeo sem título'),
+                    detalhe: item.tipo === 'live'
+                        ? 'Live • fica fixa enquanto estiver ativa'
+                        : `${midiaUsaArquivo(item) ? 'Arquivo enviado' : 'YouTube'} • toca até o final`,
+                    ordem: Number(item.ordem || 0),
+                    miniatura: midiaUsaArquivo(item) ? '' : miniaturaYoutube(item.url || item.link)
+                }));
+
+            return [...itensEventos, ...itensImagens, ...itensMidias];
+        }
+
+        function intercalarItensProgramacao(itens) {
+            const grupos = ['evento', 'imagem', 'midia'].map(tipo =>
+                itens
+                    .filter(item => item.tipo === tipo)
+                    .sort((a, b) =>
+                        (a.ordem - b.ordem) ||
+                        a.titulo.localeCompare(b.titulo, 'pt-BR')
+                    )
+            );
+            const resultado = [];
+            let indice = 0;
+
+            while (grupos.some(grupo => indice < grupo.length)) {
+                grupos.forEach(grupo => {
+                    if (grupo[indice]) resultado.push(grupo[indice]);
+                });
+                indice += 1;
+            }
+
+            return resultado;
+        }
+
+        function ordenarItensProgramacao(itens) {
+            const mapa = new Map(itens.map(item => [item.chave, item]));
+            const resultado = [];
+
+            programacaoOrdem.forEach(chave => {
+                const item = mapa.get(chave);
+                if (!item) return;
+                resultado.push(item);
+                mapa.delete(chave);
+            });
+
+            return [
+                ...resultado,
+                ...intercalarItensProgramacao(Array.from(mapa.values()))
+            ];
+        }
+
+        function iconeItemProgramacao(item) {
+            if (item.miniatura) {
+                return `<img src="${escaparHTML(item.miniatura)}" alt="" loading="lazy">`;
+            }
+
+            if (item.tipo === 'evento') {
+                return '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 3v4m10-4v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+            }
+
+            if (item.tipo === 'imagem') {
+                return '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m4 17 5-5 4 4 2-2 5 5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+            }
+
+            return '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m10 9 5 3-5 3V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+        }
+
+        function atualizarNumeracaoProgramacao() {
+            const itens = Array.from(document.querySelectorAll('#lista-programacao-conteudos .programacao-item[data-chave]'));
+
+            itens.forEach((item, indice) => {
+                item.querySelector('.programacao-posicao').textContent = String(indice + 2);
+                const subir = item.querySelector('[data-mover-programacao="-1"]');
+                const descer = item.querySelector('[data-mover-programacao="1"]');
+                if (subir) subir.disabled = indice === 0;
+                if (descer) descer.disabled = indice === itens.length - 1;
+            });
+
+            $('#programacao-posicao-musica').textContent = String(itens.length + 2);
+        }
+
+        function renderizarProgramacao() {
+            const lista = $('#lista-programacao-conteudos');
+            if (!lista || arrasteProgramacao) return;
+
+            const itens = ordenarItensProgramacao(itensDisponiveisProgramacao());
+            const musicasAtivas = midiasYoutube.filter(item =>
+                item.tipo === 'musica' &&
+                item.ativo !== false &&
+                item.audioUrl &&
+                item.capaUrl
+            ).length;
+
+            $('#programacao-musica-resumo').textContent = musicasAtivas
+                ? `${musicasAtivas} música${musicasAtivas === 1 ? '' : 's'} disponível${musicasAtivas === 1 ? '' : 'is'}; uma faixa por rodada`
+                : 'Nenhuma música ativa; esta etapa será ignorada';
+
+            if (!itens.length) {
+                lista.innerHTML = '<div class="programacao-vazia">Nenhum evento, imagem ou vídeo ativo. Ative um conteúdo para incluí-lo na programação.</div>';
+                atualizarNumeracaoProgramacao();
+                return;
+            }
+
+            lista.innerHTML = itens.map((item, indice) => `
+                <article class="programacao-item" data-chave="${escaparHTML(item.chave)}">
+                    <span class="programacao-posicao">${indice + 2}</span>
+                    <span class="programacao-icone programacao-icone-${item.tipo}" aria-hidden="true">${iconeItemProgramacao(item)}</span>
+                    <span class="programacao-dados">
+                        <strong>${escaparHTML(item.titulo)}</strong>
+                        <span>${escaparHTML(item.detalhe)}</span>
+                    </span>
+                    <span class="programacao-controles">
+                        <button class="programacao-mover" type="button" data-mover-programacao="-1" title="Mover para cima" aria-label="Mover ${escaparHTML(item.titulo)} para cima">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 14 5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <button class="programacao-mover" type="button" data-mover-programacao="1" title="Mover para baixo" aria-label="Mover ${escaparHTML(item.titulo)} para baixo">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <button class="programacao-alca" type="button" title="Arraste para reorganizar" aria-label="Arrastar ${escaparHTML(item.titulo)}" aria-describedby="programacao-instrucao-arraste">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
+                        </button>
+                    </span>
+                </article>
+            `).join('');
+
+            atualizarNumeracaoProgramacao();
+        }
+
+        function chavesProgramacaoNoPainel() {
+            return Array.from(document.querySelectorAll('#lista-programacao-conteudos .programacao-item[data-chave]'))
+                .map(item => item.dataset.chave)
+                .filter(Boolean);
+        }
+
+        let revisaoSalvamentoProgramacao = 0;
+
+        function informarEstadoProgramacao(texto, classe) {
+            const estado = $('#programacao-salvamento');
+            estado.textContent = texto;
+            estado.className = `programacao-salvamento ${classe}`;
+        }
+
+        function salvarOrdemProgramacao() {
+            const novaOrdem = chavesProgramacaoNoPainel();
+            programacaoOrdem = [...novaOrdem];
+            const revisao = ++revisaoSalvamentoProgramacao;
+            informarEstadoProgramacao('Salvando ordem...', 'salvando');
+
+            filaSalvamentoProgramacao = filaSalvamentoProgramacao
+                .catch(() => {})
+                .then(() => setDoc(
+                    doc(db, 'eventos', ID_CONFIGURACAO_PROGRAMACAO),
+                    {
+                        tipo: 'configuracao-programacao',
+                        ordem: novaOrdem,
+                        atualizadoEm: serverTimestamp()
+                    },
+                    { merge: true }
+                ));
+
+            filaSalvamentoProgramacao.then(() => {
+                if (revisao === revisaoSalvamentoProgramacao) {
+                    informarEstadoProgramacao('Ordem salva', 'salvo');
+                }
+            }).catch(erro => {
+                console.error('Erro ao salvar a programação:', erro);
+                if (revisao === revisaoSalvamentoProgramacao) {
+                    informarEstadoProgramacao('Erro ao salvar', 'erro');
+                }
+            });
+        }
+
+        function moverItemProgramacao(item, direcao) {
+            const lista = $('#lista-programacao-conteudos');
+            const itens = Array.from(lista.querySelectorAll('.programacao-item[data-chave]'));
+            const indice = itens.indexOf(item);
+            const destino = indice + direcao;
+
+            if (indice < 0 || destino < 0 || destino >= itens.length) return;
+
+            if (direcao < 0) {
+                lista.insertBefore(item, itens[destino]);
+            } else {
+                lista.insertBefore(itens[destino], item);
+            }
+
+            atualizarNumeracaoProgramacao();
+            item.querySelector('.programacao-alca')?.focus();
+            salvarOrdemProgramacao();
+        }
+
+        function finalizarArrasteProgramacao() {
+            if (!arrasteProgramacao) return;
+
+            const { item, ordemInicial } = arrasteProgramacao;
+            item.classList.remove('arrastando');
+            arrasteProgramacao = null;
+            atualizarNumeracaoProgramacao();
+
+            if (ordemInicial !== chavesProgramacaoNoPainel().join('|')) {
+                salvarOrdemProgramacao();
+            }
+        }
+
+        function iniciarEscutaProgramacao() {
+            if (pararEscutaProgramacao) pararEscutaProgramacao();
+
+            pararEscutaProgramacao = onSnapshot(
+                doc(db, 'eventos', ID_CONFIGURACAO_PROGRAMACAO),
+                documento => {
+                    const dados = documento.exists() ? documento.data() : {};
+                    programacaoOrdem = Array.isArray(dados.ordem)
+                        ? dados.ordem.filter(chave => typeof chave === 'string')
+                        : [];
+                    renderizarProgramacao();
+                    informarEstadoProgramacao('Ordem sincronizada', 'salvo');
+                },
+                erro => {
+                    console.error('Erro ao carregar a programação:', erro);
+                    informarEstadoProgramacao('Erro de sincronização', 'erro');
+                }
+            );
         }
 
         function contraste(cor) {
@@ -2232,10 +2756,13 @@
                     .filter(evento =>
                         evento.id !== ID_CONFIGURACAO_IMAGENS &&
                         evento.id !== ID_CONFIGURACAO_MIDIAS_YOUTUBE &&
+                        evento.id !== ID_CONFIGURACAO_PROGRAMACAO &&
                         evento.tipo !== 'configuracao-imagens' &&
-                        evento.tipo !== 'configuracao-videos'
+                        evento.tipo !== 'configuracao-videos' &&
+                        evento.tipo !== 'configuracao-programacao'
                     );
                 renderizarEventos();
+                renderizarProgramacao();
             }, erro => {
                 $('#lista-eventos').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar eventos: ${escaparHTML(erro.message)}</div>`;
             });
@@ -2367,7 +2894,6 @@
                             <span class="status ${item.ativo !== false ? 'status-ativo' : 'status-inativo'}">
                                 ${item.ativo !== false ? 'Ativa' : 'Inativa'}
                             </span>
-                            <span class="status">Ordem ${Number(item.ordem || 0)}</span>
                         </div>
                         <p>${Number(item.duracao || 15)} segundos na TV</p>
                         <p>${escaparHTML(periodoImagem(item))}</p>
@@ -2587,6 +3113,7 @@
                     const dados = documento.exists() ? documento.data() : {};
                     imagens = Array.isArray(dados.imagens) ? dados.imagens : [];
                     renderizarImagens();
+                    renderizarProgramacao();
                 },
                 erro => {
                     $('#lista-imagens').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar imagens: ${escaparHTML(erro.message)}</div>`;
@@ -2924,7 +3451,6 @@
                                 <span class="status">${origem}</span>
                                 <span class="status">${item.comSom === true ? 'Com som' : 'Sem som'}</span>
                                 ${origemArquivo ? '' : `<span class="status">${item.comLegenda === true ? 'Com legenda' : 'Sem legenda'}</span>`}
-                                <span class="status">Ordem ${Number(item.ordem || 0)}</span>
                             </div>
                             <p>${escaparHTML(periodoMidia(item))}</p>
                         </div>
@@ -3018,6 +3544,7 @@
                     midiasYoutube = Array.isArray(dados.midias) ? dados.midias : [];
                     renderizarMidiasYoutube();
                     renderizarMusicasYoutube();
+                    renderizarProgramacao();
                 },
                 erro => {
                     $('#lista-midias').innerHTML = `<div class="mensagem mensagem-erro">Erro ao carregar vídeos e lives: ${escaparHTML(erro.message)}</div>`;
@@ -3628,6 +4155,67 @@
             botao.addEventListener('click', () => abrirSecaoAdmin(botao.dataset.irSecao));
         });
 
+        const listaProgramacao = $('#lista-programacao-conteudos');
+
+        listaProgramacao.addEventListener('click', evento => {
+            const botao = evento.target.closest('[data-mover-programacao]');
+            if (!botao) return;
+
+            const item = botao.closest('.programacao-item[data-chave]');
+            if (!item) return;
+
+            moverItemProgramacao(item, Number(botao.dataset.moverProgramacao));
+        });
+
+        listaProgramacao.addEventListener('keydown', evento => {
+            const alca = evento.target.closest('.programacao-alca');
+            if (!alca || !['ArrowUp', 'ArrowDown'].includes(evento.key)) return;
+
+            evento.preventDefault();
+            const item = alca.closest('.programacao-item[data-chave]');
+            moverItemProgramacao(item, evento.key === 'ArrowUp' ? -1 : 1);
+        });
+
+        listaProgramacao.addEventListener('pointerdown', evento => {
+            const alca = evento.target.closest('.programacao-alca');
+            if (!alca || (evento.pointerType === 'mouse' && evento.button !== 0)) return;
+
+            const item = alca.closest('.programacao-item[data-chave]');
+            if (!item) return;
+
+            evento.preventDefault();
+            arrasteProgramacao = {
+                item,
+                ordemInicial: chavesProgramacaoNoPainel().join('|')
+            };
+            item.classList.add('arrastando');
+
+            try {
+                alca.setPointerCapture(evento.pointerId);
+            } catch {
+                // O arraste continua funcionando mesmo sem captura explícita.
+            }
+        });
+
+        window.addEventListener('pointermove', evento => {
+            if (!arrasteProgramacao) return;
+
+            evento.preventDefault();
+            const elementoNoPonto = document.elementFromPoint(evento.clientX, evento.clientY);
+            const alvo = elementoNoPonto?.closest('#lista-programacao-conteudos .programacao-item[data-chave]');
+            const item = arrasteProgramacao.item;
+
+            if (!alvo || alvo === item) return;
+
+            const caixa = alvo.getBoundingClientRect();
+            const depois = evento.clientY > caixa.top + (caixa.height / 2);
+            listaProgramacao.insertBefore(item, depois ? alvo.nextSibling : alvo);
+            atualizarNumeracaoProgramacao();
+        }, { passive: false });
+
+        window.addEventListener('pointerup', finalizarArrasteProgramacao);
+        window.addEventListener('pointercancel', finalizarArrasteProgramacao);
+
         previewSomBotao.addEventListener('click', () => {
             previewSomAtivo = !previewSomAtivo;
             atualizarBotaoSomPreview();
@@ -3699,12 +4287,14 @@
                 iniciarEscuta();
                 iniciarEscutaImagens();
                 iniciarEscutaMidias();
+                iniciarEscutaProgramacao();
                 reiniciarTimerInatividade();
             } else {
                 pararTimerInatividade();
                 if (pararEscuta) pararEscuta();
                 if (pararEscutaImagens) pararEscutaImagens();
                 if (pararEscutaMidias) pararEscutaMidias();
+                if (pararEscutaProgramacao) pararEscutaProgramacao();
                 adminApp.classList.add('oculto');
                 loginTela.classList.remove('oculto');
                 limparCamposLogin();

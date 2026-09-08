@@ -35,8 +35,10 @@ const TEMPO_COMUNICADO = 15000;
 const CHAVE_CACHE_EVENTOS = 'mural-eventos-firebase-v1';
 const CHAVE_CACHE_COMUNICADOS = 'mural-comunicados-firebase-v1';
 const CHAVE_CACHE_MIDIAS_YOUTUBE = 'mural-midias-youtube-firebase-v1';
+const CHAVE_CACHE_PROGRAMACAO = 'mural-programacao-firebase-v1';
 const ID_CONFIGURACAO_IMAGENS = 'configuracao-imagens-mural';
 const ID_CONFIGURACAO_MIDIAS_YOUTUBE = 'configuracao-videos-mural';
+const ID_CONFIGURACAO_PROGRAMACAO = 'configuracao-programacao-mural';
 const MODO_PREVIA_ADMIN =
     new URLSearchParams(window.location.search).get('previewAdmin') === '1';
 
@@ -56,6 +58,7 @@ let assinaturaMidiasYoutube = '';
 let geracaoMidiasYoutube = 0;
 let somPreviaAdminAtivo = false;
 let idMusicaDaRodada = '';
+let programacaoOrdem = [];
 
 
 // ======================================================
@@ -534,6 +537,10 @@ function renderizarEventos(lista) {
         section.id =
             `tela-evento-${evento.id}`;
 
+        section.dataset.programacaoChave = `evento:${evento.id}`;
+        section.dataset.programacaoTipo = 'evento';
+        section.dataset.ordemCategoria = String(Number(evento.ordem || 0));
+
         const segundos =
             Math.max(5, Number(evento.duracao || 25));
 
@@ -729,8 +736,10 @@ function iniciarEventosFirebase() {
                 .filter(evento =>
                     evento.id !== ID_CONFIGURACAO_IMAGENS &&
                     evento.id !== ID_CONFIGURACAO_MIDIAS_YOUTUBE &&
+                    evento.id !== ID_CONFIGURACAO_PROGRAMACAO &&
                     evento.tipo !== 'configuracao-imagens' &&
-                    evento.tipo !== 'configuracao-videos'
+                    evento.tipo !== 'configuracao-videos' &&
+                    evento.tipo !== 'configuracao-programacao'
                 );
 
             salvarCacheEventos(eventos);
@@ -2442,6 +2451,11 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         section.dataset.tipoMidia = tipo;
         section.dataset.origemMidia = videoArquivo ? 'arquivo' : 'youtube';
         section.dataset.comSom = tipo === 'musica' || item.comSom === true ? 'true' : 'false';
+        if (tipo !== 'musica') {
+            section.dataset.programacaoChave = `midia:${item.id || index}`;
+            section.dataset.programacaoTipo = 'midia';
+            section.dataset.ordemCategoria = String(Number(item.ordem || 0));
+        }
         section.style.setProperty('--midia-cor-principal', principal);
         section.style.setProperty('--midia-cor-secundaria', secundaria);
 
@@ -2762,7 +2776,7 @@ function selecionarProximaMusicaDaRodada() {
     idMusicaDaRodada = musicas[proximo].id;
 
     const ativa = document.querySelector('.tela.ativa');
-    telas = Array.from(document.querySelectorAll('.tela'));
+    telas = obterTelasOrdenadas();
     step = Math.max(0, telas.findIndex(tela => tela === ativa));
 }
 
@@ -2843,6 +2857,10 @@ function renderizarComunicados(imagens) {
 
         section.id =
             `tela-imagem-${item.id || index}`;
+
+        section.dataset.programacaoChave = `imagem:${item.id || index}`;
+        section.dataset.programacaoTipo = 'imagem';
+        section.dataset.ordemCategoria = String(Number(item.ordem || 0));
 
         section.dataset.duration =
             String(
@@ -2925,6 +2943,142 @@ function iniciarComunicadosFirebase() {
 
 
 // ======================================================
+// PROGRAMAÇÃO GLOBAL DA TV
+// ======================================================
+
+function carregarCacheProgramacao() {
+    try {
+        const dados = JSON.parse(
+            localStorage.getItem(CHAVE_CACHE_PROGRAMACAO) || '[]'
+        );
+
+        return Array.isArray(dados)
+            ? dados.filter(chave => typeof chave === 'string')
+            : [];
+    } catch (erro) {
+        console.warn('Não foi possível ler o cache da programação:', erro);
+        return [];
+    }
+}
+
+
+function salvarCacheProgramacao(ordem) {
+    try {
+        localStorage.setItem(
+            CHAVE_CACHE_PROGRAMACAO,
+            JSON.stringify(ordem)
+        );
+    } catch (erro) {
+        console.warn('Não foi possível salvar o cache da programação:', erro);
+    }
+}
+
+
+function intercalarTelasProgramacao(lista) {
+    const grupos = ['evento', 'imagem', 'midia'].map(tipo =>
+        lista
+            .filter(tela => tela.dataset.programacaoTipo === tipo)
+            .sort((a, b) =>
+                (Number(a.dataset.ordemCategoria || 0) - Number(b.dataset.ordemCategoria || 0)) ||
+                String(a.id || '').localeCompare(String(b.id || ''))
+            )
+    );
+    const semGrupo = lista.filter(tela =>
+        !['evento', 'imagem', 'midia'].includes(tela.dataset.programacaoTipo)
+    );
+    const resultado = [];
+    let indice = 0;
+
+    while (grupos.some(grupo => indice < grupo.length)) {
+        grupos.forEach(grupo => {
+            if (grupo[indice]) resultado.push(grupo[indice]);
+        });
+        indice += 1;
+    }
+
+    return [...resultado, ...semGrupo];
+}
+
+
+function obterTelasOrdenadas() {
+    const todas = Array.from(document.querySelectorAll('.tela'));
+    const tempo = todas.find(tela => tela.id === 'tela-tempo');
+    const musicas = todas.filter(tela => tela.classList.contains('tela-musica'));
+    const conteudos = todas.filter(tela =>
+        tela !== tempo &&
+        !tela.classList.contains('tela-musica')
+    );
+    const mapa = new Map(
+        conteudos
+            .filter(tela => tela.dataset.programacaoChave)
+            .map(tela => [tela.dataset.programacaoChave, tela])
+    );
+    const ordenados = [];
+
+    programacaoOrdem.forEach(chave => {
+        const tela = mapa.get(chave);
+        if (!tela) return;
+        ordenados.push(tela);
+        mapa.delete(chave);
+    });
+
+    ordenados.push(
+        ...intercalarTelasProgramacao(Array.from(mapa.values()))
+    );
+
+    conteudos.forEach(tela => {
+        if (!tela.dataset.programacaoChave && !ordenados.includes(tela)) {
+            ordenados.push(tela);
+        }
+    });
+
+    return [
+        ...(tempo ? [tempo] : []),
+        ...ordenados,
+        ...musicas
+    ];
+}
+
+
+function aplicarOrdemProgramacao(novaOrdem) {
+    const idAtivo = obterIdTelaAtiva();
+    programacaoOrdem = Array.isArray(novaOrdem)
+        ? novaOrdem.filter(chave => typeof chave === 'string')
+        : [];
+    salvarCacheProgramacao(programacaoOrdem);
+    sincronizarTelas(idAtivo);
+    agendarRotacao();
+}
+
+
+function iniciarProgramacaoFirebase() {
+    aplicarOrdemProgramacao(carregarCacheProgramacao());
+
+    if (!db) {
+        console.error('Firebase indisponível para carregar a ordem da programação.');
+        return;
+    }
+
+    db.collection('eventos')
+        .doc(ID_CONFIGURACAO_PROGRAMACAO)
+        .onSnapshot(
+            documento => {
+                const dados = documento.exists
+                    ? documento.data()
+                    : {};
+                aplicarOrdemProgramacao(
+                    Array.isArray(dados.ordem) ? dados.ordem : []
+                );
+                console.info('Ordem da programação recebida do painel.');
+            },
+            erro => {
+                console.error('Erro ao receber a ordem da programação:', erro);
+            }
+        );
+}
+
+
+// ======================================================
 // ROTAÇÃO
 // ======================================================
 
@@ -2941,10 +3095,7 @@ function obterIdTelaAtiva() {
 function sincronizarTelas(
     idPreferido = 'tela-tempo'
 ) {
-    telas =
-        Array.from(
-            document.querySelectorAll('.tela')
-        );
+    telas = obterTelasOrdenadas();
 
     if (!telas.length) {
         return;
@@ -3102,7 +3253,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '11.0.0-video-upload-direto'
+        '12.0.0-programacao-arrastavel'
     );
 
     atualizarRelogio();
@@ -3123,6 +3274,7 @@ function iniciarMural() {
         600000
     );
 
+    iniciarProgramacaoFirebase();
     iniciarEventosFirebase();
     iniciarComunicadosFirebase();
     iniciarMidiasYoutubeFirebase();
