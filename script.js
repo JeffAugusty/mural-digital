@@ -1,6 +1,6 @@
 // ======================================================
 // MURAL DIGITAL - FIREBASE COMPATÍVEL
-// Mantém: clima, eventos, QR Code, contagem, imagens e YouTube
+// Mantém: clima, eventos, QR Code, contagem, imagens, YouTube e Spotify
 // ======================================================
 
 const firebaseConfig = {
@@ -46,6 +46,9 @@ let timerRotacao = null;
 let midiasYoutube = [];
 let playersYoutube = new Map();
 let promessaApiYoutube = null;
+let playersSpotify = new Map();
+let promessaApiSpotify = null;
+let apiSpotify = null;
 let liveFixaId = '';
 let assinaturaMidiasYoutube = '';
 let geracaoMidiasYoutube = 0;
@@ -1049,6 +1052,149 @@ function destruirPlayersYoutube() {
 }
 
 
+function linkSpotifyValido(valor) {
+    const texto = String(valor || '').trim();
+
+    if (/^spotify:track:[a-zA-Z0-9]+$/i.test(texto)) {
+        return true;
+    }
+
+    try {
+        const url = new URL(texto);
+        const dominio = url.hostname.replace(/^www\./, '').toLowerCase();
+        const partes = url.pathname.split('/').filter(Boolean);
+
+        if (dominio === 'open.spotify.com') {
+            const indiceTrack = partes.indexOf('track');
+            return indiceTrack >= 0 && /^[a-zA-Z0-9]+$/.test(partes[indiceTrack + 1] || '');
+        }
+
+        return dominio === 'spotify.link' && partes.length > 0;
+    } catch {
+        return false;
+    }
+}
+
+
+function carregarApiSpotify() {
+    if (apiSpotify) {
+        return Promise.resolve(apiSpotify);
+    }
+
+    if (promessaApiSpotify) {
+        return promessaApiSpotify;
+    }
+
+    promessaApiSpotify = new Promise((resolve, reject) => {
+        const callbackAnterior = window.onSpotifyIframeApiReady;
+        const limite = window.setTimeout(() => {
+            document
+                .querySelector('script[data-api-spotify]')
+                ?.remove();
+            promessaApiSpotify = null;
+            reject(new Error('A API do Spotify não respondeu.'));
+        }, 20000);
+
+        window.onSpotifyIframeApiReady = iframeApi => {
+            window.clearTimeout(limite);
+            apiSpotify = iframeApi;
+
+            if (typeof callbackAnterior === 'function') {
+                try {
+                    callbackAnterior(iframeApi);
+                } catch (erro) {
+                    console.warn('Callback anterior do Spotify falhou:', erro);
+                }
+            }
+
+            resolve(iframeApi);
+        };
+
+        if (!document.querySelector('script[data-api-spotify]')) {
+            const script = document.createElement('script');
+            script.src = 'https://open.spotify.com/embed/iframe-api/v1';
+            script.async = true;
+            script.dataset.apiSpotify = 'true';
+            script.onerror = () => {
+                window.clearTimeout(limite);
+                script.remove();
+                promessaApiSpotify = null;
+                reject(new Error('Não foi possível carregar o Spotify.'));
+            };
+            document.head.appendChild(script);
+        }
+    });
+
+    return promessaApiSpotify;
+}
+
+
+function destruirPlayersSpotify() {
+    playersSpotify.forEach(registro => {
+        try {
+            registro.controller.destroy();
+        } catch {
+            // O iframe pode já ter sido removido pelo navegador.
+        }
+    });
+
+    playersSpotify.clear();
+}
+
+
+function mostrarAvisoSomSpotify(section, mostrar) {
+    section
+        .querySelector('.spotify-aviso-som')
+        ?.classList.toggle('visivel', Boolean(mostrar));
+}
+
+
+function aplicarCapaSpotify(section, url) {
+    if (!url) return;
+
+    const capa = section.querySelector('.musica-capa-imagem');
+    const fundo = section.querySelector('.musica-fundo-imagem');
+
+    [capa, fundo].filter(Boolean).forEach(imagem => {
+        imagem.classList.remove('carregada');
+        imagem.onload = () => imagem.classList.add('carregada');
+        imagem.onerror = () => imagem.classList.remove('carregada');
+        imagem.src = url;
+    });
+}
+
+
+async function carregarCapaSpotify(section, item, geracao) {
+    if (item.capaUrl) {
+        aplicarCapaSpotify(section, item.capaUrl);
+        return;
+    }
+
+    try {
+        const resposta = await fetch(
+            `https://open.spotify.com/oembed?url=${encodeURIComponent(item.url || item.link || '')}`,
+            { cache: 'force-cache' }
+        );
+
+        if (!resposta.ok) {
+            throw new Error(`Erro HTTP ${resposta.status}`);
+        }
+
+        const dados = await resposta.json();
+
+        if (
+            geracao === geracaoMidiasYoutube &&
+            document.body.contains(section) &&
+            dados.thumbnail_url
+        ) {
+            aplicarCapaSpotify(section, dados.thumbnail_url);
+        }
+    } catch (erro) {
+        console.warn('Não foi possível carregar a capa da música:', erro);
+    }
+}
+
+
 function mostrarAvisoSom(section, mostrar) {
     const aviso = section.querySelector('.youtube-aviso-som');
 
@@ -1116,6 +1262,23 @@ function aplicarSomPreviaAdmin() {
 
     playersYoutube.forEach(registro => {
         configurarSomYoutube(registro, !somPreviaAdminAtivo);
+    });
+
+    playersSpotify.forEach(registro => {
+        if (!registro.pronto) return;
+
+        try {
+            if (
+                somPreviaAdminAtivo &&
+                registro.section.classList.contains('ativa')
+            ) {
+                iniciarPlayerSpotify(registro.section);
+            } else {
+                registro.controller.pause();
+            }
+        } catch {
+            // O controle pode estar terminando a inicialização.
+        }
     });
 }
 
@@ -1446,6 +1609,308 @@ async function criarPlayersYoutube(sections, geracao) {
 }
 
 
+function atualizarVisualSpotify(section, estado = {}) {
+    const posicao = Math.max(0, Number(estado.position) || 0);
+    const duracao = Math.max(0, Number(estado.duration) || 0);
+    const percentual = duracao > 0
+        ? Math.min(100, (posicao / duracao) * 100)
+        : 0;
+
+    section
+        .querySelector('.musica-progresso-preenchimento')
+        ?.style.setProperty('width', `${percentual}%`);
+
+    const tempoAtual = section.querySelector('.musica-tempo-atual');
+    const tempoTotal = section.querySelector('.musica-tempo-total');
+
+    if (tempoAtual) {
+        tempoAtual.textContent = formatarTempoMusica(posicao / 1000);
+    }
+
+    if (tempoTotal) {
+        tempoTotal.textContent = formatarTempoMusica(duracao / 1000);
+    }
+}
+
+
+function finalizarMusicaSpotify(registro) {
+    if (registro.finalizando || liveFixaId) return;
+
+    registro.finalizando = true;
+    registro.terminou = true;
+    registro.section.classList.remove('tocando');
+
+    try {
+        registro.controller.pause();
+    } catch {
+        // A faixa já pode ter encerrado por conta própria.
+    }
+
+    window.clearTimeout(timerRotacao);
+    timerRotacao = window.setTimeout(() => {
+        if (registro.section.classList.contains('ativa') && !liveFixaId) {
+            rotacionarTela();
+        }
+    }, 350);
+}
+
+
+function agendarSegurancaSpotify(registro, estado = {}) {
+    window.clearTimeout(timerRotacao);
+
+    const duracao = Math.max(0, Number(estado.duration) || 0);
+    const posicao = Math.max(0, Number(estado.position) || 0);
+    const restante = duracao > posicao
+        ? duracao - posicao
+        : 5 * 60 * 1000;
+    const espera = Math.max(15000, restante + 15000);
+
+    timerRotacao = window.setTimeout(() => {
+        if (registro.section.classList.contains('ativa') && !liveFixaId) {
+            registro.terminou = true;
+            rotacionarTela();
+        }
+    }, espera);
+}
+
+
+function agendarFalhaInicioSpotify(registro) {
+    window.clearTimeout(timerRotacao);
+
+    timerRotacao = window.setTimeout(() => {
+        if (
+            !registro.section.classList.contains('ativa') ||
+            registro.iniciadoNestaExibicao
+        ) {
+            return;
+        }
+
+        mostrarAvisoSomSpotify(registro.section, true);
+
+        timerRotacao = window.setTimeout(() => {
+            if (
+                registro.section.classList.contains('ativa') &&
+                !registro.iniciadoNestaExibicao &&
+                !liveFixaId
+            ) {
+                registro.terminou = true;
+                rotacionarTela();
+            }
+        }, 15000);
+    }, 10000);
+}
+
+
+function iniciarPlayerSpotify(section) {
+    const registro = playersSpotify.get(section.id);
+
+    window.clearTimeout(timerRotacao);
+
+    if (!registro || !registro.pronto) {
+        timerRotacao = window.setTimeout(() => {
+            if (section.classList.contains('ativa') && !liveFixaId) {
+                rotacionarTela();
+            }
+        }, 25000);
+        return;
+    }
+
+    if (MODO_PREVIA_ADMIN && !somPreviaAdminAtivo) {
+        try {
+            registro.controller.pause();
+        } catch {
+            // O controle pode estar concluindo a inicialização.
+        }
+
+        section.classList.remove('tocando');
+        mostrarAvisoSomSpotify(section, false);
+        timerRotacao = window.setTimeout(() => {
+            if (section.classList.contains('ativa') && !liveFixaId) {
+                rotacionarTela();
+            }
+        }, TEMPO_COMUNICADO);
+        return;
+    }
+
+    if (section.classList.contains('tocando')) {
+        return;
+    }
+
+    registro.iniciadoNestaExibicao = false;
+    registro.finalizando = false;
+    mostrarAvisoSomSpotify(section, false);
+
+    try {
+        if (registro.terminou) {
+            registro.terminou = false;
+            registro.controller.restart();
+        } else {
+            registro.controller.play();
+        }
+
+        agendarFalhaInicioSpotify(registro);
+    } catch (erro) {
+        console.error('Não foi possível iniciar a música do Spotify:', erro);
+        mostrarAvisoSomSpotify(section, true);
+        agendarFalhaInicioSpotify(registro);
+    }
+}
+
+
+function pausarPlayersSpotifyExceto(idAtivo) {
+    playersSpotify.forEach((registro, id) => {
+        if (id === idAtivo || !registro.pronto) {
+            return;
+        }
+
+        try {
+            registro.controller.pause();
+            registro.section.classList.remove('tocando');
+        } catch {
+            // O controle pode estar mudando de estado.
+        }
+    });
+}
+
+
+function tratarAtualizacaoSpotify(sectionId, estado = {}) {
+    const registro = playersSpotify.get(sectionId);
+
+    if (!registro) return;
+
+    registro.ultimoEstado = estado;
+    atualizarVisualSpotify(registro.section, estado);
+
+    if (!registro.section.classList.contains('ativa')) {
+        return;
+    }
+
+    const tocando = estado.isPaused === false && estado.isBuffering !== true;
+    registro.section.classList.toggle('tocando', tocando);
+
+    if (tocando) {
+        registro.iniciadoNestaExibicao = true;
+        mostrarAvisoSomSpotify(registro.section, false);
+    }
+
+    const duracao = Math.max(0, Number(estado.duration) || 0);
+    const posicao = Math.max(0, Number(estado.position) || 0);
+
+    if (
+        registro.iniciadoNestaExibicao &&
+        duracao > 0 &&
+        posicao >= duracao - 750
+    ) {
+        finalizarMusicaSpotify(registro);
+        return;
+    }
+
+    if (tocando) {
+        agendarSegurancaSpotify(registro, estado);
+    }
+}
+
+
+async function criarPlayersSpotify(registros, geracao) {
+    const musicas = registros.filter(
+        registro =>
+            registro.item.tipo === 'musica' &&
+            linkSpotifyValido(registro.item.url || registro.item.link)
+    );
+
+    if (!musicas.length) return;
+
+    musicas.forEach(({ section, item }) => {
+        carregarCapaSpotify(section, item, geracao);
+    });
+
+    try {
+        const iframeApi = await carregarApiSpotify();
+
+        if (geracao !== geracaoMidiasYoutube) {
+            return;
+        }
+
+        musicas.forEach(({ section, item }) => {
+            const elemento = section.querySelector('.spotify-embed-alvo');
+
+            if (!elemento || !document.body.contains(section)) {
+                return;
+            }
+
+            iframeApi.createController(
+                elemento,
+                {
+                    url: item.url || item.link,
+                    width: 520,
+                    height: 152
+                },
+                controller => {
+                    const registro = {
+                        section,
+                        item,
+                        controller,
+                        pronto: false,
+                        terminou: false,
+                        finalizando: false,
+                        iniciadoNestaExibicao: false,
+                        ultimoEstado: null
+                    };
+
+                    playersSpotify.set(section.id, registro);
+
+                    controller.addListener('ready', () => {
+                        registro.pronto = true;
+                        section
+                            .querySelector('.spotify-carregando')
+                            ?.remove();
+
+                        if (section.classList.contains('ativa')) {
+                            iniciarPlayerSpotify(section);
+                        } else {
+                            try {
+                                controller.pause();
+                            } catch {
+                                // O controle ainda está sendo inicializado.
+                            }
+                        }
+                    });
+
+                    controller.addListener('playback_started', () => {
+                        if (!section.classList.contains('ativa')) return;
+
+                        registro.iniciadoNestaExibicao = true;
+                        registro.finalizando = false;
+                        section.classList.add('tocando');
+                        mostrarAvisoSomSpotify(section, false);
+                    });
+
+                    controller.addListener('playback_update', evento => {
+                        tratarAtualizacaoSpotify(section.id, evento.data || {});
+                    });
+                }
+            );
+        });
+    } catch (erro) {
+        console.error('Erro ao preparar o Spotify:', erro);
+
+        const ativa = document.querySelector('.tela-musica.ativa');
+        if (ativa && !liveFixaId) {
+            rotacionarTela();
+        }
+    }
+}
+
+
+function tentarAtivarSomSpotify() {
+    const section = document.querySelector('.tela-musica.ativa');
+
+    if (!section) return;
+
+    iniciarPlayerSpotify(section);
+}
+
+
 function assinaturaYoutube(listaVisivel) {
     return JSON.stringify(
         listaVisivel.map(item => ({
@@ -1454,6 +1919,7 @@ function assinaturaYoutube(listaVisivel) {
             url: item.url || item.link,
             tipo: item.tipo,
             artista: item.artista,
+            capaUrl: item.capaUrl,
             comSom: item.comSom === true,
             comLegenda: item.comLegenda === true,
             ordem: Number(item.ordem || 0),
@@ -1469,7 +1935,11 @@ function criarIdTelaYoutube(item, index) {
     const identificador = String(item.id || index)
         .replace(/[^a-zA-Z0-9_-]/g, '');
 
-    return `tela-youtube-${identificador || index}`;
+    const prefixo = item.tipo === 'musica'
+        ? 'tela-spotify'
+        : 'tela-youtube';
+
+    return `${prefixo}-${identificador || index}`;
 }
 
 
@@ -1480,6 +1950,10 @@ function renderizarMidiasYoutube(lista, forcar = false) {
 
     const visiveis = midiasYoutube
         .filter(midiaYoutubeEstaVisivel)
+        .filter(item =>
+            item.tipo !== 'musica' ||
+            linkSpotifyValido(item.url || item.link)
+        )
         .sort((a, b) =>
             (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
             String(a.titulo || '').localeCompare(String(b.titulo || ''))
@@ -1497,6 +1971,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
     const idAtivoAnterior = obterIdTelaAtiva();
 
     destruirPlayersYoutube();
+    destruirPlayersSpotify();
 
     const live = visiveis.find(item => item.tipo === 'live');
     const musicas = visiveis.filter(item => item.tipo === 'musica');
@@ -1518,8 +1993,14 @@ function renderizarMidiasYoutube(lista, forcar = false) {
     const registros = itensParaExibir.map((item, index) => {
         const section = document.createElement('section');
         const videoId = extrairIdYoutube(item.url || item.link);
-        const principal = validarCor(item.corPrincipal, '#004A8F');
-        const secundaria = validarCor(item.corSecundaria, '#0077C8');
+        const principal = validarCor(
+            item.corPrincipal,
+            item.tipo === 'musica' ? '#121212' : '#004A8F'
+        );
+        const secundaria = validarCor(
+            item.corSecundaria,
+            item.tipo === 'musica' ? '#1DB954' : '#0077C8'
+        );
         const tipo = item.tipo === 'live'
             ? 'live'
             : item.tipo === 'musica'
@@ -1530,7 +2011,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
             item === musicaDaRodada;
 
         section.className = tipo === 'musica'
-            ? `tela-youtube tela-musica${musicaSelecionada ? ' tela' : ' tela-musica-espera'}`
+            ? `tela-musica${musicaSelecionada ? ' tela' : ' tela-musica-espera'}`
             : 'tela tela-youtube';
         section.id = criarIdTelaYoutube(item, index);
         section.dataset.tipoMidia = tipo;
@@ -1540,33 +2021,40 @@ function renderizarMidiasYoutube(lista, forcar = false) {
 
         if (tipo === 'musica') {
             section.innerHTML = `
-                <div class="musica-fundo"></div>
+                <div class="musica-fundo">
+                    <img class="musica-fundo-imagem" alt="">
+                </div>
 
                 <div class="musica-card">
-                    <div class="musica-video">
-                        <div class="youtube-carregando">Preparando música...</div>
-                        <div class="youtube-player">
-                            <div class="youtube-player-alvo"></div>
-                        </div>
-                        <div class="musica-video-sombra"></div>
-                        <div class="youtube-aviso-som">Toque na tela para ativar o som</div>
-                    </div>
-
-                    <div class="musica-painel">
-                        <div class="musica-selo">
-                            <span></span>
-                            Tocando agora
-                        </div>
-
-                        <div class="musica-nota" aria-hidden="true">
+                    <div class="musica-capa-area">
+                        <div class="musica-capa-fallback" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <circle cx="6" cy="18" r="3" fill="currentColor"/>
                                 <circle cx="16" cy="16" r="3" fill="currentColor"/>
                             </svg>
                         </div>
+                        <img class="musica-capa-imagem" alt="Capa de ${escaparHTML(item.titulo || 'música')}">
+                    </div>
 
-                        <p class="musica-playlist-label">Playlist do Mural Digital</p>
+                    <div class="musica-painel">
+                        <div class="musica-topo">
+                            <div class="spotify-identidade" aria-label="Spotify">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="11" fill="currentColor"/>
+                                    <path d="M6.8 9.1c3.7-1.1 8.3-.8 11.4.9M7.6 12.3c3.1-.8 7-.6 9.7.8M8.3 15.3c2.6-.6 5.7-.4 8 .7" fill="none" stroke="#08110b" stroke-width="1.55" stroke-linecap="round"/>
+                                </svg>
+                                <span>Spotify</span>
+                            </div>
+
+                            <img src="/logo-mural-digital.png?v=2" class="musica-marca" alt="Mural Digital">
+                        </div>
+
+                        <div class="musica-selo">
+                            <span></span>
+                            Tocando agora
+                        </div>
+
                         <h1 class="musica-titulo">${escaparHTML(item.titulo || 'Música')}</h1>
                         <p class="musica-artista">${escaparHTML(item.artista || 'Artista não informado')}</p>
 
@@ -1582,7 +2070,14 @@ function renderizarMidiasYoutube(lista, forcar = false) {
                             <span></span><span></span><span></span><span></span><span></span>
                         </div>
 
-                        <img src="/logo-mural-digital.png?v=2" class="musica-marca" alt="Mural Digital">
+                        <div class="spotify-embed-oficial">
+                            <div class="spotify-carregando">Preparando Spotify...</div>
+                            <div class="spotify-embed-alvo"></div>
+                        </div>
+
+                        <div class="spotify-aviso-som">
+                            Toque na tela para iniciar a música
+                        </div>
                     </div>
                 </div>
 
@@ -1660,7 +2155,11 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         liveFixaId || idAtivoAnterior
     );
     agendarRotacao();
-    criarPlayersYoutube(registros, geracao);
+    criarPlayersYoutube(
+        registros.filter(registro => registro.item.tipo !== 'musica'),
+        geracao
+    );
+    criarPlayersSpotify(registros, geracao);
 }
 
 
@@ -1672,7 +2171,7 @@ function iniciarMidiasYoutubeFirebase() {
     }
 
     if (!db) {
-        console.error('Firebase indisponível para carregar vídeos e lives.');
+        console.error('Firebase indisponível para carregar as mídias.');
         return;
     }
 
@@ -1692,12 +2191,12 @@ function iniciarMidiasYoutubeFirebase() {
                 renderizarMidiasYoutube(lista, true);
 
                 console.info(
-                    `${lista.length} vídeo(s)/live(s) recebido(s) do painel.`
+                    `${lista.length} mídia(s) recebida(s) do painel.`
                 );
             },
             erro => {
                 console.error(
-                    'Erro ao receber vídeos e lives do Firebase:',
+                    'Erro ao receber as mídias do Firebase:',
                     erro
                 );
 
@@ -1746,27 +2245,10 @@ function atualizarProgressoMusica() {
 
     if (!section) return;
 
-    const registro = playersYoutube.get(section.id);
+    const registro = playersSpotify.get(section.id);
 
-    if (!registro?.pronto) return;
-
-    try {
-        const atual = Math.max(0, Number(registro.player.getCurrentTime()) || 0);
-        const duracao = Math.max(0, Number(registro.player.getDuration()) || 0);
-        const percentual = duracao > 0
-            ? Math.min(100, (atual / duracao) * 100)
-            : 0;
-
-        section.querySelector('.musica-progresso-preenchimento')
-            ?.style.setProperty('width', `${percentual}%`);
-
-        const tempoAtual = section.querySelector('.musica-tempo-atual');
-        const tempoTotal = section.querySelector('.musica-tempo-total');
-
-        if (tempoAtual) tempoAtual.textContent = formatarTempoMusica(atual);
-        if (tempoTotal) tempoTotal.textContent = formatarTempoMusica(duracao);
-    } catch {
-        // O player pode estar trocando de faixa ou sendo reconstruído.
+    if (registro?.ultimoEstado) {
+        atualizarVisualSpotify(section, registro.ultimoEstado);
     }
 }
 
@@ -2032,6 +2514,11 @@ function agendarRotacao() {
 
     const telaAtual = telas[step];
 
+    if (telaAtual?.classList.contains('tela-musica')) {
+        iniciarPlayerSpotify(telaAtual);
+        return;
+    }
+
     if (telaAtual?.classList.contains('tela-youtube')) {
         iniciarPlayerYoutube(telaAtual);
         return;
@@ -2092,8 +2579,15 @@ function controlarVideoClima() {
     const youtubeAtivo =
         document.querySelector('.tela-youtube.ativa');
 
+    const spotifyAtivo =
+        document.querySelector('.tela-musica.ativa');
+
     pausarPlayersYoutubeExceto(
         youtubeAtivo ? youtubeAtivo.id : ''
+    );
+
+    pausarPlayersSpotifyExceto(
+        spotifyAtivo ? spotifyAtivo.id : ''
     );
 }
 
@@ -2105,7 +2599,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '9.3-player-musical'
+        '9.4-spotify-tv'
     );
 
     atualizarRelogio();
@@ -2149,6 +2643,12 @@ function iniciarMural() {
     document.addEventListener(
         'pointerdown',
         tentarAtivarSomYoutube,
+        { passive: true }
+    );
+
+    document.addEventListener(
+        'pointerdown',
+        tentarAtivarSomSpotify,
         { passive: true }
     );
 }
