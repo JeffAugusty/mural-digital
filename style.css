@@ -719,7 +719,7 @@ body {
     display: flex;
     align-items: center;
     gap: 11px;
-    color: #1ed760;
+    color: var(--midia-cor-secundaria);
     font-size: clamp(17px, 1.35vw, 25px);
     font-weight: 800;
     letter-spacing: -0.03em;
@@ -745,10 +745,10 @@ body {
     align-items: center;
     gap: 9px;
     padding: 7px 12px;
-    border: 1px solid rgba(30, 215, 96, 0.3);
+    border: 1px solid color-mix(in srgb, var(--midia-cor-secundaria) 42%, transparent);
     border-radius: 100px;
     color: #dfffea;
-    background: rgba(30, 215, 96, 0.09);
+    background: color-mix(in srgb, var(--midia-cor-secundaria) 12%, transparent);
     font-size: clamp(10px, 0.8vw, 14px);
     font-weight: 800;
     letter-spacing: 0.12em;
@@ -759,8 +759,8 @@ body {
     width: 9px;
     height: 9px;
     border-radius: 50%;
-    background: #1ed760;
-    box-shadow: 0 0 0 5px rgba(30, 215, 96, 0.12);
+    background: var(--midia-cor-secundaria);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--midia-cor-secundaria) 16%, transparent);
 }
 
 .musica-titulo {
@@ -793,8 +793,8 @@ body {
     width: 0;
     height: 100%;
     border-radius: inherit;
-    background: #1ed760;
-    box-shadow: 0 0 16px rgba(30, 215, 96, 0.55);
+    background: var(--midia-cor-secundaria);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--midia-cor-secundaria) 60%, transparent);
     transition: width 0.45s linear;
 }
 
@@ -819,7 +819,7 @@ body {
     width: 5px;
     height: 26%;
     border-radius: 10px;
-    background: #1ed760;
+    background: var(--midia-cor-secundaria);
     transform-origin: bottom;
 }
 

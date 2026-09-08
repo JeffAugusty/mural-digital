@@ -1,6 +1,6 @@
 // ======================================================
 // MURAL DIGITAL - FIREBASE COMPATÍVEL
-// Mantém: clima, eventos, QR Code, contagem, imagens, YouTube e Spotify
+// Mantém: clima, eventos, QR Code, contagem, imagens, vídeos e músicas do YouTube
 // ======================================================
 
 const firebaseConfig = {
@@ -940,9 +940,7 @@ function midiaYoutubeEstaVisivel(item) {
     }
 
     const link = item.url || item.link;
-    const linkValido = item.tipo === 'musica'
-        ? linkSpotifyValido(link)
-        : Boolean(extrairIdYoutube(link));
+    const linkValido = Boolean(extrairIdYoutube(link));
 
     if (!linkValido) {
         return false;
@@ -1326,6 +1324,18 @@ function agendarSegurancaYoutube(registro) {
         return;
     }
 
+    if (registro.item.tipo === 'musica') {
+        if (MODO_PREVIA_ADMIN && !somPreviaAdminAtivo) {
+            timerRotacao = window.setTimeout(() => {
+                if (registro.section.classList.contains('ativa') && !liveFixaId) {
+                    rotacionarTela();
+                }
+            }, TEMPO_COMUNICADO);
+        }
+
+        return;
+    }
+
     let espera = 5 * 60 * 1000;
 
     try {
@@ -1620,7 +1630,7 @@ async function criarPlayersYoutube(sections, geracao) {
     } catch (erro) {
         console.error('Erro ao preparar o YouTube:', erro);
 
-        const ativa = document.querySelector('.tela-youtube.ativa');
+        const ativa = document.querySelector('.tela-youtube.ativa, .tela-musica.ativa');
         if (ativa?.dataset.tipoMidia === 'live') {
             encerrarLiveYoutube(ativa.id, 'A API do YouTube está indisponível.');
         } else if (ativa) {
@@ -1948,7 +1958,7 @@ function criarIdTelaYoutube(item, index) {
         .replace(/[^a-zA-Z0-9_-]/g, '');
 
     const prefixo = item.tipo === 'musica'
-        ? 'tela-spotify'
+        ? 'tela-musica'
         : 'tela-youtube';
 
     return `${prefixo}-${identificador || index}`;
@@ -1964,7 +1974,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         .filter(midiaYoutubeEstaVisivel)
         .filter(item =>
             item.tipo !== 'musica' ||
-            linkSpotifyValido(item.url || item.link)
+            Boolean(extrairIdYoutube(item.url || item.link))
         )
         .sort((a, b) =>
             (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
@@ -2021,6 +2031,9 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         const musicaSelecionada =
             tipo === 'musica' &&
             item === musicaDaRodada;
+        const capaMusica = tipo === 'musica' && videoId
+            ? validarLink(item.capaUrl) || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+            : '';
 
         section.className = tipo === 'musica'
             ? `tela-musica${musicaSelecionada ? ' tela' : ' tela-musica-espera'}`
@@ -2034,7 +2047,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         if (tipo === 'musica') {
             section.innerHTML = `
                 <div class="musica-fundo">
-                    <img class="musica-fundo-imagem" alt="">
+                    <img class="musica-fundo-imagem carregada" src="${escaparHTML(capaMusica)}" alt="">
                 </div>
 
                 <div class="musica-card">
@@ -2046,17 +2059,17 @@ function renderizarMidiasYoutube(lista, forcar = false) {
                                 <circle cx="16" cy="16" r="3" fill="currentColor"/>
                             </svg>
                         </div>
-                        <img class="musica-capa-imagem" alt="Capa de ${escaparHTML(item.titulo || 'música')}">
+                        <img class="musica-capa-imagem carregada" src="${escaparHTML(capaMusica)}" alt="Capa de ${escaparHTML(item.titulo || 'música')}">
                     </div>
 
                     <div class="musica-painel">
                         <div class="musica-topo">
-                            <div class="spotify-identidade" aria-label="Spotify">
+                            <div class="spotify-identidade" aria-label="YouTube Music">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="11" fill="currentColor"/>
-                                    <path d="M6.8 9.1c3.7-1.1 8.3-.8 11.4.9M7.6 12.3c3.1-.8 7-.6 9.7.8M8.3 15.3c2.6-.6 5.7-.4 8 .7" fill="none" stroke="#08110b" stroke-width="1.55" stroke-linecap="round"/>
+                                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <path d="m10 8 6 4-6 4V8Z" fill="currentColor"/>
                                 </svg>
-                                <span>Spotify</span>
+                                <span>YouTube Music</span>
                             </div>
 
                             <img src="/logo-mural-digital.png?v=2" class="musica-marca" alt="Mural Digital">
@@ -2083,12 +2096,8 @@ function renderizarMidiasYoutube(lista, forcar = false) {
                         </div>
 
                         <div class="spotify-embed-oficial">
-                            <div class="spotify-carregando">Preparando Spotify...</div>
-                            <div class="spotify-embed-alvo"></div>
-                        </div>
-
-                        <div class="spotify-aviso-som">
-                            Toque na tela para iniciar a música
+                            <div class="youtube-carregando spotify-carregando">Preparando YouTube...</div>
+                            <div class="youtube-player-alvo spotify-embed-alvo"></div>
                         </div>
                     </div>
                 </div>
@@ -2167,11 +2176,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         liveFixaId || idAtivoAnterior
     );
     agendarRotacao();
-    criarPlayersYoutube(
-        registros.filter(registro => registro.item.tipo !== 'musica'),
-        geracao
-    );
-    criarPlayersSpotify(registros, geracao);
+    criarPlayersYoutube(registros, geracao);
 }
 
 
@@ -2221,7 +2226,7 @@ function iniciarMidiasYoutubeFirebase() {
 
 
 function tentarAtivarSomYoutube() {
-    const section = document.querySelector('.tela-youtube.ativa');
+    const section = document.querySelector('.tela-youtube.ativa, .tela-musica.ativa');
 
     if (!section || section.dataset.comSom !== 'true') {
         return;
@@ -2257,10 +2262,17 @@ function atualizarProgressoMusica() {
 
     if (!section) return;
 
-    const registro = playersSpotify.get(section.id);
+    const registro = playersYoutube.get(section.id);
 
-    if (registro?.ultimoEstado) {
-        atualizarVisualSpotify(section, registro.ultimoEstado);
+    if (!registro?.pronto) return;
+
+    try {
+        atualizarVisualSpotify(section, {
+            position: Number(registro.player.getCurrentTime() || 0) * 1000,
+            duration: Number(registro.player.getDuration() || 0) * 1000
+        });
+    } catch {
+        // O player pode estar mudando de faixa.
     }
 }
 
@@ -2527,7 +2539,7 @@ function agendarRotacao() {
     const telaAtual = telas[step];
 
     if (telaAtual?.classList.contains('tela-musica')) {
-        iniciarPlayerSpotify(telaAtual);
+        iniciarPlayerYoutube(telaAtual);
         return;
     }
 
@@ -2589,18 +2601,12 @@ function controlarVideoClima() {
     }
 
     const youtubeAtivo =
-        document.querySelector('.tela-youtube.ativa');
-
-    const spotifyAtivo =
-        document.querySelector('.tela-musica.ativa');
+        document.querySelector('.tela-youtube.ativa, .tela-musica.ativa');
 
     pausarPlayersYoutubeExceto(
         youtubeAtivo ? youtubeAtivo.id : ''
     );
 
-    pausarPlayersSpotifyExceto(
-        spotifyAtivo ? spotifyAtivo.id : ''
-    );
 }
 
 
@@ -2611,7 +2617,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '9.4.2-spotify-faixa-inteira'
+        '9.5.0-musicas-youtube'
     );
 
     atualizarRelogio();
@@ -2658,11 +2664,6 @@ function iniciarMural() {
         { passive: true }
     );
 
-    document.addEventListener(
-        'pointerdown',
-        tentarAtivarSomSpotify,
-        { passive: true }
-    );
 }
 
 

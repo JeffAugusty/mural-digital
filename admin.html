@@ -1376,7 +1376,7 @@
                             </button>
                             <button class="atalho-item" type="button" data-ir-secao="musicas">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"/></svg></span>
-                                <span><strong>Músicas</strong><small>Controlar as faixas do Spotify</small></span>
+                                <span><strong>Músicas</strong><small>Controlar as faixas do YouTube</small></span>
                                 <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                         </div>
@@ -1710,7 +1710,7 @@
                 <section class="card painel-imagens painel-midias-youtube">
                     <div class="card-cabecalho">
                         <div>
-                            <h2>Músicas do Spotify</h2>
+                            <h2>Músicas do YouTube</h2>
                             <p class="imagem-ajuda">Uma música toca por completo depois de cada rodada dos avisos. Na rodada seguinte, o mural avança para a próxima faixa.</p>
                         </div>
                         <span id="total-musicas">0 músicas</span>
@@ -1729,7 +1729,7 @@
                                     <span class="musica-preview-nota">♪</span>
                                 </div>
                                 <div class="musica-preview-info">
-                                    <small>Spotify • Tocando agora</small>
+                                    <small>YouTube Music • Tocando agora</small>
                                     <strong id="musica-preview-titulo">Nome da música</strong>
                                     <span id="musica-preview-artista">Nome do artista</span>
                                     <div class="musica-preview-barra"></div>
@@ -1755,9 +1755,9 @@
                                 </div>
 
                                 <div class="campo campo-largo">
-                                    <label for="musica-url">Link da faixa no Spotify</label>
-                                    <input id="musica-url" type="url" required placeholder="https://open.spotify.com/track/....">
-                                    <p class="imagem-ajuda">No Spotify, abra a música, escolha Compartilhar e copie o link da faixa.</p>
+                                    <label for="musica-url">Link da música no YouTube</label>
+                                    <input id="musica-url" type="url" required placeholder="https://www.youtube.com/watch?v=...">
+                                    <p class="imagem-ajuda">No YouTube ou YouTube Music, abra a música, escolha Compartilhar e copie o link.</p>
                                 </div>
 
                                 <div class="campo">
@@ -1861,8 +1861,6 @@
         let pararEscutaMidias = null;
         let timerInatividade = null;
         let urlPreviewImagem = '';
-        let timerPreviewSpotify = null;
-        let geracaoPreviewSpotify = 0;
 
         const $ = seletor => document.querySelector(seletor);
         const loginTela = $('#login-tela');
@@ -2607,36 +2605,9 @@
             }
         }
 
-        function linkSpotifyValido(valor) {
-            const texto = String(valor || '').trim();
-
-            try {
-                const url = new URL(texto);
-                const dominio = url.hostname.replace(/^www\./, '').toLowerCase();
-                const partes = url.pathname.split('/').filter(Boolean);
-
-                if (dominio === 'open.spotify.com') {
-                    const indiceTrack = partes.indexOf('track');
-                    return indiceTrack >= 0 && /^[a-zA-Z0-9]+$/.test(partes[indiceTrack + 1] || '');
-                }
-
-                return dominio === 'spotify.link' && partes.length > 0;
-            } catch {
-                return false;
-            }
-        }
-
-        async function buscarMetadadosSpotify(url) {
-            const resposta = await fetch(
-                `https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`,
-                { cache: 'force-cache' }
-            );
-
-            if (!resposta.ok) {
-                throw new Error(`O Spotify respondeu com o código ${resposta.status}.`);
-            }
-
-            return resposta.json();
+        function miniaturaYoutube(valor) {
+            const id = extrairIdYoutube(valor);
+            return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '';
         }
 
         function criarIdMidia() {
@@ -2719,27 +2690,13 @@
             $('#musica-preview-titulo').textContent = $('#musica-titulo').value.trim() || 'Nome da música';
             $('#musica-preview-artista').textContent = $('#musica-artista').value.trim() || 'Nome do artista';
 
-            window.clearTimeout(timerPreviewSpotify);
-            const geracao = ++geracaoPreviewSpotify;
+            const miniatura = miniaturaYoutube(url);
+            if (!miniatura) return;
 
-            if (!linkSpotifyValido(url)) return;
-
-            timerPreviewSpotify = window.setTimeout(async () => {
-                try {
-                    const dados = await buscarMetadadosSpotify(url);
-
-                    if (geracao !== geracaoPreviewSpotify || !dados.thumbnail_url) {
-                        return;
-                    }
-
-                    const imagem = document.createElement('img');
-                    imagem.src = dados.thumbnail_url;
-                    imagem.alt = 'Capa da música no Spotify';
-                    capa.prepend(imagem);
-                } catch (erro) {
-                    console.warn('Não foi possível carregar a capa na prévia:', erro);
-                }
-            }, 350);
+            const imagem = document.createElement('img');
+            imagem.src = miniatura;
+            imagem.alt = 'Miniatura da música no YouTube';
+            capa.prepend(imagem);
         }
 
         function limparFormularioMusica() {
@@ -2829,7 +2786,7 @@
 
             lista.innerHTML = ordenadas.map(item => {
                 const miniatura = item.capaUrl || '';
-                const spotifyValido = linkSpotifyValido(item.url || item.link);
+                const youtubeValido = Boolean(extrairIdYoutube(item.url || item.link));
 
                 return `
                     <article class="imagem-item">
@@ -2844,7 +2801,7 @@
                                     ${item.ativo !== false ? 'Ativa' : 'Inativa'}
                                 </span>
                                 <span class="status">Ordem ${Number(item.ordem || 0)}</span>
-                                <span class="status">${spotifyValido ? 'Spotify' : 'Atualizar link'}</span>
+                                <span class="status">${youtubeValido ? 'YouTube' : 'Atualizar link'}</span>
                             </div>
                             <p>${escaparHTML(periodoMidia(item))}</p>
                         </div>
@@ -3270,8 +3227,8 @@
                 return;
             }
 
-            if (!linkSpotifyValido(url)) {
-                mostrarMensagem($('#musica-mensagem'), 'Informe o link de uma faixa válida do Spotify.');
+            if (!extrairIdYoutube(url)) {
+                mostrarMensagem($('#musica-mensagem'), 'Informe um link válido de música do YouTube ou YouTube Music.');
                 return;
             }
 
@@ -3288,14 +3245,7 @@
             botao.textContent = 'Salvando...';
 
             try {
-                let capaUrl = itemAtual?.capaUrl || '';
-
-                try {
-                    const metadados = await buscarMetadadosSpotify(url);
-                    capaUrl = metadados.thumbnail_url || capaUrl;
-                } catch (erroCapa) {
-                    console.warn('A música será salva sem a capa automática:', erroCapa);
-                }
+                const capaUrl = miniaturaYoutube(url) || itemAtual?.capaUrl || '';
 
                 const novaMusica = {
                     id,
