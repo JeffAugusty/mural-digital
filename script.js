@@ -1081,6 +1081,30 @@ function configurarSomYoutube(registro, forcarSilencio = false) {
 }
 
 
+function configurarLegendasYoutube(registro) {
+    if (!registro?.player) return;
+
+    const exibirLegendas = registro.item.comLegenda === true;
+
+    try {
+        if (exibirLegendas) {
+            return;
+        }
+
+        // O primeiro comando desmarca a faixa de legendas quando o módulo
+        // já está disponível. O segundo funciona como reforço em versões do
+        // player que expõem o descarregamento do módulo de legendas.
+        registro.player.setOption?.('captions', 'track', {});
+
+        if (typeof registro.player.unloadModule === 'function') {
+            registro.player.unloadModule('captions');
+        }
+    } catch (erro) {
+        console.warn('Não foi possível ajustar as legendas do YouTube:', erro);
+    }
+}
+
+
 function aplicarSomPreviaAdmin() {
     if (!MODO_PREVIA_ADMIN) return;
 
@@ -1206,6 +1230,7 @@ function iniciarPlayerYoutube(section) {
     }
 
     configurarSomYoutube(registro);
+    configurarLegendasYoutube(registro);
 
     try {
         if (
@@ -1273,6 +1298,7 @@ function tratarEstadoYoutube(sectionId, estado) {
     }
 
     if (estado === window.YT.PlayerState.PLAYING) {
+        configurarLegendasYoutube(registro);
         agendarSegurancaYoutube(registro);
         return;
     }
@@ -1359,8 +1385,12 @@ async function criarPlayersYoutube(sections, geracao) {
                 playerVars: {
                     autoplay: 0,
                     controls: 0,
+                    cc_load_policy: item.comLegenda === true ? 1 : 0,
+                    cc_lang_pref: 'pt',
                     disablekb: 1,
                     fs: 0,
+                    hl: 'pt-BR',
+                    iv_load_policy: 3,
                     playsinline: 1,
                     rel: 0,
                     origin: window.location.origin
@@ -1368,6 +1398,7 @@ async function criarPlayersYoutube(sections, geracao) {
                 events: {
                     onReady: () => {
                         registro.pronto = true;
+                        configurarLegendasYoutube(registro);
                         section
                             .querySelector('.youtube-carregando')
                             ?.remove();
@@ -1418,6 +1449,7 @@ function assinaturaYoutube(listaVisivel) {
             url: item.url || item.link,
             tipo: item.tipo,
             comSom: item.comSom === true,
+            comLegenda: item.comLegenda === true,
             ordem: Number(item.ordem || 0),
             corPrincipal: item.corPrincipal,
             corSecundaria: item.corSecundaria,

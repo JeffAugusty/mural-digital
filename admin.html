@@ -1552,6 +1552,14 @@
                             <p class="imagem-ajuda">Para anúncios, recomendamos deixar sem som. Em uma live, marque esta opção quando precisar do áudio na TV.</p>
                         </div>
 
+                        <div class="campo campo-largo">
+                            <label class="linha-check">
+                                <input id="midia-com-legenda" type="checkbox">
+                                Exibir legendas
+                            </label>
+                            <p class="imagem-ajuda">Deixe desmarcado para reproduzir o conteúdo sem as legendas automáticas do YouTube.</p>
+                        </div>
+
                         <div class="campo">
                             <label for="midia-inicio">Exibir a partir de (opcional)</label>
                             <input id="midia-inicio" type="datetime-local">
@@ -2443,6 +2451,7 @@
             $('#midia-id').value = '';
             $('#midia-ativa').checked = true;
             $('#midia-com-som').checked = false;
+            $('#midia-com-legenda').checked = false;
             $('#midia-tipo').value = 'video';
             $('#midia-ordem').value = 0;
             $('#midia-cor-principal').value = '#004a8f';
@@ -2489,6 +2498,7 @@
                                 </span>
                                 <span class="status">${tipo}</span>
                                 <span class="status">${item.comSom === true ? 'Com som' : 'Sem som'}</span>
+                                <span class="status">${item.comLegenda === true ? 'Com legenda' : 'Sem legenda'}</span>
                                 <span class="status">Ordem ${Number(item.ordem || 0)}</span>
                             </div>
                             <p>${escaparHTML(periodoMidia(item))}</p>
@@ -2543,6 +2553,7 @@
             $('#midia-url').value = item.url || item.link || '';
             $('#midia-tipo').value = item.tipo === 'live' ? 'live' : 'video';
             $('#midia-com-som').checked = item.comSom === true;
+            $('#midia-com-legenda').checked = item.comLegenda === true;
             $('#midia-inicio').value = item.inicio || '';
             $('#midia-fim').value = item.fim || '';
             $('#midia-ordem').value = item.ordem || 0;
@@ -2811,6 +2822,7 @@
                 youtubeId,
                 tipo: $('#midia-tipo').value === 'live' ? 'live' : 'video',
                 comSom: $('#midia-com-som').checked,
+                comLegenda: $('#midia-com-legenda').checked,
                 ativo: $('#midia-ativa').checked,
                 inicio,
                 fim,
