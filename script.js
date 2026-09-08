@@ -1140,6 +1140,8 @@ function carregarApiSpotify() {
 
 function destruirPlayersSpotify() {
     playersSpotify.forEach(registro => {
+        cancelarFalhaInicioSpotify(registro);
+
         try {
             registro.controller.destroy();
         } catch {
@@ -1148,6 +1150,16 @@ function destruirPlayersSpotify() {
     });
 
     playersSpotify.clear();
+}
+
+
+function cancelarFalhaInicioSpotify(registro) {
+    if (!registro) return;
+
+    window.clearTimeout(registro.timerAvisoInicio);
+    window.clearTimeout(registro.timerPularInicio);
+    registro.timerAvisoInicio = null;
+    registro.timerPularInicio = null;
 }
 
 
@@ -1645,6 +1657,7 @@ function atualizarVisualSpotify(section, estado = {}) {
 function finalizarMusicaSpotify(registro) {
     if (registro.finalizando || liveFixaId) return;
 
+    cancelarFalhaInicioSpotify(registro);
     registro.finalizando = true;
     registro.terminou = true;
     registro.section.classList.remove('tocando');
@@ -1664,29 +1677,12 @@ function finalizarMusicaSpotify(registro) {
 }
 
 
-function agendarSegurancaSpotify(registro, estado = {}) {
-    window.clearTimeout(timerRotacao);
-
-    const duracao = Math.max(0, Number(estado.duration) || 0);
-    const posicao = Math.max(0, Number(estado.position) || 0);
-    const restante = duracao > posicao
-        ? duracao - posicao
-        : 5 * 60 * 1000;
-    const espera = Math.max(15000, restante + 15000);
-
-    timerRotacao = window.setTimeout(() => {
-        if (registro.section.classList.contains('ativa') && !liveFixaId) {
-            registro.terminou = true;
-            rotacionarTela();
-        }
-    }, espera);
-}
-
-
 function agendarFalhaInicioSpotify(registro) {
-    window.clearTimeout(timerRotacao);
+    cancelarFalhaInicioSpotify(registro);
 
-    timerRotacao = window.setTimeout(() => {
+    registro.timerAvisoInicio = window.setTimeout(() => {
+        registro.timerAvisoInicio = null;
+
         if (
             !registro.section.classList.contains('ativa') ||
             registro.iniciadoNestaExibicao
@@ -1696,7 +1692,9 @@ function agendarFalhaInicioSpotify(registro) {
 
         mostrarAvisoSomSpotify(registro.section, true);
 
-        timerRotacao = window.setTimeout(() => {
+        registro.timerPularInicio = window.setTimeout(() => {
+            registro.timerPularInicio = null;
+
             if (
                 registro.section.classList.contains('ativa') &&
                 !registro.iniciadoNestaExibicao &&
@@ -1723,6 +1721,8 @@ function iniciarPlayerSpotify(section) {
         }, 25000);
         return;
     }
+
+    cancelarFalhaInicioSpotify(registro);
 
     if (MODO_PREVIA_ADMIN && !somPreviaAdminAtivo) {
         try {
@@ -1772,6 +1772,8 @@ function pausarPlayersSpotifyExceto(idAtivo) {
             return;
         }
 
+        cancelarFalhaInicioSpotify(registro);
+
         try {
             registro.controller.pause();
             registro.section.classList.remove('tocando');
@@ -1798,6 +1800,7 @@ function tratarAtualizacaoSpotify(sectionId, estado = {}) {
     registro.section.classList.toggle('tocando', tocando);
 
     if (tocando) {
+        cancelarFalhaInicioSpotify(registro);
         registro.iniciadoNestaExibicao = true;
         mostrarAvisoSomSpotify(registro.section, false);
     }
@@ -1814,9 +1817,6 @@ function tratarAtualizacaoSpotify(sectionId, estado = {}) {
         return;
     }
 
-    if (tocando) {
-        agendarSegurancaSpotify(registro, estado);
-    }
 }
 
 
@@ -1863,7 +1863,9 @@ async function criarPlayersSpotify(registros, geracao) {
                         terminou: false,
                         finalizando: false,
                         iniciadoNestaExibicao: false,
-                        ultimoEstado: null
+                        ultimoEstado: null,
+                        timerAvisoInicio: null,
+                        timerPularInicio: null
                     };
 
                     playersSpotify.set(section.id, registro);
@@ -1888,6 +1890,7 @@ async function criarPlayersSpotify(registros, geracao) {
                     controller.addListener('playback_started', () => {
                         if (!section.classList.contains('ativa')) return;
 
+                        cancelarFalhaInicioSpotify(registro);
                         registro.iniciadoNestaExibicao = true;
                         registro.finalizando = false;
                         section.classList.add('tocando');
@@ -2608,7 +2611,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '9.4.1-spotify-tv'
+        '9.4.2-spotify-faixa-inteira'
     );
 
     atualizarRelogio();
