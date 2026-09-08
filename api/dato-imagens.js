@@ -8,7 +8,9 @@ const TIPOS_PERMITIDOS = new Set([
     'audio/mp4',
     'audio/x-m4a',
     'audio/wav',
-    'audio/x-wav'
+    'audio/x-wav',
+    'video/mp4',
+    'video/webm'
 ]);
 
 function responder(res, status, dados) {
@@ -152,7 +154,9 @@ module.exports = async function handler(req, res) {
         if (acao === 'finalizar-upload') {
             const caminho = String(corpo.caminho || '');
             const nome = String(corpo.nome || 'Arquivo do mural').trim().slice(0, 100);
-            const categoria = corpo.categoria === 'audio' ? 'audio' : 'imagem';
+            const categoria = ['audio', 'video'].includes(corpo.categoria)
+                ? corpo.categoria
+                : 'imagem';
 
             if (!caminho.startsWith('/') || caminho.length > 500) {
                 responder(res, 400, { erro: 'Caminho temporário inválido.' });
@@ -167,7 +171,7 @@ module.exports = async function handler(req, res) {
                         attributes: {
                             path: caminho,
                             author: usuario.email || 'Administrador do mural',
-                            notes: `${categoria === 'audio' ? 'Áudio' : 'Imagem'} do mural: ${nome}`,
+                            notes: `${categoria === 'audio' ? 'Áudio' : categoria === 'video' ? 'Vídeo' : 'Imagem'} do mural: ${nome}`,
                             tags: ['mural-digital', categoria]
                         }
                     }

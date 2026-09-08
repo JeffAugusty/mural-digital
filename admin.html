@@ -539,7 +539,8 @@
             border-radius: 10%;
             background: rgba(0,0,0,.3);
         }
-        .midia-preview img {
+        .midia-preview img,
+        .midia-preview video {
             position: absolute;
             inset: 7%;
             z-index: 1;
@@ -548,6 +549,9 @@
             object-fit: cover;
             border-radius: 10%;
             background: #050505;
+        }
+        .midia-preview video {
+            pointer-events: none;
         }
         .midia-preview-placeholder {
             position: relative;
@@ -593,6 +597,13 @@
         }
         .midia-miniatura {
             position: relative;
+        }
+        .midia-miniatura video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #050505;
         }
         .midia-miniatura::after {
             content: "▶";
@@ -1371,7 +1382,7 @@
                             </button>
                             <button class="atalho-item" type="button" data-ir-secao="midias">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m10 9 5 3-5 3V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
-                                <span><strong>Vídeos e lives</strong><small>Controlar YouTube e transmissões</small></span>
+                                <span><strong>Vídeos e lives</strong><small>Controlar vídeos e transmissões</small></span>
                                 <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <button class="atalho-item" type="button" data-ir-secao="musicas">
@@ -1601,8 +1612,8 @@
                 <section class="card painel-imagens painel-midias-youtube">
             <div class="card-cabecalho">
                 <div>
-                    <h2>Vídeos e transmissões do YouTube</h2>
-                    <p class="imagem-ajuda">Anúncios entram na rotação e tocam até o fim. Uma live ativa permanece fixa na TV.</p>
+                    <h2>Vídeos e transmissões</h2>
+                    <p class="imagem-ajuda">Use um link do YouTube ou envie um vídeo. Anúncios tocam até o fim; uma live ativa permanece fixa na TV.</p>
                 </div>
                 <span id="total-midias">0 mídias</span>
             </div>
@@ -1612,6 +1623,9 @@
             <div class="imagem-layout">
                 <form id="midia-form" class="imagem-formulario">
                     <input id="midia-id" type="hidden">
+                    <input id="midia-video-url-atual" type="hidden">
+                    <input id="midia-video-dato-id-atual" type="hidden">
+                    <input id="midia-video-dato-path-atual" type="hidden">
 
                     <h3 id="midia-form-titulo">Novo vídeo ou live</h3>
 
@@ -1635,9 +1649,23 @@
                         </div>
 
                         <div class="campo campo-largo">
+                            <label for="midia-origem">Origem do vídeo</label>
+                            <select id="midia-origem">
+                                <option value="youtube">YouTube / transmissão ao vivo</option>
+                                <option value="arquivo">Enviar arquivo de vídeo</option>
+                            </select>
+                        </div>
+
+                        <div id="midia-campo-youtube" class="campo campo-largo">
                             <label for="midia-url">Link do YouTube</label>
-                            <input id="midia-url" type="url" required placeholder="https://www.youtube.com/watch?v=...">
+                            <input id="midia-url" type="url" placeholder="https://www.youtube.com/watch?v=...">
                             <p class="imagem-ajuda">Aceita links de vídeos, Shorts e transmissões ao vivo do YouTube.</p>
+                        </div>
+
+                        <div id="midia-campo-arquivo" class="campo campo-largo oculto">
+                            <label for="midia-video-arquivo">Arquivo do vídeo</label>
+                            <input id="midia-video-arquivo" type="file" accept="video/mp4,video/webm,.mp4,.webm">
+                            <p class="imagem-ajuda">MP4 ou WebM, com no máximo 80 MB. Recomendamos MP4 em 1920 × 1080.</p>
                         </div>
 
                         <div class="campo">
@@ -1661,7 +1689,7 @@
                             <p class="imagem-ajuda">Para anúncios, recomendamos deixar sem som. Em uma live, marque esta opção quando precisar do áudio na TV.</p>
                         </div>
 
-                        <div class="campo campo-largo">
+                        <div id="midia-campo-legenda" class="campo campo-largo">
                             <label class="linha-check">
                                 <input id="midia-com-legenda" type="checkbox">
                                 Exibir legendas
@@ -1868,6 +1896,8 @@
             'audio/wav',
             'audio/x-wav'
         ];
+        const TAMANHO_MAXIMO_VIDEO = 80 * 1024 * 1024;
+        const TIPOS_VIDEO_PERMITIDOS = ['video/mp4', 'video/webm'];
         const LARGURA_MAXIMA_IMAGEM = 1920;
         const ALTURA_MAXIMA_IMAGEM = 1080;
 
@@ -1879,6 +1909,8 @@
         let pararEscutaMidias = null;
         let timerInatividade = null;
         let urlPreviewImagem = '';
+        let urlPreviewVideoMidia = '';
+        let arquivoPreviewVideoMidia = null;
         let urlPreviewCapaMusica = '';
         let arquivoPreviewCapaMusica = null;
 
@@ -1909,7 +1941,7 @@
             },
             midias: {
                 titulo: 'Vídeos e lives',
-                descricao: 'Gerencie anúncios em vídeo e transmissões ao vivo do YouTube.'
+                descricao: 'Gerencie vídeos enviados, conteúdos do YouTube e transmissões ao vivo.'
             },
             musicas: {
                 titulo: 'Músicas',
@@ -2252,6 +2284,17 @@
             return '';
         }
 
+        function validarArquivoVideo(arquivo) {
+            if (!arquivo) return '';
+            if (!TIPOS_VIDEO_PERMITIDOS.includes(arquivo.type)) {
+                return 'Utilize um vídeo MP4 ou WebM.';
+            }
+            if (arquivo.size > TAMANHO_MAXIMO_VIDEO) {
+                return 'O vídeo deve ter no máximo 80 MB.';
+            }
+            return '';
+        }
+
         function liberarPreviewImagem() {
             if (urlPreviewImagem.startsWith('blob:')) {
                 URL.revokeObjectURL(urlPreviewImagem);
@@ -2506,7 +2549,9 @@
                 categoria
             });
 
-            for (let tentativa = 0; tentativa < 75; tentativa += 1) {
+            const totalTentativas = categoria === 'video' ? 150 : 75;
+
+            for (let tentativa = 0; tentativa < totalTentativas; tentativa += 1) {
                 await esperar(1200);
                 const consulta = await chamarApiDato({
                     acao: 'consultar-upload',
@@ -2669,14 +2714,47 @@
             return `${inicio} até ${fim}`;
         }
 
+        function midiaUsaArquivo(item) {
+            return item?.origem === 'arquivo' || Boolean(item?.videoUrl);
+        }
+
+        function liberarPreviewVideoMidia() {
+            if (urlPreviewVideoMidia.startsWith('blob:')) {
+                URL.revokeObjectURL(urlPreviewVideoMidia);
+            }
+            urlPreviewVideoMidia = '';
+            arquivoPreviewVideoMidia = null;
+        }
+
+        function atualizarCamposOrigemMidia() {
+            const arquivo = $('#midia-origem').value === 'arquivo';
+
+            if (!arquivo && urlPreviewVideoMidia.startsWith('blob:')) {
+                liberarPreviewVideoMidia();
+            }
+
+            $('#midia-campo-youtube').classList.toggle('oculto', arquivo);
+            $('#midia-campo-arquivo').classList.toggle('oculto', !arquivo);
+            $('#midia-campo-legenda').classList.toggle('oculto', arquivo);
+            $('#midia-url').required = !arquivo;
+
+            if (arquivo && $('#midia-tipo').value === 'live') {
+                $('#midia-tipo').value = 'video';
+            }
+
+            const opcaoLive = $('#midia-tipo').querySelector('option[value="live"]');
+            if (opcaoLive) opcaoLive.disabled = arquivo;
+        }
+
         function atualizarPreviewMidia() {
             const area = $('#midia-preview');
-            const videoId = extrairIdYoutube($('#midia-url').value);
+            const origemArquivo = $('#midia-origem').value === 'arquivo';
+            const videoId = origemArquivo ? '' : extrairIdYoutube($('#midia-url').value);
             const tipo = $('#midia-tipo').value === 'live' ? 'live' : 'video';
-            const imagemAnterior = area.querySelector('img');
+            const visualAnterior = area.querySelector('img, video');
 
-            if (imagemAnterior) {
-                imagemAnterior.remove();
+            if (visualAnterior) {
+                visualAnterior.remove();
             }
 
             area.style.background = `linear-gradient(135deg, ${$('#midia-cor-principal').value}, ${$('#midia-cor-secundaria').value})`;
@@ -2684,25 +2762,57 @@
             $('#midia-preview-selo').classList.toggle('live', tipo === 'live');
             $('#midia-preview-titulo').textContent = $('#midia-titulo').value.trim() || 'Título da mídia';
 
-            if (videoId) {
+            let possuiVisual = false;
+
+            if (origemArquivo) {
+                const arquivo = $('#midia-video-arquivo').files[0] || null;
+
+                if (arquivo !== arquivoPreviewVideoMidia) {
+                    liberarPreviewVideoMidia();
+                    arquivoPreviewVideoMidia = arquivo;
+                    urlPreviewVideoMidia = arquivo
+                        ? URL.createObjectURL(arquivo)
+                        : $('#midia-video-url-atual').value;
+                } else if (!arquivo && !urlPreviewVideoMidia) {
+                    urlPreviewVideoMidia = $('#midia-video-url-atual').value;
+                }
+
+                if (urlPreviewVideoMidia) {
+                    const video = document.createElement('video');
+                    video.src = urlPreviewVideoMidia;
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.preload = 'metadata';
+                    video.setAttribute('aria-label', 'Prévia do vídeo enviado');
+                    area.prepend(video);
+                    possuiVisual = true;
+                }
+            } else if (videoId) {
                 const imagem = document.createElement('img');
                 imagem.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
                 imagem.alt = 'Prévia do vídeo do YouTube';
                 area.prepend(imagem);
+                possuiVisual = true;
             }
 
             const placeholder = area.querySelector('.midia-preview-placeholder');
             if (placeholder) {
-                placeholder.style.display = videoId ? 'none' : '';
+                placeholder.textContent = origemArquivo ? 'Prévia do arquivo' : 'Prévia do YouTube';
+                placeholder.style.display = possuiVisual ? 'none' : '';
             }
         }
 
         function limparFormularioMidia() {
+            liberarPreviewVideoMidia();
             midiaForm.reset();
             $('#midia-id').value = '';
+            $('#midia-video-url-atual').value = '';
+            $('#midia-video-dato-id-atual').value = '';
+            $('#midia-video-dato-path-atual').value = '';
             $('#midia-ativa').checked = true;
             $('#midia-com-som').checked = false;
             $('#midia-com-legenda').checked = false;
+            $('#midia-origem').value = 'youtube';
             $('#midia-tipo').value = 'video';
             $('#midia-ordem').value = 0;
             $('#midia-cor-principal').value = '#004a8f';
@@ -2711,6 +2821,7 @@
             $('#midia-salvar-botao').textContent = 'Salvar mídia';
             $('#midia-cancelar-botao').classList.add('oculto');
             esconderMensagem($('#midia-mensagem'));
+            atualizarCamposOrigemMidia();
             atualizarPreviewMidia();
         }
 
@@ -2788,16 +2899,20 @@
             }
 
             lista.innerHTML = ordenadas.map(item => {
-                const videoId = extrairIdYoutube(item.url || item.link);
-                const miniatura = videoId
-                    ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
-                    : '';
+                const origemArquivo = midiaUsaArquivo(item);
+                const videoId = origemArquivo ? '' : extrairIdYoutube(item.url || item.link);
+                const miniatura = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '';
                 const tipo = item.tipo === 'live' ? 'Live' : 'Anúncio';
+                const origem = origemArquivo ? 'Arquivo enviado' : 'YouTube';
 
                 return `
                     <article class="imagem-item">
                         <div class="imagem-miniatura midia-miniatura">
-                            ${miniatura ? `<img src="${miniatura}" alt="${escaparHTML(item.titulo || 'Vídeo do YouTube')}" loading="lazy">` : ''}
+                            ${origemArquivo && item.videoUrl
+                                ? `<video src="${escaparHTML(item.videoUrl)}" muted playsinline preload="metadata" aria-label="${escaparHTML(item.titulo || 'Vídeo enviado')}"></video>`
+                                : miniatura
+                                    ? `<img src="${miniatura}" alt="${escaparHTML(item.titulo || 'Vídeo do YouTube')}" loading="lazy">`
+                                    : ''}
                         </div>
                         <div class="imagem-dados">
                             <h4>${escaparHTML(item.titulo || 'Mídia sem título')}</h4>
@@ -2806,8 +2921,9 @@
                                     ${item.ativo !== false ? 'Ativa' : 'Inativa'}
                                 </span>
                                 <span class="status">${tipo}</span>
+                                <span class="status">${origem}</span>
                                 <span class="status">${item.comSom === true ? 'Com som' : 'Sem som'}</span>
-                                <span class="status">${item.comLegenda === true ? 'Com legenda' : 'Sem legenda'}</span>
+                                ${origemArquivo ? '' : `<span class="status">${item.comLegenda === true ? 'Com legenda' : 'Sem legenda'}</span>`}
                                 <span class="status">Ordem ${Number(item.ordem || 0)}</span>
                             </div>
                             <p>${escaparHTML(periodoMidia(item))}</p>
@@ -2914,10 +3030,18 @@
             const item = midiasYoutube.find(midia => midia.id === id);
             if (!item) return;
 
+            liberarPreviewVideoMidia();
+            const origemArquivo = midiaUsaArquivo(item);
+
             $('#midia-id').value = item.id;
+            $('#midia-video-url-atual').value = item.videoUrl || '';
+            $('#midia-video-dato-id-atual').value = item.videoDatoId || '';
+            $('#midia-video-dato-path-atual').value = item.videoDatoPath || '';
             $('#midia-ativa').checked = item.ativo !== false;
             $('#midia-titulo').value = item.titulo || '';
             $('#midia-url').value = item.url || item.link || '';
+            $('#midia-video-arquivo').value = '';
+            $('#midia-origem').value = origemArquivo ? 'arquivo' : 'youtube';
             $('#midia-tipo').value = item.tipo === 'live' ? 'live' : 'video';
             $('#midia-com-som').checked = item.comSom === true;
             $('#midia-com-legenda').checked = item.comLegenda === true;
@@ -2929,6 +3053,7 @@
             $('#midia-form-titulo').textContent = 'Editar vídeo ou live';
             $('#midia-salvar-botao').textContent = 'Salvar alterações';
             $('#midia-cancelar-botao').classList.remove('oculto');
+            atualizarCamposOrigemMidia();
             atualizarPreviewMidia();
             midiaForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -2955,6 +3080,15 @@
 
             try {
                 await salvarListaMidias(midiasYoutube.filter(midia => midia.id !== id));
+
+                if (item.videoDatoId) {
+                    try {
+                        await excluirArquivoDato(item.videoDatoId);
+                    } catch (erroExclusao) {
+                        console.warn('O vídeo saiu do mural, mas o arquivo não pôde ser removido do DatoCMS:', erroExclusao);
+                    }
+                }
+
                 if ($('#midia-id').value === id) limparFormularioMidia();
                 mostrarMensagem($('#midia-mensagem'), 'Mídia excluída com sucesso.', 'sucesso');
             } catch (erro) {
@@ -3227,20 +3361,33 @@
             esconderMensagem($('#midia-mensagem'));
 
             const idAtual = $('#midia-id').value;
-            const itemAtual = midiasYoutube.find(item => item.id === idAtual);
+            const itemAtual = midiasYoutube.find(item => item.id === idAtual && item.tipo !== 'musica');
             const titulo = $('#midia-titulo').value.trim();
+            const origemArquivo = $('#midia-origem').value === 'arquivo';
             const url = $('#midia-url').value.trim();
-            const youtubeId = extrairIdYoutube(url);
+            const youtubeId = origemArquivo ? '' : extrairIdYoutube(url);
+            const arquivoVideo = $('#midia-video-arquivo').files[0];
             const inicio = $('#midia-inicio').value;
             const fim = $('#midia-fim').value;
+            const erroVideo = validarArquivoVideo(arquivoVideo);
 
             if (!titulo) {
                 mostrarMensagem($('#midia-mensagem'), 'Informe o título do vídeo ou da live.');
                 return;
             }
 
-            if (!youtubeId) {
+            if (!origemArquivo && !youtubeId) {
                 mostrarMensagem($('#midia-mensagem'), 'Informe um link válido de vídeo ou live do YouTube.');
+                return;
+            }
+
+            if (origemArquivo && !itemAtual?.videoUrl && !arquivoVideo) {
+                mostrarMensagem($('#midia-mensagem'), 'Escolha o arquivo do vídeo.');
+                return;
+            }
+
+            if (erroVideo) {
+                mostrarMensagem($('#midia-mensagem'), erroVideo);
                 return;
             }
 
@@ -3252,33 +3399,64 @@
             const botao = $('#midia-salvar-botao');
             const agora = new Date().toISOString();
             const id = itemAtual ? itemAtual.id : criarIdMidia();
-            const novoItem = {
-                id,
-                titulo,
-                url,
-                youtubeId,
-                tipo: $('#midia-tipo').value === 'live' ? 'live' : 'video',
-                comSom: $('#midia-com-som').checked,
-                comLegenda: $('#midia-com-legenda').checked,
-                ativo: $('#midia-ativa').checked,
-                inicio,
-                fim,
-                ordem: Math.max(0, Number($('#midia-ordem').value) || 0),
-                corPrincipal: $('#midia-cor-principal').value.toUpperCase(),
-                corSecundaria: $('#midia-cor-secundaria').value.toUpperCase(),
-                criadoEm: itemAtual?.criadoEm || agora,
-                atualizadoEm: agora
-            };
-
-            const novaLista = itemAtual
-                ? midiasYoutube.map(item => item.id === id ? novoItem : item)
-                : [...midiasYoutube, novoItem];
+            const videoDatoAnteriorId = itemAtual?.videoDatoId || '';
+            let videoUrl = origemArquivo ? itemAtual?.videoUrl || '' : '';
+            let videoDatoId = origemArquivo ? videoDatoAnteriorId : '';
+            let videoDatoPath = origemArquivo ? itemAtual?.videoDatoPath || '' : '';
+            let novoVideoDato = null;
 
             botao.disabled = true;
-            botao.textContent = 'Salvando...';
+            botao.textContent = arquivoVideo ? 'Enviando vídeo...' : 'Salvando...';
 
             try {
+                if (origemArquivo && arquivoVideo) {
+                    novoVideoDato = await enviarArquivoParaDato(arquivoVideo, titulo, 'video');
+                    videoUrl = novoVideoDato.url;
+                    videoDatoId = novoVideoDato.id;
+                    videoDatoPath = novoVideoDato.caminho;
+                }
+
+                const novoItem = {
+                    id,
+                    titulo,
+                    origem: origemArquivo ? 'arquivo' : 'youtube',
+                    url: origemArquivo ? '' : url,
+                    youtubeId,
+                    videoUrl,
+                    videoDatoId,
+                    videoDatoPath,
+                    provedorVideo: origemArquivo ? 'datocms' : 'youtube',
+                    tipo: origemArquivo ? 'video' : ($('#midia-tipo').value === 'live' ? 'live' : 'video'),
+                    comSom: $('#midia-com-som').checked,
+                    comLegenda: origemArquivo ? false : $('#midia-com-legenda').checked,
+                    ativo: $('#midia-ativa').checked,
+                    inicio,
+                    fim,
+                    ordem: Math.max(0, Number($('#midia-ordem').value) || 0),
+                    corPrincipal: $('#midia-cor-principal').value.toUpperCase(),
+                    corSecundaria: $('#midia-cor-secundaria').value.toUpperCase(),
+                    criadoEm: itemAtual?.criadoEm || agora,
+                    atualizadoEm: agora
+                };
+
+                const novaLista = itemAtual
+                    ? midiasYoutube.map(item => item.id === id ? novoItem : item)
+                    : [...midiasYoutube, novoItem];
+
+                botao.textContent = 'Salvando...';
                 await salvarListaMidias(novaLista);
+
+                if (
+                    videoDatoAnteriorId &&
+                    (!origemArquivo || (novoVideoDato && videoDatoAnteriorId !== novoVideoDato.id))
+                ) {
+                    try {
+                        await excluirArquivoDato(videoDatoAnteriorId);
+                    } catch (erroExclusao) {
+                        console.warn('O vídeo antigo não pôde ser removido do DatoCMS:', erroExclusao);
+                    }
+                }
+
                 limparFormularioMidia();
                 mostrarMensagem(
                     $('#midia-mensagem'),
@@ -3286,6 +3464,14 @@
                     'sucesso'
                 );
             } catch (erro) {
+                if (novoVideoDato?.id) {
+                    try {
+                        await excluirArquivoDato(novoVideoDato.id);
+                    } catch (erroLimpeza) {
+                        console.warn('Não foi possível limpar o envio incompleto do vídeo:', erroLimpeza);
+                    }
+                }
+
                 mostrarMensagem($('#midia-mensagem'), `Não foi possível salvar: ${erro.message}`);
             } finally {
                 botao.disabled = false;
@@ -3497,6 +3683,10 @@
         form.addEventListener('input', atualizarPreview);
         midiaForm.addEventListener('input', atualizarPreviewMidia);
         midiaForm.addEventListener('change', atualizarPreviewMidia);
+        $('#midia-origem').addEventListener('change', () => {
+            atualizarCamposOrigemMidia();
+            atualizarPreviewMidia();
+        });
         musicaForm.addEventListener('input', atualizarPreviewMusica);
         musicaForm.addEventListener('change', atualizarPreviewMusica);
 

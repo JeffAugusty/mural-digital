@@ -435,7 +435,8 @@ body {
 
 /* YOUTUBE: VÍDEOS E TRANSMISSÕES */
 
-.tela-youtube {
+.tela-youtube,
+.tela-video-arquivo {
     --midia-cor-principal: #004a8f;
     --midia-cor-secundaria: #0077c8;
     color: #fff;
@@ -486,6 +487,15 @@ body {
     height: 100% !important;
     border: 0;
     pointer-events: none;
+}
+
+.video-arquivo-player {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: cover;
+    background: #000;
 }
 
 .youtube-carregando {
