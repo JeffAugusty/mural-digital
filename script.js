@@ -935,7 +935,16 @@ function converterAgendaYoutube(valor, fimDoDia = false) {
 
 
 function midiaYoutubeEstaVisivel(item) {
-    if (item.ativo === false || !extrairIdYoutube(item.url || item.link)) {
+    if (item.ativo === false) {
+        return false;
+    }
+
+    const link = item.url || item.link;
+    const linkValido = item.tipo === 'musica'
+        ? linkSpotifyValido(link)
+        : Boolean(extrairIdYoutube(link));
+
+    if (!linkValido) {
         return false;
     }
 
@@ -2599,7 +2608,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '9.4-spotify-tv'
+        '9.4.1-spotify-tv'
     );
 
     atualizarRelogio();
