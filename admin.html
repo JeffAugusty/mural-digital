@@ -1435,6 +1435,142 @@
             .programacao-alca { width: 100%; }
             .programacao-fixo-selo { text-align: center; }
         }
+
+        .menu-usuario-perfil {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            margin-top: 5px;
+            padding: 3px 8px;
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 999px;
+            color: #d9efff;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+        .primeiro-acesso-card { width: min(480px, 100%); }
+        .primeiro-acesso-aviso {
+            margin: 0 0 22px;
+            padding: 13px 14px;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            color: #17466e;
+            background: #eff6ff;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .usuarios-layout {
+            display: grid;
+            grid-template-columns: minmax(330px, 420px) minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+        }
+        .usuario-formulario {
+            padding: 18px;
+            border: 1px solid var(--borda);
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+        .usuario-formulario h3,
+        .usuario-listagem h3 { margin: 0 0 14px; font-size: 16px; }
+        .permissoes-titulo {
+            display: block;
+            margin: 17px 0 8px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .permissoes-grade {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .permissao-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-height: 42px;
+            padding: 9px 10px;
+            border: 1px solid #d7e0ea;
+            border-radius: 10px;
+            background: #fff;
+            color: #25344a;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .permissao-item input { width: 17px; height: 17px; margin: 0; }
+        .senha-temporaria-linha {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+        }
+        .senha-temporaria-linha .botao { min-width: 92px; padding: 9px 11px; }
+        .usuarios-lista { display: grid; gap: 10px; }
+        .usuario-item {
+            display: grid;
+            grid-template-columns: 46px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            padding: 13px;
+            border: 1px solid var(--borda);
+            border-radius: 12px;
+            background: #fff;
+        }
+        .usuario-avatar {
+            display: grid;
+            place-items: center;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            color: #fff;
+            background: linear-gradient(135deg, #0067b9, #003f73);
+            font-size: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .usuario-dados { min-width: 0; }
+        .usuario-dados h4 { margin: 0 0 3px; font-size: 14px; }
+        .usuario-dados p {
+            overflow: hidden;
+            margin: 0;
+            color: #5f6f82;
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .usuario-selos { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+        .usuario-acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+        .usuario-acoes button {
+            padding: 7px 9px;
+            border: 0;
+            border-radius: 8px;
+            color: #17466e;
+            background: #edf3f8;
+            font-size: 12px;
+        }
+        .usuario-acoes button.perigo { color: #a61b1b; background: #feecec; }
+        .configuracao-servidor {
+            margin-bottom: 14px;
+            padding: 13px 14px;
+            border: 1px solid #fed7aa;
+            border-radius: 12px;
+            color: #92400e;
+            background: #fff7ed;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 980px) {
+            .usuarios-layout { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .permissoes-grade { grid-template-columns: 1fr; }
+            .usuario-item { grid-template-columns: 42px minmax(0, 1fr); }
+            .usuario-avatar { width: 42px; height: 42px; }
+            .usuario-acoes { grid-column: 1 / -1; justify-content: flex-start; }
+            .senha-temporaria-linha { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -1479,6 +1615,32 @@
         <div class="login-credito">Desenvolvido por <strong>Jeferson Augusto</strong></div>
     </section>
 
+    <section id="primeiro-acesso-tela" class="login-tela oculto">
+        <form id="primeiro-acesso-form" class="login-card primeiro-acesso-card" autocomplete="off">
+            <div class="login-card-cabecalho">
+                <h1>Crie sua senha</h1>
+                <p>Esta etapa é obrigatória no primeiro acesso</p>
+            </div>
+
+            <div class="primeiro-acesso-aviso">
+                Por segurança, a senha temporária só serve para entrar uma vez. Escolha agora uma senha pessoal com pelo menos 8 caracteres.
+            </div>
+            <div id="primeiro-acesso-mensagem" class="mensagem mensagem-erro oculto"></div>
+
+            <div class="campo">
+                <label for="nova-senha">Nova senha</label>
+                <input id="nova-senha" type="password" autocomplete="new-password" minlength="8" required placeholder="No mínimo 8 caracteres">
+            </div>
+            <div class="campo" style="margin-top:16px">
+                <label for="confirmar-nova-senha">Confirme a nova senha</label>
+                <input id="confirmar-nova-senha" type="password" autocomplete="new-password" minlength="8" required placeholder="Digite novamente">
+            </div>
+
+            <button id="primeiro-acesso-botao" class="botao botao-primario" style="width:100%;margin-top:24px" type="submit">SALVAR NOVA SENHA</button>
+            <button id="primeiro-acesso-sair" class="botao botao-secundario" style="width:100%;margin-top:10px" type="button">Sair</button>
+        </form>
+    </section>
+
     <main id="admin-app" class="oculto">
         <aside class="menu-lateral" aria-label="Navegação do painel">
             <div class="menu-marca">
@@ -1517,6 +1679,10 @@
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
                     <span>Músicas</span>
                 </button>
+                <button class="menu-item" type="button" data-secao="usuarios" aria-label="Usuários">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span>Usuários</span>
+                </button>
             </nav>
 
             <div class="menu-rodape">
@@ -1527,6 +1693,7 @@
                 <div class="menu-usuario">
                     <span>Usuário conectado</span>
                     <p id="usuario-email"></p>
+                    <strong id="usuario-perfil" class="menu-usuario-perfil"></strong>
                 </div>
                 <button id="sair-botao" class="menu-sair" type="button" aria-label="Sair">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4M14 8l4 4-4 4m4-4H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2103,6 +2270,77 @@
                     </div>
                 </section>
             </section>
+
+            <section class="painel-secao" data-painel="usuarios">
+                <section class="card painel-imagens">
+                    <div class="card-cabecalho">
+                        <div>
+                            <h2>Usuários e acessos</h2>
+                            <p class="imagem-ajuda">Crie contas, escolha os módulos disponíveis e bloqueie acessos sem excluir o histórico.</p>
+                        </div>
+                        <span id="total-usuarios">0 usuários</span>
+                    </div>
+
+                    <div id="usuario-mensagem" class="mensagem oculto"></div>
+                    <div id="usuarios-configuracao-aviso" class="configuracao-servidor oculto"></div>
+
+                    <div class="usuarios-layout">
+                        <form id="usuario-form" class="usuario-formulario" autocomplete="off">
+                            <input id="usuario-id" type="hidden">
+                            <h3 id="usuario-form-titulo">Novo usuário</h3>
+
+                            <div class="grade">
+                                <div class="campo campo-largo">
+                                    <label for="usuario-nome">Nome</label>
+                                    <input id="usuario-nome" maxlength="100" required placeholder="Nome completo">
+                                </div>
+                                <div class="campo campo-largo">
+                                    <label for="usuario-email-cadastro">E-mail de acesso</label>
+                                    <input id="usuario-email-cadastro" type="email" maxlength="254" required autocomplete="off" placeholder="usuario@email.com">
+                                </div>
+                                <div class="campo campo-largo">
+                                    <label for="usuario-papel">Tipo de usuário</label>
+                                    <select id="usuario-papel">
+                                        <option value="usuario">Usuário comum</option>
+                                        <option value="admin">Administrador</option>
+                                    </select>
+                                    <p class="imagem-ajuda">As permissões abaixo definem exatamente o que a pessoa poderá acessar.</p>
+                                </div>
+                                <div id="senha-temporaria-campo" class="campo campo-largo">
+                                    <label for="usuario-senha-temporaria">Senha temporária</label>
+                                    <div class="senha-temporaria-linha">
+                                        <input id="usuario-senha-temporaria" type="text" minlength="8" autocomplete="off" placeholder="Mínimo de 8 caracteres">
+                                        <button id="gerar-senha-botao" class="botao botao-secundario" type="button">Gerar senha</button>
+                                    </div>
+                                    <p class="imagem-ajuda">Entregue esta senha diretamente ao usuário. No primeiro login, ele será obrigado a criar outra.</p>
+                                </div>
+                            </div>
+
+                            <span class="permissoes-titulo">Módulos liberados</span>
+                            <div class="permissoes-grade">
+                                <label class="permissao-item"><input type="checkbox" name="usuario-permissao" value="visao-geral" checked disabled> Visão geral</label>
+                                <label class="permissao-item"><input type="checkbox" name="usuario-permissao" value="eventos" checked> Eventos</label>
+                                <label class="permissao-item"><input type="checkbox" name="usuario-permissao" value="programacao"> Programação da TV</label>
+                                <label class="permissao-item"><input type="checkbox" name="usuario-permissao" value="imagens"> Imagens</label>
+                                <label class="permissao-item"><input type="checkbox" name="usuario-permissao" value="midias"> Vídeos e lives</label>
+                                <label class="permissao-item"><input type="checkbox" name="usuario-permissao" value="musicas"> Músicas</label>
+                            </div>
+
+                            <div class="botoes">
+                                <button id="usuario-cancelar-botao" class="botao botao-secundario oculto" type="button">Cancelar edição</button>
+                                <button id="usuario-salvar-botao" class="botao botao-primario" type="submit">Criar usuário</button>
+                            </div>
+                        </form>
+
+                        <div class="usuario-listagem">
+                            <h3>Contas cadastradas</h3>
+                            <div id="lista-usuarios" class="usuarios-lista">
+                                <div class="vazio">Carregando usuários...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
         </div>
     </main>
 
@@ -2110,7 +2348,7 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
         import {
             getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
-            setPersistence, browserSessionPersistence
+            setPersistence, browserSessionPersistence, updatePassword
         } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
         import {
             getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
@@ -2165,6 +2403,23 @@
         const TIPOS_VIDEO_PERMITIDOS = ['video/mp4', 'video/webm'];
         const LARGURA_MAXIMA_IMAGEM = 1920;
         const ALTURA_MAXIMA_IMAGEM = 1080;
+        const PERMISSOES_ADMIN = [
+            'visao-geral',
+            'programacao',
+            'eventos',
+            'imagens',
+            'midias',
+            'musicas'
+        ];
+        const ROTULOS_PERMISSOES = {
+            'visao-geral': 'Visão geral',
+            programacao: 'Programação',
+            eventos: 'Eventos',
+            imagens: 'Imagens',
+            midias: 'Vídeos e lives',
+            musicas: 'Músicas',
+            usuarios: 'Usuários'
+        };
 
         let eventos = [];
         let imagens = [];
@@ -2174,6 +2429,7 @@
         let pararEscutaImagens = null;
         let pararEscutaMidias = null;
         let pararEscutaProgramacao = null;
+        let pararEscutaPerfil = null;
         let filaSalvamentoProgramacao = Promise.resolve();
         let arrasteProgramacao = null;
         let timerInatividade = null;
@@ -2182,15 +2438,21 @@
         let arquivoPreviewVideoMidia = null;
         let urlPreviewCapaMusica = '';
         let arquivoPreviewCapaMusica = null;
+        let perfilUsuario = null;
+        let usuariosCadastrados = [];
+        let usuariosCarregados = false;
+        let autenticacaoEmAndamento = 0;
 
         const $ = seletor => document.querySelector(seletor);
         const loginTela = $('#login-tela');
+        const primeiroAcessoTela = $('#primeiro-acesso-tela');
         const adminApp = $('#admin-app');
         const form = $('#evento-form');
         const loginForm = $('#login-form');
         const imagemForm = $('#imagem-form');
         const midiaForm = $('#midia-form');
         const musicaForm = $('#musica-form');
+        const usuarioForm = $('#usuario-form');
         const previewMuralIframe = $('#preview-mural-iframe');
         const previewSomBotao = $('#preview-som-botao');
         let previewSomAtivo = false;
@@ -2219,11 +2481,39 @@
             musicas: {
                 titulo: 'Músicas',
                 descricao: 'Organize as faixas que tocam depois de cada rodada dos avisos.'
+            },
+            usuarios: {
+                titulo: 'Usuários',
+                descricao: 'Cadastre pessoas e defina quais áreas cada uma pode acessar.'
             }
         };
 
+        function temPermissao(nome) {
+            if (!perfilUsuario || perfilUsuario.ativo === false) return false;
+            if (perfilUsuario.papel === 'superadmin') return true;
+            return Array.isArray(perfilUsuario.permissoes) &&
+                perfilUsuario.permissoes.includes(nome);
+        }
+
+        function aplicarPermissoesInterface() {
+            document.querySelectorAll('[data-secao]').forEach(botao => {
+                botao.classList.toggle('oculto', !temPermissao(botao.dataset.secao));
+            });
+
+            document.querySelectorAll('[data-ir-secao]').forEach(botao => {
+                botao.classList.toggle('oculto', !temPermissao(botao.dataset.irSecao));
+            });
+
+            const nomesPapel = {
+                superadmin: 'Superadministrador',
+                admin: 'Administrador',
+                usuario: 'Usuário'
+            };
+            $('#usuario-perfil').textContent = nomesPapel[perfilUsuario?.papel] || 'Usuário';
+        }
+
         function abrirSecaoAdmin(nome) {
-            if (!SECOES_ADMIN[nome]) return;
+            if (!SECOES_ADMIN[nome] || !temPermissao(nome)) return;
 
             document.querySelectorAll('[data-secao]').forEach(botao => {
                 botao.classList.toggle('ativo', botao.dataset.secao === nome);
@@ -2235,6 +2525,7 @@
 
             $('#secao-titulo').textContent = SECOES_ADMIN[nome].titulo;
             $('#secao-descricao').textContent = SECOES_ADMIN[nome].descricao;
+            if (nome === 'usuarios' && !usuariosCarregados) carregarUsuarios();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -2311,6 +2602,225 @@
         function escaparHTML(valor) {
             return String(valor || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        async function chamarApiUsuarios(dados) {
+            if (!auth.currentUser) {
+                throw new Error('Sua sessão expirou. Entre novamente.');
+            }
+
+            const token = await auth.currentUser.getIdToken();
+            const resposta = await fetch('/api/usuarios', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            });
+            const retorno = await resposta.json().catch(() => ({}));
+
+            if (!resposta.ok) {
+                const erro = new Error(retorno.erro || `Falha no servidor (${resposta.status}).`);
+                erro.status = resposta.status;
+                throw erro;
+            }
+
+            return retorno;
+        }
+
+        function iniciaisUsuario(nome, email) {
+            const partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
+            if (partes.length >= 2) return `${partes[0][0]}${partes.at(-1)[0]}`;
+            return (partes[0]?.slice(0, 2) || String(email || '').slice(0, 2) || 'US');
+        }
+
+        function formatarDataHoraUsuario(valor) {
+            if (!valor) return 'Ainda não acessou';
+            const data = new Date(valor);
+            if (Number.isNaN(data.getTime())) return 'Ainda não acessou';
+            return data.toLocaleString('pt-BR', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            });
+        }
+
+        function rotuloPapelUsuario(papel) {
+            if (papel === 'superadmin') return 'Superadministrador';
+            if (papel === 'admin') return 'Administrador';
+            return 'Usuário comum';
+        }
+
+        function renderizarUsuarios() {
+            const lista = $('#lista-usuarios');
+            const usuarios = [...usuariosCadastrados].sort((a, b) =>
+                String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR')
+            );
+
+            $('#total-usuarios').textContent = `${usuarios.length} usuário${usuarios.length === 1 ? '' : 's'}`;
+            if (!usuarios.length) {
+                lista.innerHTML = '<div class="vazio">Nenhuma conta cadastrada.</div>';
+                return;
+            }
+
+            lista.innerHTML = usuarios.map(usuario => {
+                const permissoes = usuario.papel === 'superadmin'
+                    ? 'Acesso total'
+                    : (usuario.permissoes || [])
+                        .filter(item => item !== 'visao-geral')
+                        .map(item => ROTULOS_PERMISSOES[item] || item)
+                        .join(', ') || 'Somente visão geral';
+                const ehProprio = usuario.uid === perfilUsuario?.uid;
+                const protegido = usuario.papel === 'superadmin';
+
+                return `
+                    <article class="usuario-item">
+                        <div class="usuario-avatar" aria-hidden="true">${escaparHTML(iniciaisUsuario(usuario.nome, usuario.email))}</div>
+                        <div class="usuario-dados">
+                            <h4>${escaparHTML(usuario.nome || 'Usuário sem nome')}</h4>
+                            <p>${escaparHTML(usuario.email)}</p>
+                            <div class="usuario-selos">
+                                <span class="status ${usuario.ativo !== false ? 'status-ativo' : 'status-inativo'}">${usuario.ativo !== false ? 'Ativo' : 'Bloqueado'}</span>
+                                <span class="status">${escaparHTML(rotuloPapelUsuario(usuario.papel))}</span>
+                                ${usuario.primeiroAcesso ? '<span class="status status-inativo">Primeiro acesso pendente</span>' : ''}
+                            </div>
+                            <p style="margin-top:6px" title="${escaparHTML(permissoes)}">${escaparHTML(permissoes)}</p>
+                            <p style="margin-top:3px">Último acesso: ${escaparHTML(formatarDataHoraUsuario(usuario.ultimoAcesso))}</p>
+                        </div>
+                        <div class="usuario-acoes">
+                            ${protegido ? '' : `<button type="button" data-acao-usuario="editar" data-id="${escaparHTML(usuario.uid)}">Editar</button>`}
+                            ${protegido || ehProprio ? '' : `<button type="button" data-acao-usuario="senha" data-id="${escaparHTML(usuario.uid)}">Nova senha temporária</button>`}
+                            ${protegido || ehProprio ? '' : `<button type="button" class="${usuario.ativo !== false ? 'perigo' : ''}" data-acao-usuario="alternar" data-id="${escaparHTML(usuario.uid)}">${usuario.ativo !== false ? 'Bloquear' : 'Reativar'}</button>`}
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function carregarUsuarios() {
+            if (!temPermissao('usuarios')) return;
+            const lista = $('#lista-usuarios');
+            lista.innerHTML = '<div class="vazio">Carregando usuários...</div>';
+            esconderMensagem($('#usuario-mensagem'));
+            $('#usuarios-configuracao-aviso').classList.add('oculto');
+
+            try {
+                const retorno = await chamarApiUsuarios({ acao: 'listar' });
+                usuariosCadastrados = Array.isArray(retorno.usuarios) ? retorno.usuarios : [];
+                usuariosCarregados = true;
+                renderizarUsuarios();
+            } catch (erro) {
+                usuariosCarregados = false;
+                lista.innerHTML = '<div class="vazio">Não foi possível carregar as contas.</div>';
+                if (erro.status === 503) {
+                    const aviso = $('#usuarios-configuracao-aviso');
+                    aviso.textContent = erro.message;
+                    aviso.classList.remove('oculto');
+                } else {
+                    mostrarMensagem($('#usuario-mensagem'), erro.message);
+                }
+            }
+        }
+
+        function gerarSenhaTemporaria() {
+            const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+            const valores = new Uint32Array(10);
+            window.crypto.getRandomValues(valores);
+            const parte = Array.from(valores, valor => caracteres[valor % caracteres.length]).join('');
+            return `Mural-${parte}!`;
+        }
+
+        function permissoesFormularioUsuario() {
+            return Array.from(document.querySelectorAll('input[name="usuario-permissao"]:checked'))
+                .map(campo => campo.value);
+        }
+
+        function marcarPermissoesUsuario(permissoes) {
+            const liberadas = new Set(['visao-geral', ...(permissoes || [])]);
+            document.querySelectorAll('input[name="usuario-permissao"]').forEach(campo => {
+                campo.checked = liberadas.has(campo.value);
+            });
+        }
+
+        function limparFormularioUsuario() {
+            usuarioForm.reset();
+            $('#usuario-id').value = '';
+            $('#usuario-email-cadastro').disabled = false;
+            $('#senha-temporaria-campo').classList.remove('oculto');
+            $('#usuario-senha-temporaria').required = true;
+            $('#usuario-papel').value = 'usuario';
+            $('#usuario-form-titulo').textContent = 'Novo usuário';
+            $('#usuario-salvar-botao').textContent = 'Criar usuário';
+            $('#usuario-cancelar-botao').classList.add('oculto');
+            marcarPermissoesUsuario(['visao-geral', 'eventos']);
+            esconderMensagem($('#usuario-mensagem'));
+        }
+
+        function editarUsuario(uid) {
+            const usuario = usuariosCadastrados.find(item => item.uid === uid);
+            if (!usuario || usuario.papel === 'superadmin') return;
+            $('#usuario-id').value = usuario.uid;
+            $('#usuario-nome').value = usuario.nome || '';
+            $('#usuario-email-cadastro').value = usuario.email || '';
+            $('#usuario-email-cadastro').disabled = true;
+            $('#usuario-papel').value = usuario.papel === 'admin' ? 'admin' : 'usuario';
+            $('#senha-temporaria-campo').classList.add('oculto');
+            $('#usuario-senha-temporaria').required = false;
+            $('#usuario-senha-temporaria').value = '';
+            $('#usuario-form-titulo').textContent = 'Editar usuário';
+            $('#usuario-salvar-botao').textContent = 'Salvar permissões';
+            $('#usuario-cancelar-botao').classList.remove('oculto');
+            marcarPermissoesUsuario(usuario.permissoes);
+            usuarioForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function alternarUsuario(uid) {
+            const usuario = usuariosCadastrados.find(item => item.uid === uid);
+            if (!usuario) return;
+            const ativar = usuario.ativo === false;
+            const verbo = ativar ? 'reativar' : 'bloquear';
+            if (!window.confirm(`Deseja ${verbo} o acesso de ${usuario.nome}?`)) return;
+
+            try {
+                await chamarApiUsuarios({ acao: 'alternar', uid, ativo: ativar });
+                usuariosCarregados = false;
+                await carregarUsuarios();
+                mostrarMensagem($('#usuario-mensagem'), `Usuário ${ativar ? 'reativado' : 'bloqueado'} com sucesso.`, 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#usuario-mensagem'), erro.message);
+            }
+        }
+
+        async function redefinirSenhaUsuario(uid) {
+            const usuario = usuariosCadastrados.find(item => item.uid === uid);
+            if (!usuario) return;
+            const sugestao = gerarSenhaTemporaria();
+            const senha = window.prompt(
+                `Defina a senha temporária de ${usuario.nome}. A pessoa deverá trocá-la no próximo login:`,
+                sugestao
+            );
+            if (senha === null) return;
+            if (senha.length < 8) {
+                mostrarMensagem($('#usuario-mensagem'), 'A senha temporária precisa ter pelo menos 8 caracteres.');
+                return;
+            }
+
+            try {
+                await chamarApiUsuarios({
+                    acao: 'redefinir-senha',
+                    uid,
+                    senhaTemporaria: senha
+                });
+                usuariosCarregados = false;
+                await carregarUsuarios();
+                mostrarMensagem(
+                    $('#usuario-mensagem'),
+                    'Senha temporária definida. Entregue-a diretamente ao usuário; ela não será exibida novamente.',
+                    'sucesso'
+                );
+            } catch (erro) {
+                mostrarMensagem($('#usuario-mensagem'), erro.message);
+            }
         }
 
         function formatarData(data) {
@@ -3710,6 +4220,122 @@
             }
         });
 
+        $('#primeiro-acesso-form').addEventListener('submit', async evento => {
+            evento.preventDefault();
+            esconderMensagem($('#primeiro-acesso-mensagem'));
+            const senha = $('#nova-senha').value;
+            const confirmacao = $('#confirmar-nova-senha').value;
+
+            if (senha.length < 8) {
+                mostrarMensagem($('#primeiro-acesso-mensagem'), 'A nova senha precisa ter pelo menos 8 caracteres.');
+                return;
+            }
+            if (senha !== confirmacao) {
+                mostrarMensagem($('#primeiro-acesso-mensagem'), 'As duas senhas não são iguais.');
+                return;
+            }
+            if (!auth.currentUser) {
+                mostrarMensagem($('#primeiro-acesso-mensagem'), 'Sua sessão expirou. Entre novamente.');
+                return;
+            }
+
+            const botao = $('#primeiro-acesso-botao');
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+            try {
+                await updatePassword(auth.currentUser, senha);
+                const retorno = await chamarApiUsuarios({ acao: 'concluir-primeiro-acesso' });
+                await auth.currentUser.getIdToken(true);
+                perfilUsuario = retorno.usuario;
+                $('#primeiro-acesso-form').reset();
+                primeiroAcessoTela.classList.add('oculto');
+                iniciarPainelAutorizado();
+            } catch (erro) {
+                mostrarMensagem(
+                    $('#primeiro-acesso-mensagem'),
+                    erro.code === 'auth/requires-recent-login'
+                        ? 'Entre novamente com a senha temporária e tente outra vez.'
+                        : (erro.message || 'Não foi possível salvar a nova senha.')
+                );
+            } finally {
+                botao.disabled = false;
+                botao.textContent = 'Salvar nova senha';
+            }
+        });
+
+        $('#primeiro-acesso-sair').addEventListener('click', async () => {
+            await signOut(auth);
+            limparCamposLogin();
+        });
+
+        usuarioForm.addEventListener('submit', async evento => {
+            evento.preventDefault();
+            esconderMensagem($('#usuario-mensagem'));
+            const uid = $('#usuario-id').value;
+            const senhaTemporaria = $('#usuario-senha-temporaria').value;
+            const dados = {
+                acao: uid ? 'atualizar' : 'criar',
+                uid,
+                nome: $('#usuario-nome').value.trim(),
+                email: $('#usuario-email-cadastro').value.trim(),
+                papel: $('#usuario-papel').value,
+                permissoes: permissoesFormularioUsuario(),
+                senhaTemporaria
+            };
+
+            if (!uid && senhaTemporaria.length < 8) {
+                mostrarMensagem($('#usuario-mensagem'), 'A senha temporária precisa ter pelo menos 8 caracteres.');
+                return;
+            }
+
+            const botao = $('#usuario-salvar-botao');
+            botao.disabled = true;
+            botao.textContent = uid ? 'Salvando...' : 'Criando...';
+            try {
+                await chamarApiUsuarios(dados);
+                limparFormularioUsuario();
+                usuariosCarregados = false;
+                await carregarUsuarios();
+                mostrarMensagem(
+                    $('#usuario-mensagem'),
+                    uid
+                        ? 'Permissões atualizadas. Elas valerão na próxima renovação da sessão do usuário.'
+                        : 'Usuário criado. Entregue diretamente a senha temporária que você definiu.',
+                    'sucesso'
+                );
+            } catch (erro) {
+                mostrarMensagem($('#usuario-mensagem'), erro.message);
+            } finally {
+                botao.disabled = false;
+                botao.textContent = $('#usuario-id').value ? 'Salvar permissões' : 'Criar usuário';
+            }
+        });
+
+        $('#gerar-senha-botao').addEventListener('click', () => {
+            const campo = $('#usuario-senha-temporaria');
+            campo.value = gerarSenhaTemporaria();
+            campo.focus();
+            campo.select();
+        });
+
+        $('#usuario-papel').addEventListener('change', () => {
+            if ($('#usuario-id').value) return;
+            marcarPermissoesUsuario(
+                $('#usuario-papel').value === 'admin'
+                    ? PERMISSOES_ADMIN
+                    : ['visao-geral', 'eventos']
+            );
+        });
+
+        $('#usuario-cancelar-botao').addEventListener('click', limparFormularioUsuario);
+        $('#lista-usuarios').addEventListener('click', evento => {
+            const botao = evento.target.closest('button[data-acao-usuario]');
+            if (!botao) return;
+            if (botao.dataset.acaoUsuario === 'editar') editarUsuario(botao.dataset.id);
+            if (botao.dataset.acaoUsuario === 'alternar') alternarUsuario(botao.dataset.id);
+            if (botao.dataset.acaoUsuario === 'senha') redefinirSenhaUsuario(botao.dataset.id);
+        });
+
         form.addEventListener('submit', async evento => {
             evento.preventDefault();
             esconderMensagem($('#form-mensagem'));
@@ -4278,24 +4904,98 @@
         musicaForm.addEventListener('input', atualizarPreviewMusica);
         musicaForm.addEventListener('change', atualizarPreviewMusica);
 
-        onAuthStateChanged(auth, usuario => {
+        function encerrarEscutasPainel() {
+            if (pararEscuta) pararEscuta();
+            if (pararEscutaImagens) pararEscutaImagens();
+            if (pararEscutaMidias) pararEscutaMidias();
+            if (pararEscutaProgramacao) pararEscutaProgramacao();
+            if (pararEscutaPerfil) pararEscutaPerfil();
+            pararEscuta = null;
+            pararEscutaImagens = null;
+            pararEscutaMidias = null;
+            pararEscutaProgramacao = null;
+            pararEscutaPerfil = null;
+        }
+
+        function iniciarEscutaPerfil() {
+            if (!auth.currentUser) return;
+            if (pararEscutaPerfil) pararEscutaPerfil();
+            const uid = auth.currentUser.uid;
+
+            pararEscutaPerfil = onSnapshot(
+                doc(db, 'usuarios', uid),
+                async registro => {
+                    if (!registro.exists() || auth.currentUser?.uid !== uid) return;
+                    const atualizado = { uid, ...registro.data() };
+                    if (atualizado.ativo === false) {
+                        await signOut(auth);
+                        mostrarMensagem($('#login-mensagem'), 'Seu acesso foi bloqueado por um administrador.');
+                        return;
+                    }
+
+                    perfilUsuario = atualizado;
+                    await auth.currentUser.getIdToken(true).catch(() => {});
+                    aplicarPermissoesInterface();
+                    const painelAtual = document.querySelector('[data-painel].ativo')?.dataset.painel;
+                    if (painelAtual && !temPermissao(painelAtual)) abrirSecaoAdmin('visao-geral');
+                },
+                erro => console.warn('Não foi possível acompanhar as permissões do usuário:', erro)
+            );
+        }
+
+        function iniciarPainelAutorizado() {
+            loginTela.classList.add('oculto');
+            primeiroAcessoTela.classList.add('oculto');
+            adminApp.classList.remove('oculto');
+            $('#usuario-email').textContent = perfilUsuario?.email || auth.currentUser?.email || '';
+            aplicarPermissoesInterface();
+            abrirSecaoAdmin('visao-geral');
+            iniciarEscuta();
+            iniciarEscutaImagens();
+            iniciarEscutaMidias();
+            iniciarEscutaProgramacao();
+            iniciarEscutaPerfil();
+            reiniciarTimerInatividade();
+        }
+
+        onAuthStateChanged(auth, async usuario => {
+            const revisao = ++autenticacaoEmAndamento;
             if (usuario) {
-                loginTela.classList.add('oculto');
-                adminApp.classList.remove('oculto');
-                $('#usuario-email').textContent = usuario.email;
-                abrirSecaoAdmin('visao-geral');
-                iniciarEscuta();
-                iniciarEscutaImagens();
-                iniciarEscutaMidias();
-                iniciarEscutaProgramacao();
-                reiniciarTimerInatividade();
+                esconderMensagem($('#login-mensagem'));
+                adminApp.classList.add('oculto');
+                primeiroAcessoTela.classList.add('oculto');
+
+                try {
+                    const retorno = await chamarApiUsuarios({ acao: 'me' });
+                    if (revisao !== autenticacaoEmAndamento || auth.currentUser?.uid !== usuario.uid) return;
+
+                    perfilUsuario = retorno.usuario;
+                    await usuario.getIdToken(true);
+
+                    if (perfilUsuario.primeiroAcesso) {
+                        loginTela.classList.add('oculto');
+                        primeiroAcessoTela.classList.remove('oculto');
+                        reiniciarTimerInatividade();
+                        $('#nova-senha').focus();
+                    } else {
+                        iniciarPainelAutorizado();
+                    }
+                } catch (erro) {
+                    if (revisao !== autenticacaoEmAndamento) return;
+                    await signOut(auth).catch(() => {});
+                    mostrarMensagem(
+                        $('#login-mensagem'),
+                        erro.message || 'Não foi possível validar as permissões desta conta.'
+                    );
+                }
             } else {
                 pararTimerInatividade();
-                if (pararEscuta) pararEscuta();
-                if (pararEscutaImagens) pararEscutaImagens();
-                if (pararEscutaMidias) pararEscutaMidias();
-                if (pararEscutaProgramacao) pararEscutaProgramacao();
+                encerrarEscutasPainel();
+                perfilUsuario = null;
+                usuariosCadastrados = [];
+                usuariosCarregados = false;
                 adminApp.classList.add('oculto');
+                primeiroAcessoTela.classList.add('oculto');
                 loginTela.classList.remove('oculto');
                 limparCamposLogin();
             }
@@ -4306,6 +5006,7 @@
         limparFormularioImagem();
         limparFormularioMidia();
         limparFormularioMusica();
+        limparFormularioUsuario();
     </script>
 </body>
 </html>
