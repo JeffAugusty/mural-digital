@@ -953,9 +953,9 @@ function renderizarInteracaoMusica() {
                 </aside>
 
                 <img
-                    src="isologo-mural-digital.png"
+                    src="logo-uniube.png"
                     class="interacao-musica-logo"
-                    alt="Mural Digital"
+                    alt="Uniube"
                 >
             </div>
         </div>
@@ -3435,7 +3435,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '13.1.0-interacao-musical'
+        '13.1.1-logo-uniube-interacao'
     );
 
     atualizarRelogio();
