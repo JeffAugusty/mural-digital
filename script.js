@@ -1121,7 +1121,10 @@ function midiaYoutubeEstaVisivel(item) {
         item.tipo !== 'live' &&
         (item.origem === 'arquivo' || Boolean(item.videoUrl));
     const linkValido = item.tipo === 'musica'
-        ? Boolean(validarLink(item.audioUrl)) && Boolean(validarLink(item.capaUrl))
+        ? Boolean(validarLink(item.capaUrl)) && (
+            Boolean(extrairIdYoutube(item.url || item.link)) ||
+            Boolean(validarLink(item.audioUrl))
+        )
         : videoArquivo
             ? Boolean(validarLink(item.videoUrl))
             : Boolean(extrairIdYoutube(item.url || item.link));
@@ -1576,6 +1579,10 @@ function mostrarAvisoSom(section, mostrar) {
     if (aviso) {
         aviso.classList.toggle('visivel', Boolean(mostrar));
     }
+
+    if (section.classList.contains('tela-musica')) {
+        section.classList.toggle('audio-bloqueado', Boolean(mostrar));
+    }
 }
 
 
@@ -2008,7 +2015,7 @@ async function criarPlayersYoutube(sections, geracao) {
     } catch (erro) {
         console.error('Erro ao preparar o YouTube:', erro);
 
-        const ativa = document.querySelector('.tela-youtube.ativa');
+        const ativa = document.querySelector('.tela-youtube.ativa, .tela-musica.ativa');
         if (ativa?.dataset.tipoMidia === 'live') {
             encerrarLiveYoutube(ativa.id, 'A API do YouTube está indisponível.');
         } else if (ativa) {
@@ -2538,7 +2545,13 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         .filter(midiaYoutubeEstaVisivel)
         .filter(item =>
             item.tipo !== 'musica' ||
-            (Boolean(validarLink(item.audioUrl)) && Boolean(validarLink(item.capaUrl)))
+            (
+                Boolean(validarLink(item.capaUrl)) &&
+                (
+                    Boolean(extrairIdYoutube(item.url || item.link)) ||
+                    Boolean(validarLink(item.audioUrl))
+                )
+            )
         )
         .sort((a, b) =>
             (Number(a.ordem || 0) - Number(b.ordem || 0)) ||
@@ -2636,7 +2649,9 @@ function renderizarMidiasYoutube(lista, forcar = false) {
                         <img src="${escaparHTML(capaMusica)}" alt="Capa de ${escaparHTML(item.titulo || 'música')}">
                     </div>
 
-                    <audio class="musica-audio" src="${escaparHTML(audioMusica)}" preload="metadata"></audio>
+                    ${videoId
+                        ? '<div class="musica-youtube-audio"><div class="youtube-player-alvo"></div></div>'
+                        : `<audio class="musica-audio" src="${escaparHTML(audioMusica)}" preload="metadata"></audio>`}
 
                     <div class="musica-video-sombra"></div>
 
@@ -2788,8 +2803,8 @@ function renderizarMidiasYoutube(lista, forcar = false) {
     agendarRotacao();
     criarPlayersYoutube(
         registros.filter(registro =>
-            registro.item.tipo !== 'musica' &&
-            !midiaUsaVideoArquivo(registro.item)
+            !midiaUsaVideoArquivo(registro.item) &&
+            Boolean(registro.videoId)
         ),
         geracao
     );
@@ -2894,6 +2909,11 @@ function tentarAtivarSomAudio() {
     const section = document.querySelector('.tela-musica.ativa');
     if (!section) return;
 
+    if (playersYoutube.has(section.id)) {
+        iniciarPlayerYoutube(section);
+        return;
+    }
+
     const registro = playersAudio.get(section.id);
     if (!registro) return;
 
@@ -2915,6 +2935,20 @@ function atualizarProgressoMusica() {
     const section = document.querySelector('.tela-musica.ativa');
 
     if (!section) return;
+
+    const registroYoutube = playersYoutube.get(section.id);
+
+    if (registroYoutube?.pronto) {
+        try {
+            atualizarVisualSpotify(section, {
+                position: Number(registroYoutube.player.getCurrentTime() || 0) * 1000,
+                duration: Number(registroYoutube.player.getDuration() || 0) * 1000
+            });
+        } catch {
+            // O player ainda pode estar carregando os metadados.
+        }
+        return;
+    }
 
     const registro = playersAudio.get(section.id);
 
@@ -3331,7 +3365,11 @@ function agendarRotacao() {
     const telaAtual = telas[step];
 
     if (telaAtual?.classList.contains('tela-musica')) {
-        iniciarPlayerAudio(telaAtual);
+        if (playersYoutube.has(telaAtual.id)) {
+            iniciarPlayerYoutube(telaAtual);
+        } else {
+            iniciarPlayerAudio(telaAtual);
+        }
         return;
     }
 
@@ -3366,6 +3404,16 @@ function rotacionarTela() {
     const terminouMusica = telaAnterior.classList.contains('tela-musica');
 
     if (terminouMusica) {
+        const registroYoutube = playersYoutube.get(telaAnterior.id);
+        if (registroYoutube?.pronto) {
+            try {
+                registroYoutube.player.pauseVideo();
+                registroYoutube.player.seekTo(0, false);
+            } catch {
+                // O player pode estar sendo reconstruído por uma atualização.
+            }
+        }
+
         const registroAudio = playersAudio.get(telaAnterior.id);
         if (registroAudio) {
             registroAudio.audio.pause();
@@ -3435,7 +3483,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '13.1.1-logo-uniube-interacao'
+        '13.2.0-musica-youtube'
     );
 
     atualizarRelogio();
