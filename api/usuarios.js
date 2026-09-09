@@ -118,7 +118,7 @@ async function garantirPerfil(decoded, authAdmin, dbAdmin) {
 
     if (!registro.exists) {
         throw erroHttp(
-            'Esta conta ainda não foi cadastrada por um superadministrador.',
+            'Esta conta ainda não foi cadastrada por um administrador.',
             403
         );
     }
@@ -131,7 +131,7 @@ async function garantirPerfil(decoded, authAdmin, dbAdmin) {
 
 function exigirSuperadmin(perfil) {
     if (perfil.papel !== 'superadmin') {
-        throw erroHttp('Somente o superadministrador pode gerenciar usuários.', 403);
+        throw erroHttp('Somente o administrador responsável pode gerenciar usuários.', 403);
     }
 }
 
