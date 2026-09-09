@@ -433,6 +433,183 @@ body {
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
 }
 
+/* INTERAÇÃO MUSICAL */
+
+.tela-interacao-musica {
+    --interacao-cor-principal: #004a8f;
+    --interacao-cor-secundaria: #0077c8;
+    color: #fff;
+    background: linear-gradient(
+        135deg,
+        var(--interacao-cor-principal),
+        var(--interacao-cor-secundaria)
+    );
+}
+
+.interacao-musica-card {
+    position: relative;
+    z-index: 2;
+    width: 91vw;
+    height: 82vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 25vw, 400px);
+    gap: clamp(20px, 3vw, 58px);
+    padding: clamp(22px, 3vw, 58px);
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.23);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: clamp(24px, 3vw, 55px);
+    box-shadow: 0 5vh 12vh rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.interacao-musica-conteudo {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.interacao-musica-etiqueta {
+    align-self: flex-start;
+    margin-bottom: clamp(10px, 1.8vh, 22px);
+    padding: clamp(6px, 0.7vw, 12px) clamp(14px, 1.8vw, 30px);
+    color: var(--interacao-cor-principal);
+    background: #fff;
+    border-radius: 100px;
+    font-size: clamp(11px, 1.05vw, 20px);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+}
+
+.interacao-musica-titulo {
+    max-width: 100%;
+    color: #fff;
+    font-size: clamp(38px, 4.7vw, 90px);
+    font-weight: 900;
+    line-height: 0.94;
+    letter-spacing: -0.045em;
+}
+
+.interacao-musica-descricao {
+    max-width: 800px;
+    margin-top: clamp(14px, 2.4vh, 28px);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(17px, 1.65vw, 31px);
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.interacao-musica-passos {
+    display: grid;
+    gap: clamp(8px, 1.3vh, 16px);
+    margin-top: clamp(18px, 3.2vh, 38px);
+}
+
+.interacao-musica-passo {
+    display: flex;
+    align-items: center;
+    gap: clamp(12px, 1.4vw, 24px);
+    color: #fff;
+    font-size: clamp(15px, 1.35vw, 25px);
+    font-weight: 800;
+}
+
+.interacao-musica-passo strong {
+    width: clamp(34px, 3vw, 54px);
+    height: clamp(34px, 3vw, 54px);
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    color: var(--interacao-cor-principal);
+    background: #fff;
+    border-radius: 50%;
+    font-size: clamp(16px, 1.5vw, 28px);
+    font-weight: 900;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+}
+
+.interacao-musica-lateral {
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(15px, 2vh, 25px);
+}
+
+.interacao-musica-acao {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(22px, 2.2vw, 38px);
+    color: #171717;
+    background: #fff;
+    border-radius: clamp(20px, 2.5vw, 42px);
+    box-shadow: 0 3vh 7vh rgba(0, 0, 0, 0.25);
+}
+
+.interacao-musica-qr-titulo {
+    margin-bottom: clamp(8px, 1.2vh, 16px);
+    color: var(--interacao-cor-principal);
+    font-size: clamp(11px, 1.1vw, 21px);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-align: center;
+}
+
+.interacao-musica-qr-code {
+    width: clamp(190px, 17vw, 270px);
+    height: clamp(190px, 17vw, 270px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: clamp(7px, 0.7vw, 12px);
+    background: #fff;
+    border: 3px solid #171717;
+    border-radius: clamp(10px, 1vw, 18px);
+}
+
+.interacao-musica-qr-code img,
+.interacao-musica-qr-code canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.interacao-musica-qr-texto {
+    margin-top: clamp(9px, 1.2vh, 16px);
+    color: var(--interacao-cor-principal);
+    font-size: clamp(11px, 1vw, 18px);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-align: center;
+}
+
+.interacao-musica-dominio {
+    max-width: 100%;
+    margin-top: 4px;
+    color: #777;
+    font-size: clamp(9px, 0.75vw, 14px);
+    font-weight: 600;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.interacao-musica-logo {
+    display: block;
+    width: clamp(95px, 9vw, 150px);
+    height: clamp(60px, 7vh, 95px);
+    object-fit: contain;
+    background: transparent;
+    filter: drop-shadow(0 5px 13px rgba(0, 0, 0, 0.32));
+}
+
 /* YOUTUBE: VÍDEOS E TRANSMISSÕES */
 
 .tela-youtube,
@@ -924,6 +1101,34 @@ body {
         padding: 20px 25px;
     }
 
+    .interacao-musica-card {
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: 18px;
+        padding: 20px 25px;
+    }
+
+    .interacao-musica-titulo {
+        font-size: clamp(34px, 4.5vw, 45px);
+    }
+
+    .interacao-musica-lateral {
+        gap: 12px;
+    }
+
+    .interacao-musica-acao {
+        padding: 15px;
+    }
+
+    .interacao-musica-qr-code {
+        width: 160px;
+        height: 160px;
+    }
+
+    .interacao-musica-logo {
+        width: 92px;
+        height: 55px;
+    }
+
     .evento-titulo {
         font-size: clamp(29px, 4vw, 38px);
     }
@@ -980,6 +1185,30 @@ body {
         height: 86vh;
         padding-top: 18px;
         padding-bottom: 18px;
+    }
+
+    .interacao-musica-card {
+        height: 86vh;
+        padding-top: 18px;
+        padding-bottom: 18px;
+    }
+
+    .interacao-musica-etiqueta {
+        margin-bottom: 8px;
+    }
+
+    .interacao-musica-descricao {
+        margin-top: 10px;
+    }
+
+    .interacao-musica-passos {
+        gap: 7px;
+        margin-top: 13px;
+    }
+
+    .interacao-musica-acao {
+        padding-top: 14px;
+        padding-bottom: 14px;
     }
 
     .evento-etiqueta {
@@ -1063,6 +1292,50 @@ body {
     .evento-logo {
         width: 180px;
         max-height: 65px;
+    }
+
+    .interacao-musica-card {
+        width: 90vw;
+        height: 90vh;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .interacao-musica-titulo {
+        font-size: clamp(34px, 9vw, 62px);
+    }
+
+    .interacao-musica-descricao {
+        font-size: clamp(15px, 4vw, 24px);
+    }
+
+    .interacao-musica-passos {
+        display: none;
+    }
+
+    .interacao-musica-lateral {
+        height: auto;
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .interacao-musica-acao {
+        width: auto;
+    }
+
+    .interacao-musica-qr-code {
+        width: 105px;
+        height: 105px;
+    }
+
+    .interacao-musica-logo {
+        width: 105px;
+        height: 70px;
+    }
+
+    .interacao-musica-dominio {
+        display: none;
     }
 
     .evento-qr-texto,
