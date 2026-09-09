@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function autenticado() {
+      return request.auth != null && request.auth.token.ativo != false;
+    }
+
+    function acessoLiberado() {
+      return autenticado() && request.auth.token.primeiroAcesso != true;
+    }
+
+    function superadmin() {
+      return acessoLiberado() && request.auth.token.papel == 'superadmin';
+    }
+
+    function possui(permissao) {
+      return acessoLiberado() && (
+        superadmin() ||
+        request.auth.token.permissoes is list &&
+        request.auth.token.permissoes.hasAny([permissao])
+      );
+    }
+
+    match /eventos/{documento} {
+      allow read: if true;
+
+      allow create: if documento != 'configuracao-imagens-mural' &&
+        documento != 'configuracao-videos-mural' &&
+        documento != 'configuracao-programacao-mural' &&
+        possui('eventos');
+
+      allow update, delete: if documento != 'configuracao-imagens-mural' &&
+        documento != 'configuracao-videos-mural' &&
+        documento != 'configuracao-programacao-mural' &&
+        possui('eventos');
+
+      allow write: if documento == 'configuracao-imagens-mural' && possui('imagens');
+      allow write: if documento == 'configuracao-programacao-mural' && possui('programacao');
+      allow write: if documento == 'configuracao-videos-mural' &&
+        (possui('midias') || possui('musicas'));
+    }
+
+    match /usuarios/{usuarioId} {
+      allow read: if acessoLiberado() &&
+        (request.auth.uid == usuarioId || superadmin());
+      allow write: if false;
+    }
+
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+  }
+}
