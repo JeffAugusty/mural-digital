@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-versao-admin="13.1.0-interacao-musical">
+<html lang="pt-br" data-versao-admin="13.2.0-musica-youtube">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2201,7 +2201,7 @@
                     <div class="card-cabecalho">
                         <div>
                             <h2>Músicas do mural</h2>
-                            <p class="imagem-ajuda">Envie a capa e o áudio. Uma música toca por completo depois de cada rodada dos avisos e a próxima faixa entra na rodada seguinte.</p>
+                            <p class="imagem-ajuda">Envie a capa e informe o link do YouTube. Uma música toca por completo depois de cada rodada dos avisos e a próxima faixa entra na rodada seguinte.</p>
                         </div>
                         <span id="total-musicas">0 músicas</span>
                     </div>
@@ -2300,9 +2300,9 @@
                                 </div>
 
                                 <div class="campo campo-largo">
-                                    <label for="musica-audio-arquivo">Arquivo de áudio</label>
-                                    <input id="musica-audio-arquivo" class="imagem-arquivo" type="file" accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav,.mp3,.m4a,.wav">
-                                    <p class="imagem-ajuda">MP3, M4A ou WAV, com no máximo 30 MB. Utilize somente arquivos cuja reprodução esteja autorizada.</p>
+                                    <label for="musica-youtube-url">Link da música no YouTube</label>
+                                    <input id="musica-youtube-url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
+                                    <p class="imagem-ajuda">Cole o link do vídeo oficial. Na TV, o layout continuará exibindo somente a capa, o título e o artista.</p>
                                 </div>
 
                                 <div class="campo">
@@ -3029,7 +3029,7 @@
             const musicasAtivas = midiasYoutube.filter(item =>
                 item.tipo === 'musica' &&
                 item.ativo !== false &&
-                item.audioUrl &&
+                (extrairIdYoutube(item.url || item.link) || item.audioUrl) &&
                 item.capaUrl
             ).length;
 
@@ -4017,6 +4017,7 @@
             $('#musica-capa-dato-id-atual').value = '';
             $('#musica-audio-url-atual').value = '';
             $('#musica-audio-dato-id-atual').value = '';
+            $('#musica-youtube-url').value = '';
             $('#musica-ativa').checked = true;
             $('#musica-ordem').value = 0;
             $('#musica-cor-principal').value = '#121212';
@@ -4105,7 +4106,8 @@
 
             lista.innerHTML = ordenadas.map(item => {
                 const miniatura = item.capaUrl || '';
-                const audioPronto = Boolean(item.audioUrl);
+                const youtubePronto = Boolean(extrairIdYoutube(item.url || item.link));
+                const audioLegado = !youtubePronto && Boolean(item.audioUrl);
                 const capaPronta = Boolean(item.capaDatoId && item.capaUrl);
 
                 return `
@@ -4121,8 +4123,8 @@
                                     ${item.ativo !== false ? 'Ativa' : 'Inativa'}
                                 </span>
                                 <span class="status">Ordem ${Number(item.ordem || 0)}</span>
-                                <span class="status ${audioPronto ? 'status-ativo' : 'status-inativo'}">
-                                    ${audioPronto ? 'Áudio pronto' : 'Enviar áudio'}
+                                <span class="status ${youtubePronto || audioLegado ? 'status-ativo' : 'status-inativo'}">
+                                    ${youtubePronto ? 'YouTube pronto' : audioLegado ? 'Áudio atual' : 'Informar YouTube'}
                                 </span>
                                 <span class="status ${capaPronta ? 'status-ativo' : 'status-inativo'}">
                                     ${capaPronta ? 'Capa pronta' : 'Enviar capa'}
@@ -4266,8 +4268,8 @@
             $('#musica-ativa').checked = item.ativo !== false;
             $('#musica-titulo').value = item.titulo || '';
             $('#musica-artista').value = item.artista || '';
+            $('#musica-youtube-url').value = item.url || item.link || '';
             $('#musica-capa-arquivo').value = '';
-            $('#musica-audio-arquivo').value = '';
             $('#musica-inicio').value = item.inicio || '';
             $('#musica-fim').value = item.fim || '';
             $('#musica-ordem').value = item.ordem || 0;
@@ -4828,15 +4830,19 @@
             const itemAtual = midiasYoutube.find(item => item.id === idAtual && item.tipo === 'musica');
             const titulo = $('#musica-titulo').value.trim();
             const artista = $('#musica-artista').value.trim();
+            const linkYoutube = $('#musica-youtube-url').value.trim();
             const arquivoCapa = $('#musica-capa-arquivo').files[0];
-            const arquivoAudio = $('#musica-audio-arquivo').files[0];
             const inicio = $('#musica-inicio').value;
             const fim = $('#musica-fim').value;
             const erroCapa = validarArquivoImagem(arquivoCapa);
-            const erroAudio = validarArquivoAudio(arquivoAudio);
 
             if (!titulo || !artista) {
                 mostrarMensagem($('#musica-mensagem'), 'Informe o nome da música e o artista.');
+                return;
+            }
+
+            if (!extrairIdYoutube(linkYoutube)) {
+                mostrarMensagem($('#musica-mensagem'), 'Informe um link válido de vídeo do YouTube.');
                 return;
             }
 
@@ -4845,13 +4851,8 @@
                 return;
             }
 
-            if ((!itemAtual || !itemAtual.audioUrl) && !arquivoAudio) {
-                mostrarMensagem($('#musica-mensagem'), 'Escolha o arquivo de áudio da música.');
-                return;
-            }
-
-            if (erroCapa || erroAudio) {
-                mostrarMensagem($('#musica-mensagem'), erroCapa || erroAudio);
+            if (erroCapa) {
+                mostrarMensagem($('#musica-mensagem'), erroCapa);
                 return;
             }
 
@@ -4872,7 +4873,6 @@
             let audioDatoId = audioDatoAnteriorId;
             let audioDatoPath = itemAtual?.audioDatoPath || '';
             let novaCapaDato = null;
-            let novoAudioDato = null;
 
             botao.disabled = true;
             botao.textContent = arquivoCapa ? 'Preparando capa...' : 'Salvando...';
@@ -4887,15 +4887,7 @@
                     capaDatoPath = novaCapaDato.caminho;
                 }
 
-                if (arquivoAudio) {
-                    botao.textContent = 'Enviando áudio...';
-                    novoAudioDato = await enviarArquivoParaDato(arquivoAudio, `${titulo} - áudio`, 'audio');
-                    audioUrl = novoAudioDato.url;
-                    audioDatoId = novoAudioDato.id;
-                    audioDatoPath = novoAudioDato.caminho;
-                }
-
-                botao.textContent = 'Salvando...';
+                 botao.textContent = 'Salvando...';
 
                 const novaMusica = {
                     id,
@@ -4907,7 +4899,9 @@
                     audioUrl,
                     audioDatoId,
                     audioDatoPath,
-                    provedorAudio: 'datocms',
+                    url: linkYoutube,
+                    link: linkYoutube,
+                    provedorAudio: 'youtube',
                     tipo: 'musica',
                     comSom: true,
                     ativo: $('#musica-ativa').checked,
@@ -4927,8 +4921,7 @@
                 await salvarListaMidias(novaLista);
 
                 const arquivosAntigos = [
-                    novaCapaDato && capaDatoAnteriorId !== novaCapaDato.id ? capaDatoAnteriorId : '',
-                    novoAudioDato && audioDatoAnteriorId !== novoAudioDato.id ? audioDatoAnteriorId : ''
+                    novaCapaDato && capaDatoAnteriorId !== novaCapaDato.id ? capaDatoAnteriorId : ''
                 ].filter(Boolean);
 
                 for (const uploadId of arquivosAntigos) {
@@ -4946,7 +4939,7 @@
                     'sucesso'
                 );
             } catch (erro) {
-                for (const uploadId of [novaCapaDato?.id, novoAudioDato?.id].filter(Boolean)) {
+                for (const uploadId of [novaCapaDato?.id].filter(Boolean)) {
                     try {
                         await excluirArquivoDato(uploadId);
                     } catch (erroLimpeza) {
