@@ -1,0 +1,11 @@
+{
+  "name": "mural-digital",
+  "version": "13.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
