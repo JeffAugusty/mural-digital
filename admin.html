@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-versao-admin="13.0.0-usuarios-permissoes">
+<html lang="pt-br" data-versao-admin="13.0.1-rotulo-administrador">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2505,7 +2505,7 @@
             });
 
             const nomesPapel = {
-                superadmin: 'Superadministrador',
+                superadmin: 'Administrador',
                 admin: 'Administrador',
                 usuario: 'Usuário'
             };
@@ -2646,7 +2646,7 @@
         }
 
         function rotuloPapelUsuario(papel) {
-            if (papel === 'superadmin') return 'Superadministrador';
+            if (papel === 'superadmin') return 'Administrador';
             if (papel === 'admin') return 'Administrador';
             return 'Usuário comum';
         }
