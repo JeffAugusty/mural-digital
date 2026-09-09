@@ -35,6 +35,7 @@ const TEMPO_COMUNICADO = 15000;
 const CHAVE_CACHE_EVENTOS = 'mural-eventos-firebase-v1';
 const CHAVE_CACHE_COMUNICADOS = 'mural-comunicados-firebase-v1';
 const CHAVE_CACHE_MIDIAS_YOUTUBE = 'mural-midias-youtube-firebase-v1';
+const CHAVE_CACHE_INTERACAO_MUSICA = 'mural-interacao-musica-firebase-v1';
 const CHAVE_CACHE_PROGRAMACAO = 'mural-programacao-firebase-v1';
 const ID_CONFIGURACAO_IMAGENS = 'configuracao-imagens-mural';
 const ID_CONFIGURACAO_MIDIAS_YOUTUBE = 'configuracao-videos-mural';
@@ -59,6 +60,13 @@ let geracaoMidiasYoutube = 0;
 let somPreviaAdminAtivo = false;
 let idMusicaDaRodada = '';
 let programacaoOrdem = [];
+let configuracaoInteracaoMusica = {
+    ativo: false,
+    linkFormulario: '',
+    duracao: 15,
+    corPrincipal: '#004A8F',
+    corSecundaria: '#0077C8'
+};
 
 
 // ======================================================
@@ -801,6 +809,164 @@ function criarQRCode(section, link) {
         console.error('Erro ao criar QR Code:', erro);
         area.textContent = 'QR indisponível';
     }
+}
+
+
+// ======================================================
+// INTERAÇÃO MUSICAL DOS ALUNOS
+// ======================================================
+
+function normalizarConfiguracaoInteracaoMusica(dados = {}) {
+    return {
+        ativo: dados.ativo === true,
+        linkFormulario: validarLink(dados.linkFormulario),
+        duracao: Math.min(60, Math.max(5, Number(dados.duracao) || 15)),
+        corPrincipal: validarCor(dados.corPrincipal, '#004A8F'),
+        corSecundaria: validarCor(dados.corSecundaria, '#0077C8')
+    };
+}
+
+
+function carregarCacheInteracaoMusica() {
+    try {
+        const dados = JSON.parse(
+            localStorage.getItem(CHAVE_CACHE_INTERACAO_MUSICA) || '{}'
+        );
+
+        return normalizarConfiguracaoInteracaoMusica(dados);
+    } catch (erro) {
+        console.warn('Não foi possível ler o cache da interação musical:', erro);
+        return normalizarConfiguracaoInteracaoMusica();
+    }
+}
+
+
+function salvarCacheInteracaoMusica(dados) {
+    try {
+        localStorage.setItem(
+            CHAVE_CACHE_INTERACAO_MUSICA,
+            JSON.stringify(dados)
+        );
+    } catch (erro) {
+        console.warn('Não foi possível salvar o cache da interação musical:', erro);
+    }
+}
+
+
+function criarQRCodeInteracaoMusica(section, link) {
+    const area = section.querySelector('.interacao-musica-qr-code');
+
+    if (!area || !link) return;
+
+    if (typeof window.QRCode === 'undefined') {
+        area.textContent = 'QR indisponível';
+        return;
+    }
+
+    try {
+        area.innerHTML = '';
+
+        new window.QRCode(area, {
+            text: link,
+            width: 260,
+            height: 260,
+            colorDark: '#101010',
+            colorLight: '#FFFFFF',
+            correctLevel: window.QRCode.CorrectLevel.M
+        });
+    } catch (erro) {
+        console.error('Erro ao criar o QR Code da interação musical:', erro);
+        area.textContent = 'QR indisponível';
+    }
+}
+
+
+function renderizarInteracaoMusica() {
+    const container = document.getElementById('container-interacao-musica');
+    if (!container) return;
+
+    const configuracao = normalizarConfiguracaoInteracaoMusica(
+        configuracaoInteracaoMusica
+    );
+    const existeMusicaAtiva = Boolean(
+        document.querySelector('.tela-musica.tela')
+    );
+
+    if (
+        !configuracao.ativo ||
+        !configuracao.linkFormulario ||
+        !existeMusicaAtiva
+    ) {
+        container.replaceChildren();
+        return;
+    }
+
+    const section = document.createElement('section');
+    section.className = 'tela tela-interacao-musica';
+    section.id = 'tela-interacao-musica';
+    section.dataset.duration = String(configuracao.duracao * 1000);
+    section.style.setProperty('--interacao-cor-principal', configuracao.corPrincipal);
+    section.style.setProperty('--interacao-cor-secundaria', configuracao.corSecundaria);
+    section.style.setProperty(
+        'background',
+        `linear-gradient(135deg, ${configuracao.corPrincipal}, ${configuracao.corSecundaria})`,
+        'important'
+    );
+
+    section.innerHTML = `
+        <div class="interacao-musica-card">
+            <div class="interacao-musica-conteudo">
+                <div class="interacao-musica-etiqueta">PARTICIPE DO MURAL</div>
+
+                <h1 class="interacao-musica-titulo">
+                    QUER INDICAR<br>UMA MÚSICA?
+                </h1>
+
+                <p class="interacao-musica-descricao">
+                    Sua sugestão pode tocar aqui no Mural Digital.
+                </p>
+
+                <div class="interacao-musica-passos">
+                    <div class="interacao-musica-passo">
+                        <strong>1</strong>
+                        <span>Escaneie o QR Code</span>
+                    </div>
+                    <div class="interacao-musica-passo">
+                        <strong>2</strong>
+                        <span>Envie sua indicação</span>
+                    </div>
+                    <div class="interacao-musica-passo">
+                        <strong>3</strong>
+                        <span>Aguarde a seleção</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="interacao-musica-lateral">
+                <aside class="interacao-musica-acao">
+                    <div class="interacao-musica-qr-titulo">APONTE A CÂMERA</div>
+                    <div class="interacao-musica-qr-code"></div>
+                    <div class="interacao-musica-qr-texto">INDIQUE SUA MÚSICA</div>
+                    <div class="interacao-musica-dominio">
+                        ${escaparHTML(obterDominio(configuracao.linkFormulario))}
+                    </div>
+                </aside>
+
+                <img
+                    src="isologo-mural-digital.png"
+                    class="interacao-musica-logo"
+                    alt="Mural Digital"
+                >
+            </div>
+        </div>
+
+        <div class="credito-desenvolvedor">
+            Desenvolvido por <span>Jeferson Augusto</span>
+        </div>
+    `;
+
+    container.replaceChildren(section);
+    criarQRCodeInteracaoMusica(section, configuracao.linkFormulario);
 }
 
 
@@ -2610,6 +2776,8 @@ function renderizarMidiasYoutube(lista, forcar = false) {
                 .map(registro => registro.section)
         );
 
+    renderizarInteracaoMusica();
+
     liveFixaId = live
         ? registros.find(registro => registro.item.tipo === 'live')?.section.id || ''
         : '';
@@ -2631,10 +2799,13 @@ function renderizarMidiasYoutube(lista, forcar = false) {
 
 
 function iniciarMidiasYoutubeFirebase() {
+    configuracaoInteracaoMusica = carregarCacheInteracaoMusica();
     const cache = carregarCacheMidiasYoutube();
 
     if (cache.length) {
         renderizarMidiasYoutube(cache, true);
+    } else {
+        renderizarInteracaoMusica();
     }
 
     if (!db) {
@@ -2654,7 +2825,13 @@ function iniciarMidiasYoutubeFirebase() {
                     ? dados.midias
                     : [];
 
+                configuracaoInteracaoMusica =
+                    normalizarConfiguracaoInteracaoMusica(
+                        dados.interacaoMusica || {}
+                    );
+
                 salvarCacheMidiasYoutube(lista);
+                salvarCacheInteracaoMusica(configuracaoInteracaoMusica);
                 renderizarMidiasYoutube(lista, true);
 
                 console.info(
@@ -3003,9 +3180,13 @@ function intercalarTelasProgramacao(lista) {
 function obterTelasOrdenadas() {
     const todas = Array.from(document.querySelectorAll('.tela'));
     const tempo = todas.find(tela => tela.id === 'tela-tempo');
+    const interacaoMusica = todas.find(
+        tela => tela.id === 'tela-interacao-musica'
+    );
     const musicas = todas.filter(tela => tela.classList.contains('tela-musica'));
     const conteudos = todas.filter(tela =>
         tela !== tempo &&
+        tela !== interacaoMusica &&
         !tela.classList.contains('tela-musica')
     );
     const mapa = new Map(
@@ -3035,6 +3216,7 @@ function obterTelasOrdenadas() {
     return [
         ...(tempo ? [tempo] : []),
         ...ordenados,
+        ...(interacaoMusica ? [interacaoMusica] : []),
         ...musicas
     ];
 }
@@ -3253,7 +3435,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '12.0.0-programacao-arrastavel'
+        '13.1.0-interacao-musical'
     );
 
     atualizarRelogio();
