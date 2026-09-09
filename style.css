@@ -603,8 +603,8 @@ body {
 
 .interacao-musica-logo {
     display: block;
-    width: clamp(95px, 9vw, 150px);
-    height: clamp(60px, 7vh, 95px);
+    width: clamp(170px, 14vw, 245px);
+    height: clamp(54px, 8vh, 90px);
     object-fit: contain;
     background: transparent;
     filter: drop-shadow(0 5px 13px rgba(0, 0, 0, 0.32));
@@ -1125,8 +1125,8 @@ body {
     }
 
     .interacao-musica-logo {
-        width: 92px;
-        height: 55px;
+        width: 150px;
+        height: 58px;
     }
 
     .evento-titulo {
@@ -1330,8 +1330,8 @@ body {
     }
 
     .interacao-musica-logo {
-        width: 105px;
-        height: 70px;
+        width: 145px;
+        height: 58px;
     }
 
     .interacao-musica-dominio {
