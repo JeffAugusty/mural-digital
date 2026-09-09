@@ -1,5 +1,5 @@
 const DATO_API = 'https://site-api.datocms.com';
-const FIREBASE_API_KEY = 'AIzaSyBxD5x__EVbG06U4_wz4VRil_e1t-cB3EY';
+const { obterFirebaseAdmin } = require('./_firebase-admin');
 const TIPOS_PERMITIDOS = new Set([
     'image/jpeg',
     'image/png',
@@ -29,7 +29,7 @@ function mensagemDoDato(dados, alternativa) {
         alternativa;
 }
 
-async function validarAdministrador(req) {
+async function validarAdministrador(req, permissoesAceitas = []) {
     const cabecalho = String(req.headers.authorization || '');
     const token = cabecalho.startsWith('Bearer ')
         ? cabecalho.slice(7).trim()
@@ -41,25 +41,57 @@ async function validarAdministrador(req) {
         throw erro;
     }
 
-    const resposta = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
-        {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken: token })
-        }
-    );
-
-    const dados = await resposta.json().catch(() => ({}));
-    const usuario = Array.isArray(dados.users) ? dados.users[0] : null;
-
-    if (!resposta.ok || !usuario) {
+    let usuario;
+    try {
+        usuario = await obterFirebaseAdmin().authAdmin.verifyIdToken(token, true);
+    } catch {
         const erro = new Error('Sua sessão expirou. Entre novamente no painel.');
         erro.status = 401;
         throw erro;
     }
 
+    if (usuario.ativo === false) {
+        const erro = new Error('Este usuário está desativado.');
+        erro.status = 403;
+        throw erro;
+    }
+
+    if (usuario.primeiroAcesso === true) {
+        const erro = new Error('Defina sua nova senha antes de enviar arquivos.');
+        erro.status = 403;
+        throw erro;
+    }
+
+    const superadmin = usuario.papel === 'superadmin';
+    const permissoes = Array.isArray(usuario.permissoes) ? usuario.permissoes : [];
+    const autorizado = !permissoesAceitas.length ||
+        superadmin ||
+        permissoesAceitas.some(permissao => permissoes.includes(permissao));
+
+    if (!autorizado) {
+        const erro = new Error('Seu usuário não tem permissão para enviar este conteúdo.');
+        erro.status = 403;
+        throw erro;
+    }
+
     return usuario;
+}
+
+function permissoesDaOperacao(corpo) {
+    if (corpo.acao === 'solicitar-upload') {
+        const tipo = String(corpo.tipo || '');
+        if (tipo.startsWith('audio/')) return ['musicas'];
+        if (tipo.startsWith('video/')) return ['midias'];
+        return ['imagens', 'musicas'];
+    }
+
+    if (corpo.acao === 'finalizar-upload') {
+        if (corpo.categoria === 'audio') return ['musicas'];
+        if (corpo.categoria === 'video') return ['midias'];
+        return ['imagens', 'musicas'];
+    }
+
+    return ['imagens', 'midias', 'musicas'];
 }
 
 async function chamarDato(caminho, opcoes = {}) {
@@ -114,8 +146,8 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        const usuario = await validarAdministrador(req);
         const corpo = req.body && typeof req.body === 'object' ? req.body : {};
+        const usuario = await validarAdministrador(req, permissoesDaOperacao(corpo));
         const acao = corpo.acao;
 
         if (acao === 'solicitar-upload') {
