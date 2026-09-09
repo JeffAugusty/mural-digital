@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-versao-admin="13.0.1-rotulo-administrador">
+<html lang="pt-br" data-versao-admin="13.1.0-interacao-musical">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -715,6 +715,34 @@
             font-size: 20px;
         }
 
+        .interacao-musica-configuracao {
+            margin-bottom: 18px;
+            padding: 18px;
+            border: 1px solid #bed6ec;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f6faff, #eef6fd);
+        }
+        .interacao-musica-configuracao-cabecalho {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 15px;
+        }
+        .interacao-musica-configuracao h3 {
+            margin: 0;
+            font-size: 17px;
+        }
+        .interacao-musica-configuracao .imagem-ajuda {
+            max-width: 780px;
+        }
+        #interacao-musica-cor-principal,
+        #interacao-musica-cor-secundaria {
+            height: 44px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
         /* NOVO LAYOUT DO PAINEL ADMINISTRATIVO */
         #admin-app {
             height: 100vh;
@@ -1397,6 +1425,9 @@
                 grid-column: 1 / -1;
                 justify-content: flex-start;
                 max-width: none;
+            }
+            .interacao-musica-configuracao-cabecalho {
+                flex-direction: column;
             }
             .botoes { flex-direction: column-reverse; }
             .botao { width: 100%; }
@@ -2177,6 +2208,51 @@
 
                     <div id="musica-mensagem" class="mensagem oculto"></div>
 
+                    <form id="interacao-musica-form" class="interacao-musica-configuracao">
+                        <div class="interacao-musica-configuracao-cabecalho">
+                            <div>
+                                <h3>Interação com os alunos</h3>
+                                <p class="imagem-ajuda">Configure a chamada com QR Code que será exibida imediatamente antes de cada música.</p>
+                            </div>
+                        </div>
+
+                        <div id="interacao-musica-mensagem" class="mensagem oculto"></div>
+
+                        <div class="grade">
+                            <div class="campo campo-largo">
+                                <label class="linha-check">
+                                    <input id="interacao-musica-ativa" type="checkbox">
+                                    Exibir a chamada interativa antes das músicas
+                                </label>
+                            </div>
+
+                            <div class="campo campo-largo">
+                                <label for="interacao-musica-link">Link do formulário</label>
+                                <input id="interacao-musica-link" type="url" placeholder="https://forms.gle/...">
+                                <p class="imagem-ajuda">Cole aqui o link público do Google Forms. O QR Code será criado automaticamente.</p>
+                            </div>
+
+                            <div class="campo">
+                                <label for="interacao-musica-duracao">Tempo na TV (segundos)</label>
+                                <input id="interacao-musica-duracao" type="number" min="5" max="60" value="15">
+                            </div>
+
+                            <div class="campo">
+                                <label for="interacao-musica-cor-principal">Cor principal</label>
+                                <input id="interacao-musica-cor-principal" type="color" value="#004a8f">
+                            </div>
+
+                            <div class="campo">
+                                <label for="interacao-musica-cor-secundaria">Cor secundária</label>
+                                <input id="interacao-musica-cor-secundaria" type="color" value="#0077c8">
+                            </div>
+                        </div>
+
+                        <div class="botoes">
+                            <button id="interacao-musica-salvar-botao" class="botao botao-primario" type="submit">Salvar interação</button>
+                        </div>
+                    </form>
+
                     <div class="imagem-layout">
                         <form id="musica-form" class="imagem-formulario">
                             <input id="musica-id" type="hidden">
@@ -2424,6 +2500,13 @@
         let eventos = [];
         let imagens = [];
         let midiasYoutube = [];
+        let configuracaoInteracaoMusica = {
+            ativo: false,
+            linkFormulario: '',
+            duracao: 15,
+            corPrincipal: '#004A8F',
+            corSecundaria: '#0077C8'
+        };
         let programacaoOrdem = [];
         let pararEscuta = null;
         let pararEscutaImagens = null;
@@ -2452,6 +2535,7 @@
         const imagemForm = $('#imagem-form');
         const midiaForm = $('#midia-form');
         const musicaForm = $('#musica-form');
+        const interacaoMusicaForm = $('#interacao-musica-form');
         const usuarioForm = $('#usuario-form');
         const previewMuralIframe = $('#preview-mural-iframe');
         const previewSomBotao = $('#preview-som-botao');
@@ -3862,6 +3946,32 @@
             atualizarPreviewMidia();
         }
 
+        function normalizarConfiguracaoInteracaoMusica(dados = {}) {
+            return {
+                ativo: dados.ativo === true,
+                linkFormulario: String(dados.linkFormulario || '').trim(),
+                duracao: Math.min(60, Math.max(5, Number(dados.duracao) || 15)),
+                corPrincipal: /^#[0-9a-f]{6}$/i.test(dados.corPrincipal || '')
+                    ? dados.corPrincipal.toUpperCase()
+                    : '#004A8F',
+                corSecundaria: /^#[0-9a-f]{6}$/i.test(dados.corSecundaria || '')
+                    ? dados.corSecundaria.toUpperCase()
+                    : '#0077C8'
+            };
+        }
+
+        function preencherConfiguracaoInteracaoMusica() {
+            const dados = normalizarConfiguracaoInteracaoMusica(
+                configuracaoInteracaoMusica
+            );
+
+            $('#interacao-musica-ativa').checked = dados.ativo;
+            $('#interacao-musica-link').value = dados.linkFormulario;
+            $('#interacao-musica-duracao').value = dados.duracao;
+            $('#interacao-musica-cor-principal').value = dados.corPrincipal.toLowerCase();
+            $('#interacao-musica-cor-secundaria').value = dados.corSecundaria.toLowerCase();
+        }
+
         function atualizarPreviewMusica() {
             const area = $('#musica-preview');
             const capa = area.querySelector('.musica-preview-capa');
@@ -4052,6 +4162,11 @@
                 documento => {
                     const dados = documento.exists() ? documento.data() : {};
                     midiasYoutube = Array.isArray(dados.midias) ? dados.midias : [];
+                    configuracaoInteracaoMusica =
+                        normalizarConfiguracaoInteracaoMusica(
+                            dados.interacaoMusica || {}
+                        );
+                    preencherConfiguracaoInteracaoMusica();
                     renderizarMidiasYoutube();
                     renderizarMusicasYoutube();
                     renderizarProgramacao();
@@ -4632,6 +4747,79 @@
             }
         });
 
+        interacaoMusicaForm.addEventListener('submit', async evento => {
+            evento.preventDefault();
+            esconderMensagem($('#interacao-musica-mensagem'));
+
+            const ativo = $('#interacao-musica-ativa').checked;
+            const linkInformado = $('#interacao-musica-link').value.trim();
+            let linkFormulario = '';
+
+            if (linkInformado) {
+                try {
+                    const url = new URL(linkInformado);
+                    if (!['https:', 'http:'].includes(url.protocol)) throw new Error();
+                    linkFormulario = url.href;
+                } catch {
+                    mostrarMensagem(
+                        $('#interacao-musica-mensagem'),
+                        'Informe um link válido do formulário, começando com https://.'
+                    );
+                    return;
+                }
+            }
+
+            if (ativo && !linkFormulario) {
+                mostrarMensagem(
+                    $('#interacao-musica-mensagem'),
+                    'Cole o link do formulário antes de ativar a chamada.'
+                );
+                return;
+            }
+
+            const novaConfiguracao = normalizarConfiguracaoInteracaoMusica({
+                ativo,
+                linkFormulario,
+                duracao: $('#interacao-musica-duracao').value,
+                corPrincipal: $('#interacao-musica-cor-principal').value,
+                corSecundaria: $('#interacao-musica-cor-secundaria').value
+            });
+            const botao = $('#interacao-musica-salvar-botao');
+
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+
+            try {
+                await setDoc(
+                    doc(db, 'eventos', ID_CONFIGURACAO_MIDIAS_YOUTUBE),
+                    {
+                        tipo: 'configuracao-videos',
+                        interacaoMusica: novaConfiguracao,
+                        atualizadoEm: serverTimestamp()
+                    },
+                    { merge: true }
+                );
+
+                configuracaoInteracaoMusica = novaConfiguracao;
+                preencherConfiguracaoInteracaoMusica();
+                mostrarMensagem(
+                    $('#interacao-musica-mensagem'),
+                    ativo
+                        ? 'Chamada interativa ativada com sucesso.'
+                        : 'Configuração salva. A chamada está desativada.',
+                    'sucesso'
+                );
+            } catch (erro) {
+                mostrarMensagem(
+                    $('#interacao-musica-mensagem'),
+                    `Não foi possível salvar a interação: ${erro.message}`
+                );
+            } finally {
+                botao.disabled = false;
+                botao.textContent = 'Salvar interação';
+            }
+        });
+
         musicaForm.addEventListener('submit', async evento => {
             evento.preventDefault();
             esconderMensagem($('#musica-mensagem'));
@@ -5006,6 +5194,7 @@
         limparFormularioImagem();
         limparFormularioMidia();
         limparFormularioMusica();
+        preencherConfiguracaoInteracaoMusica();
         limparFormularioUsuario();
     </script>
 </body>
