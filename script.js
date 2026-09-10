@@ -2176,6 +2176,24 @@ function criarPlayersVideoArquivo(registros) {
                 const vertical = video.videoHeight > video.videoWidth;
                 registro.section.classList.toggle('video-arquivo-vertical', vertical);
                 registro.section.classList.toggle('video-arquivo-horizontal', !vertical);
+
+                const palco = video.closest('.video-arquivo-palco');
+                const proporcaoPalco = palco
+                    ? palco.clientWidth / Math.max(1, palco.clientHeight)
+                    : 16 / 9;
+                const proporcaoVideo = video.videoWidth / Math.max(1, video.videoHeight);
+
+                video.style.setProperty('object-fit', 'contain', 'important');
+                video.style.setProperty('object-position', 'center', 'important');
+
+                if (proporcaoVideo < proporcaoPalco) {
+                    video.style.setProperty('width', 'auto', 'important');
+                    video.style.setProperty('height', '100%', 'important');
+                } else {
+                    video.style.setProperty('width', '100%', 'important');
+                    video.style.setProperty('height', 'auto', 'important');
+                }
+
                 removerCarregamento();
             });
             video.addEventListener('canplay', removerCarregamento);
@@ -3490,7 +3508,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '13.3.0-videos-r2'
+        '13.3.1-enquadramento-video'
     );
 
     atualizarRelogio();
