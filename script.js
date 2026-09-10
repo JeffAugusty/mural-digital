@@ -2172,7 +2172,12 @@ function criarPlayersVideoArquivo(registros) {
                 registro.section.querySelector('.youtube-carregando')?.remove();
             };
 
-            video.addEventListener('loadedmetadata', removerCarregamento);
+            video.addEventListener('loadedmetadata', () => {
+                const vertical = video.videoHeight > video.videoWidth;
+                registro.section.classList.toggle('video-arquivo-vertical', vertical);
+                registro.section.classList.toggle('video-arquivo-horizontal', !vertical);
+                removerCarregamento();
+            });
             video.addEventListener('canplay', removerCarregamento);
             video.addEventListener('playing', () => {
                 window.clearTimeout(registro.timerFalha);
@@ -2507,6 +2512,8 @@ function assinaturaYoutube(listaVisivel) {
             origem: item.origem,
             url: item.url || item.link,
             videoUrl: item.videoUrl,
+            videoR2Chave: item.videoR2Chave,
+            provedorVideo: item.provedorVideo,
             tipo: item.tipo,
             artista: item.artista,
             capaUrl: item.capaUrl,
@@ -2698,7 +2705,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
 
             <div class="youtube-card">
                 <div class="youtube-carregando">Carregando vídeo...</div>
-                <div class="youtube-player">
+                <div class="youtube-player video-arquivo-palco">
                     <video
                         class="video-arquivo-player"
                         src="${escaparHTML(urlVideoArquivo)}"
@@ -3483,7 +3490,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '13.2.0-musica-youtube'
+        '13.3.0-videos-r2'
     );
 
     atualizarRelogio();
