@@ -1259,6 +1259,7 @@ function destruirPlayersYoutube() {
 function destruirPlayersVideoArquivo() {
     playersVideoArquivo.forEach(registro => {
         window.clearTimeout(registro.timerFalha);
+        registro.observadorTamanho?.disconnect();
 
         try {
             registro.video.pause();
@@ -2089,6 +2090,7 @@ function iniciarPlayerVideoArquivo(section) {
 
     const { video } = registro;
     window.clearTimeout(registro.timerFalha);
+    registro.ajustarEnquadramento?.();
 
     if (
         video.ended ||
@@ -2161,12 +2163,15 @@ function criarPlayersVideoArquivo(registros) {
         .forEach(registroBase => {
             const video = registroBase.section.querySelector('.video-arquivo-player');
             const videoFundo = registroBase.section.querySelector('.video-arquivo-fundo-dinamico');
+            const palco = registroBase.section.querySelector('.video-arquivo-palco');
             if (!video) return;
 
             const registro = {
                 ...registroBase,
                 video,
                 videoFundo,
+                palco,
+                observadorTamanho: null,
                 timerFalha: null
             };
 
@@ -2174,27 +2179,38 @@ function criarPlayersVideoArquivo(registros) {
                 registro.section.querySelector('.youtube-carregando')?.remove();
             };
 
-            video.addEventListener('loadedmetadata', () => {
+            const ajustarEnquadramento = () => {
+                if (!palco || !video.videoWidth || !video.videoHeight) return;
+
+                const larguraPalco = palco.clientWidth;
+                const alturaPalco = palco.clientHeight;
+                if (!larguraPalco || !alturaPalco) return;
+
                 const vertical = video.videoHeight > video.videoWidth;
                 registro.section.classList.toggle('video-arquivo-vertical', vertical);
                 registro.section.classList.toggle('video-arquivo-horizontal', !vertical);
+                const escala = Math.min(
+                    larguraPalco / video.videoWidth,
+                    alturaPalco / video.videoHeight
+                );
+                const larguraExibida = Math.max(1, Math.floor(video.videoWidth * escala));
+                const alturaExibida = Math.max(1, Math.floor(video.videoHeight * escala));
 
-                const palco = video.closest('.video-arquivo-palco');
-                const proporcaoPalco = palco
-                    ? palco.clientWidth / Math.max(1, palco.clientHeight)
-                    : 16 / 9;
-                const proporcaoVideo = video.videoWidth / Math.max(1, video.videoHeight);
-
+                video.style.setProperty('width', `${larguraExibida}px`, 'important');
+                video.style.setProperty('height', `${alturaExibida}px`, 'important');
+                video.style.setProperty('aspect-ratio', `${video.videoWidth} / ${video.videoHeight}`, 'important');
                 video.style.setProperty('object-fit', 'contain', 'important');
                 video.style.setProperty('object-position', 'center', 'important');
+            };
 
-                if (proporcaoVideo < proporcaoPalco) {
-                    video.style.setProperty('width', 'auto', 'important');
-                    video.style.setProperty('height', '100%', 'important');
-                } else {
-                    video.style.setProperty('width', '100%', 'important');
-                    video.style.setProperty('height', 'auto', 'important');
-                }
+            registro.ajustarEnquadramento = ajustarEnquadramento;
+            if (palco && typeof ResizeObserver === 'function') {
+                registro.observadorTamanho = new ResizeObserver(ajustarEnquadramento);
+                registro.observadorTamanho.observe(palco);
+            }
+
+            video.addEventListener('loadedmetadata', () => {
+                ajustarEnquadramento();
 
                 if (videoFundo) {
                     const instanteFundo = Number.isFinite(video.duration)
@@ -2209,6 +2225,9 @@ function criarPlayersVideoArquivo(registros) {
 
                 removerCarregamento();
             });
+            if (video.readyState >= 1) {
+                window.requestAnimationFrame(ajustarEnquadramento);
+            }
             videoFundo?.addEventListener('loadeddata', () => {
                 registro.section.classList.add('video-arquivo-fundo-pronto');
             });
@@ -3543,7 +3562,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '13.3.2-video-vertical-tv'
+        '13.3.3-video-sem-corte'
     );
 
     atualizarRelogio();
