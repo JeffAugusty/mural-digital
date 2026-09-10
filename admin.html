@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-versao-admin="13.2.0-musica-youtube">
+<html lang="pt-br" data-versao-admin="13.2.1-capa-youtube">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2294,15 +2294,9 @@
                                 </div>
 
                                 <div class="campo campo-largo">
-                                    <label for="musica-capa-arquivo">Imagem de capa</label>
-                                    <input id="musica-capa-arquivo" class="imagem-arquivo" type="file" accept="image/jpeg,image/png,image/webp">
-                                    <p class="imagem-ajuda">JPG, PNG ou WebP, com no máximo 8 MB. Para preencher a TV sem faixas, prefira uma imagem 1920 × 1080.</p>
-                                </div>
-
-                                <div class="campo campo-largo">
                                     <label for="musica-youtube-url">Link da música no YouTube</label>
                                     <input id="musica-youtube-url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
-                                    <p class="imagem-ajuda">Cole o link do vídeo oficial. Na TV, o layout continuará exibindo somente a capa, o título e o artista.</p>
+                                    <p class="imagem-ajuda">Cole o link do vídeo oficial. A capa será obtida automaticamente do YouTube e o vídeo não aparecerá na TV.</p>
                                 </div>
 
                                 <div class="campo">
@@ -2520,7 +2514,6 @@
         let urlPreviewVideoMidia = '';
         let arquivoPreviewVideoMidia = null;
         let urlPreviewCapaMusica = '';
-        let arquivoPreviewCapaMusica = null;
         let perfilUsuario = null;
         let usuariosCadastrados = [];
         let usuariosCarregados = false;
@@ -3807,6 +3800,27 @@
             }
         }
 
+        function urlCapaYoutube(videoId, qualidade = 'maxresdefault') {
+            return `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/${qualidade}.jpg`;
+        }
+
+        function testarCapaYoutube(url, larguraMinima = 1) {
+            return new Promise(resolve => {
+                const imagem = new Image();
+                imagem.onload = () => resolve(imagem.naturalWidth >= larguraMinima ? url : '');
+                imagem.onerror = () => resolve('');
+                imagem.src = url;
+            });
+        }
+
+        async function obterCapaYoutube(videoId) {
+            const capaAlta = await testarCapaYoutube(
+                urlCapaYoutube(videoId, 'maxresdefault'),
+                1000
+            );
+            return capaAlta || urlCapaYoutube(videoId, 'hqdefault');
+        }
+
         function miniaturaYoutube(valor) {
             const id = extrairIdYoutube(valor);
             return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '';
@@ -3983,18 +3997,9 @@
             $('#musica-preview-titulo').textContent = $('#musica-titulo').value.trim() || 'Nome da música';
             $('#musica-preview-artista').textContent = $('#musica-artista').value.trim() || 'Nome do artista';
 
-            const arquivoCapa = $('#musica-capa-arquivo').files[0];
-
-            if (arquivoCapa !== arquivoPreviewCapaMusica) {
-                if (urlPreviewCapaMusica.startsWith('blob:')) {
-                    URL.revokeObjectURL(urlPreviewCapaMusica);
-                }
-
-                arquivoPreviewCapaMusica = arquivoCapa || null;
-                urlPreviewCapaMusica = arquivoCapa
-                    ? URL.createObjectURL(arquivoCapa)
-                    : $('#musica-capa-url-atual').value;
-            }
+            const videoId = extrairIdYoutube($('#musica-youtube-url').value.trim());
+            urlPreviewCapaMusica = $('#musica-capa-url-atual').value ||
+                (videoId ? urlCapaYoutube(videoId) : '');
 
             if (!urlPreviewCapaMusica) return;
 
@@ -4010,7 +4015,6 @@
             }
 
             urlPreviewCapaMusica = '';
-            arquivoPreviewCapaMusica = null;
             musicaForm.reset();
             $('#musica-id').value = '';
             $('#musica-capa-url-atual').value = '';
@@ -4258,7 +4262,6 @@
                 URL.revokeObjectURL(urlPreviewCapaMusica);
             }
             urlPreviewCapaMusica = item.capaUrl || '';
-            arquivoPreviewCapaMusica = null;
 
             $('#musica-id').value = item.id;
             $('#musica-capa-url-atual').value = item.capaUrl || '';
@@ -4269,7 +4272,6 @@
             $('#musica-titulo').value = item.titulo || '';
             $('#musica-artista').value = item.artista || '';
             $('#musica-youtube-url').value = item.url || item.link || '';
-            $('#musica-capa-arquivo').value = '';
             $('#musica-inicio').value = item.inicio || '';
             $('#musica-fim').value = item.fim || '';
             $('#musica-ordem').value = item.ordem || 0;
@@ -4831,28 +4833,17 @@
             const titulo = $('#musica-titulo').value.trim();
             const artista = $('#musica-artista').value.trim();
             const linkYoutube = $('#musica-youtube-url').value.trim();
-            const arquivoCapa = $('#musica-capa-arquivo').files[0];
             const inicio = $('#musica-inicio').value;
             const fim = $('#musica-fim').value;
-            const erroCapa = validarArquivoImagem(arquivoCapa);
+            const videoId = extrairIdYoutube(linkYoutube);
 
             if (!titulo || !artista) {
                 mostrarMensagem($('#musica-mensagem'), 'Informe o nome da música e o artista.');
                 return;
             }
 
-            if (!extrairIdYoutube(linkYoutube)) {
+            if (!videoId) {
                 mostrarMensagem($('#musica-mensagem'), 'Informe um link válido de vídeo do YouTube.');
-                return;
-            }
-
-            if ((!itemAtual || !itemAtual.capaDatoId) && !arquivoCapa) {
-                mostrarMensagem($('#musica-mensagem'), 'Escolha uma imagem de capa para a música.');
-                return;
-            }
-
-            if (erroCapa) {
-                mostrarMensagem($('#musica-mensagem'), erroCapa);
                 return;
             }
 
@@ -4864,27 +4855,22 @@
             const botao = $('#musica-salvar-botao');
             const agora = new Date().toISOString();
             const id = itemAtual ? itemAtual.id : criarIdMidia();
-            const capaDatoAnteriorId = itemAtual?.capaDatoId || '';
             const audioDatoAnteriorId = itemAtual?.audioDatoId || '';
             let capaUrl = itemAtual?.capaUrl || '';
-            let capaDatoId = capaDatoAnteriorId;
+            let capaDatoId = itemAtual?.capaDatoId || '';
             let capaDatoPath = itemAtual?.capaDatoPath || '';
             let audioUrl = itemAtual?.audioUrl || '';
             let audioDatoId = audioDatoAnteriorId;
             let audioDatoPath = itemAtual?.audioDatoPath || '';
-            let novaCapaDato = null;
 
             botao.disabled = true;
-            botao.textContent = arquivoCapa ? 'Preparando capa...' : 'Salvando...';
+            botao.textContent = 'Preparando capa...';
 
             try {
-                if (arquivoCapa) {
-                    const capaOtimizada = await otimizarImagemParaTv(arquivoCapa);
-                    botao.textContent = 'Enviando capa...';
-                    novaCapaDato = await enviarArquivoParaDato(capaOtimizada, `${titulo} - capa`, 'imagem');
-                    capaUrl = novaCapaDato.url;
-                    capaDatoId = novaCapaDato.id;
-                    capaDatoPath = novaCapaDato.caminho;
+                if (!capaUrl) {
+                    capaUrl = await obterCapaYoutube(videoId);
+                    capaDatoId = '';
+                    capaDatoPath = '';
                 }
 
                  botao.textContent = 'Salvando...';
@@ -4920,18 +4906,6 @@
 
                 await salvarListaMidias(novaLista);
 
-                const arquivosAntigos = [
-                    novaCapaDato && capaDatoAnteriorId !== novaCapaDato.id ? capaDatoAnteriorId : ''
-                ].filter(Boolean);
-
-                for (const uploadId of arquivosAntigos) {
-                    try {
-                        await excluirArquivoDato(uploadId);
-                    } catch (erroExclusao) {
-                        console.warn('Um arquivo antigo da música não pôde ser removido do DatoCMS:', erroExclusao);
-                    }
-                }
-
                 limparFormularioMusica();
                 mostrarMensagem(
                     $('#musica-mensagem'),
@@ -4939,14 +4913,6 @@
                     'sucesso'
                 );
             } catch (erro) {
-                for (const uploadId of [novaCapaDato?.id].filter(Boolean)) {
-                    try {
-                        await excluirArquivoDato(uploadId);
-                    } catch (erroLimpeza) {
-                        console.warn('Não foi possível limpar um envio incompleto:', erroLimpeza);
-                    }
-                }
-
                 mostrarMensagem($('#musica-mensagem'), `Não foi possível salvar: ${erro.message}`);
             } finally {
                 botao.disabled = false;
