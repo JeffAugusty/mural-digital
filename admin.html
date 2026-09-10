@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-versao-admin="13.2.1-capa-youtube">
+<html lang="pt-br" data-versao-admin="13.3.0-videos-r2">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -551,6 +551,8 @@
             background: #050505;
         }
         .midia-preview video {
+            object-fit: contain;
+            background: radial-gradient(circle at center, #173750, #050b12 72%);
             pointer-events: none;
         }
         .midia-preview-placeholder {
@@ -2086,6 +2088,7 @@
                 <form id="midia-form" class="imagem-formulario">
                     <input id="midia-id" type="hidden">
                     <input id="midia-video-url-atual" type="hidden">
+                    <input id="midia-video-r2-chave-atual" type="hidden">
                     <input id="midia-video-dato-id-atual" type="hidden">
                     <input id="midia-video-dato-path-atual" type="hidden">
 
@@ -2127,7 +2130,7 @@
                         <div id="midia-campo-arquivo" class="campo campo-largo oculto">
                             <label for="midia-video-arquivo">Arquivo do vídeo</label>
                             <input id="midia-video-arquivo" type="file" accept="video/mp4,video/webm,.mp4,.webm">
-                            <p class="imagem-ajuda">MP4 ou WebM, com no máximo 80 MB. Recomendamos MP4 em 1920 × 1080.</p>
+                            <p class="imagem-ajuda">MP4 ou WebM, com no máximo 500 MB. Vídeos verticais serão centralizados na TV sem cortes.</p>
                         </div>
 
                         <div class="campo">
@@ -2469,7 +2472,7 @@
             'audio/wav',
             'audio/x-wav'
         ];
-        const TAMANHO_MAXIMO_VIDEO = 80 * 1024 * 1024;
+        const TAMANHO_MAXIMO_VIDEO = 500 * 1024 * 1024;
         const TIPOS_VIDEO_PERMITIDOS = ['video/mp4', 'video/webm'];
         const LARGURA_MAXIMA_IMAGEM = 1920;
         const ALTURA_MAXIMA_IMAGEM = 1080;
@@ -3404,7 +3407,7 @@
                 return 'Utilize um vídeo MP4 ou WebM.';
             }
             if (arquivo.size > TAMANHO_MAXIMO_VIDEO) {
-                return 'O vídeo deve ter no máximo 80 MB.';
+                return 'O vídeo deve ter no máximo 500 MB.';
             }
             return '';
         }
@@ -3542,6 +3545,96 @@
             } finally {
                 window.clearTimeout(timer);
             }
+        }
+
+
+        async function chamarApiR2(dados, tempoLimite = 30000) {
+            if (!auth.currentUser) {
+                throw new Error('Sua sessão expirou. Entre novamente no painel.');
+            }
+
+            const controlador = new AbortController();
+            const timer = window.setTimeout(() => controlador.abort(), tempoLimite);
+
+            try {
+                const token = await auth.currentUser.getIdToken();
+                const resposta = await fetch('/api/r2-videos', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados),
+                    signal: controlador.signal
+                });
+                const retorno = await resposta.json().catch(() => ({}));
+
+                if (!resposta.ok) {
+                    throw new Error(retorno.erro || `Falha no servidor (${resposta.status}).`);
+                }
+
+                return retorno;
+            } catch (erro) {
+                if (erro.name === 'AbortError') {
+                    throw new Error('A operação com o armazenamento demorou demais. Tente novamente.');
+                }
+                throw erro;
+            } finally {
+                window.clearTimeout(timer);
+            }
+        }
+
+        async function enviarVideoParaR2(arquivo) {
+            const permissao = await chamarApiR2({
+                acao: 'solicitar-upload',
+                nomeArquivo: arquivo.name,
+                tipo: arquivo.type,
+                tamanho: arquivo.size
+            });
+            const controlador = new AbortController();
+            const timer = window.setTimeout(() => controlador.abort(), 20 * 60 * 1000);
+
+            try {
+                const resposta = await fetch(permissao.urlUpload, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': arquivo.type },
+                    body: arquivo,
+                    signal: controlador.signal
+                });
+
+                if (!resposta.ok) {
+                    throw new Error(`O Cloudflare R2 recusou o vídeo (${resposta.status}).`);
+                }
+            } catch (erro) {
+                if (erro.name === 'AbortError') {
+                    throw new Error('O envio do vídeo demorou demais. Verifique a conexão e tente novamente.');
+                }
+                throw erro;
+            } finally {
+                window.clearTimeout(timer);
+            }
+
+            try {
+                return await chamarApiR2({
+                    acao: 'confirmar-upload',
+                    chave: permissao.chave
+                });
+            } catch (erro) {
+                try {
+                    await excluirVideoR2(permissao.chave);
+                } catch {
+                    // A limpeza poderá ser feita posteriormente pelo armazenamento.
+                }
+                throw erro;
+            }
+        }
+
+        async function excluirVideoR2(chave) {
+            if (!chave) return;
+            await chamarApiR2({
+                acao: 'excluir-upload',
+                chave
+            });
         }
 
         function esperar(milissegundos) {
@@ -3942,6 +4035,7 @@
             midiaForm.reset();
             $('#midia-id').value = '';
             $('#midia-video-url-atual').value = '';
+            $('#midia-video-r2-chave-atual').value = '';
             $('#midia-video-dato-id-atual').value = '';
             $('#midia-video-dato-path-atual').value = '';
             $('#midia-ativa').checked = true;
@@ -4055,7 +4149,11 @@
                 const videoId = origemArquivo ? '' : extrairIdYoutube(item.url || item.link);
                 const miniatura = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '';
                 const tipo = item.tipo === 'live' ? 'Live' : 'Anúncio';
-                const origem = origemArquivo ? 'Arquivo enviado' : 'YouTube';
+                const origem = origemArquivo
+                    ? item.videoR2Chave || item.provedorVideo === 'r2'
+                        ? 'Arquivo no R2'
+                        : 'Arquivo atual'
+                    : 'YouTube';
 
                 return `
                     <article class="imagem-item">
@@ -4193,6 +4291,7 @@
 
             $('#midia-id').value = item.id;
             $('#midia-video-url-atual').value = item.videoUrl || '';
+            $('#midia-video-r2-chave-atual').value = item.videoR2Chave || '';
             $('#midia-video-dato-id-atual').value = item.videoDatoId || '';
             $('#midia-video-dato-path-atual').value = item.videoDatoPath || '';
             $('#midia-ativa').checked = item.ativo !== false;
@@ -4244,6 +4343,14 @@
                         await excluirArquivoDato(item.videoDatoId);
                     } catch (erroExclusao) {
                         console.warn('O vídeo saiu do mural, mas o arquivo não pôde ser removido do DatoCMS:', erroExclusao);
+                    }
+                }
+
+                if (item.videoR2Chave) {
+                    try {
+                        await excluirVideoR2(item.videoR2Chave);
+                    } catch (erroExclusao) {
+                        console.warn('O vídeo saiu do mural, mas o arquivo não pôde ser removido do R2:', erroExclusao);
                     }
                 }
 
@@ -4672,20 +4779,27 @@
             const agora = new Date().toISOString();
             const id = itemAtual ? itemAtual.id : criarIdMidia();
             const videoDatoAnteriorId = itemAtual?.videoDatoId || '';
+            const videoR2AnteriorChave = itemAtual?.videoR2Chave || '';
             let videoUrl = origemArquivo ? itemAtual?.videoUrl || '' : '';
+            let videoR2Chave = origemArquivo ? videoR2AnteriorChave : '';
             let videoDatoId = origemArquivo ? videoDatoAnteriorId : '';
             let videoDatoPath = origemArquivo ? itemAtual?.videoDatoPath || '' : '';
-            let novoVideoDato = null;
+            let provedorVideo = origemArquivo
+                ? itemAtual?.provedorVideo || (videoR2Chave ? 'r2' : 'datocms')
+                : 'youtube';
+            let novoVideoR2 = null;
 
             botao.disabled = true;
             botao.textContent = arquivoVideo ? 'Enviando vídeo...' : 'Salvando...';
 
             try {
                 if (origemArquivo && arquivoVideo) {
-                    novoVideoDato = await enviarArquivoParaDato(arquivoVideo, titulo, 'video');
-                    videoUrl = novoVideoDato.url;
-                    videoDatoId = novoVideoDato.id;
-                    videoDatoPath = novoVideoDato.caminho;
+                    novoVideoR2 = await enviarVideoParaR2(arquivoVideo);
+                    videoUrl = novoVideoR2.url;
+                    videoR2Chave = novoVideoR2.chave;
+                    videoDatoId = '';
+                    videoDatoPath = '';
+                    provedorVideo = 'r2';
                 }
 
                 const novoItem = {
@@ -4695,9 +4809,10 @@
                     url: origemArquivo ? '' : url,
                     youtubeId,
                     videoUrl,
+                    videoR2Chave,
                     videoDatoId,
                     videoDatoPath,
-                    provedorVideo: origemArquivo ? 'datocms' : 'youtube',
+                    provedorVideo,
                     tipo: origemArquivo ? 'video' : ($('#midia-tipo').value === 'live' ? 'live' : 'video'),
                     comSom: $('#midia-com-som').checked,
                     comLegenda: origemArquivo ? false : $('#midia-com-legenda').checked,
@@ -4720,12 +4835,23 @@
 
                 if (
                     videoDatoAnteriorId &&
-                    (!origemArquivo || (novoVideoDato && videoDatoAnteriorId !== novoVideoDato.id))
+                    (!origemArquivo || novoVideoR2)
                 ) {
                     try {
                         await excluirArquivoDato(videoDatoAnteriorId);
                     } catch (erroExclusao) {
                         console.warn('O vídeo antigo não pôde ser removido do DatoCMS:', erroExclusao);
+                    }
+                }
+
+                if (
+                    videoR2AnteriorChave &&
+                    videoR2AnteriorChave !== videoR2Chave
+                ) {
+                    try {
+                        await excluirVideoR2(videoR2AnteriorChave);
+                    } catch (erroExclusao) {
+                        console.warn('O vídeo antigo não pôde ser removido do R2:', erroExclusao);
                     }
                 }
 
@@ -4736,11 +4862,11 @@
                     'sucesso'
                 );
             } catch (erro) {
-                if (novoVideoDato?.id) {
+                if (novoVideoR2?.chave) {
                     try {
-                        await excluirArquivoDato(novoVideoDato.id);
+                        await excluirVideoR2(novoVideoR2.chave);
                     } catch (erroLimpeza) {
-                        console.warn('Não foi possível limpar o envio incompleto do vídeo:', erroLimpeza);
+                        console.warn('Não foi possível limpar o envio incompleto do R2:', erroLimpeza);
                     }
                 }
 
