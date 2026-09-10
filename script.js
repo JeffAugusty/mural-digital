@@ -2160,11 +2160,13 @@ function criarPlayersVideoArquivo(registros) {
         .filter(registro => midiaUsaVideoArquivo(registro.item))
         .forEach(registroBase => {
             const video = registroBase.section.querySelector('.video-arquivo-player');
+            const videoFundo = registroBase.section.querySelector('.video-arquivo-fundo-dinamico');
             if (!video) return;
 
             const registro = {
                 ...registroBase,
                 video,
+                videoFundo,
                 timerFalha: null
             };
 
@@ -2194,7 +2196,31 @@ function criarPlayersVideoArquivo(registros) {
                     video.style.setProperty('height', 'auto', 'important');
                 }
 
+                if (videoFundo) {
+                    const instanteFundo = Number.isFinite(video.duration)
+                        ? Math.min(0.5, Math.max(0, video.duration / 20))
+                        : 0.15;
+                    try {
+                        videoFundo.currentTime = instanteFundo;
+                    } catch {
+                        // O degradê permanece como alternativa enquanto a miniatura carrega.
+                    }
+                }
+
                 removerCarregamento();
+            });
+            videoFundo?.addEventListener('loadeddata', () => {
+                registro.section.classList.add('video-arquivo-fundo-pronto');
+            });
+            videoFundo?.addEventListener('loadedmetadata', () => {
+                const instanteFundo = Number.isFinite(videoFundo.duration)
+                    ? Math.min(0.5, Math.max(0, videoFundo.duration / 20))
+                    : 0.15;
+                try {
+                    videoFundo.currentTime = instanteFundo;
+                } catch {
+                    // O fundo em degradê continua visível se o navegador não permitir a busca.
+                }
             });
             video.addEventListener('canplay', removerCarregamento);
             video.addEventListener('playing', () => {
@@ -2724,6 +2750,15 @@ function renderizarMidiasYoutube(lista, forcar = false) {
             <div class="youtube-card">
                 <div class="youtube-carregando">Carregando vídeo...</div>
                 <div class="youtube-player video-arquivo-palco">
+                    <video
+                        class="video-arquivo-fundo-dinamico"
+                        src="${escaparHTML(urlVideoArquivo)}"
+                        preload="metadata"
+                        playsinline
+                        muted
+                        tabindex="-1"
+                        aria-hidden="true"
+                    ></video>
                     <video
                         class="video-arquivo-player"
                         src="${escaparHTML(urlVideoArquivo)}"
@@ -3508,7 +3543,7 @@ function controlarVideoClima() {
 function iniciarMural() {
     document.documentElement.setAttribute(
         'data-versao-mural',
-        '13.3.1-enquadramento-video'
+        '13.3.2-video-vertical-tv'
     );
 
     atualizarRelogio();
