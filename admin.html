@@ -3548,7 +3548,7 @@
         }
 
 
-        async function chamarApiR2(dados, tempoLimite = 30000) {
+        async function chamarApiR2(dados, tempoLimite = 30000, endpoint = '/api/r2-videos') {
             if (!auth.currentUser) {
                 throw new Error('Sua sessão expirou. Entre novamente no painel.');
             }
@@ -3558,7 +3558,7 @@
 
             try {
                 const token = await auth.currentUser.getIdToken();
-                const resposta = await fetch('/api/r2-videos', {
+                const resposta = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -3772,8 +3772,60 @@
             throw new Error('O DatoCMS demorou demais para processar o arquivo. Tente novamente.');
         }
 
-        async function enviarImagemParaDato(arquivo, nome) {
-            return enviarArquivoParaDato(arquivo, nome, 'imagem');
+        async function chamarApiImagensR2(dados) {
+            return chamarApiR2(dados, 30000, '/api/r2-imagens');
+        }
+
+        async function excluirImagemR2(chave) {
+            if (!chave) return;
+            await chamarApiImagensR2({ acao: 'excluir-upload', chave });
+        }
+
+        async function enviarImagemParaR2(arquivo) {
+            const permissao = await chamarApiImagensR2({
+                acao: 'solicitar-upload',
+                nomeArquivo: arquivo.name,
+                tipo: arquivo.type,
+                tamanho: arquivo.size
+            });
+            const controlador = new AbortController();
+            const timer = window.setTimeout(() => controlador.abort(), 300000);
+
+            try {
+                const resposta = await fetch(permissao.urlUpload, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': arquivo.type },
+                    body: arquivo,
+                    signal: controlador.signal
+                });
+                if (!resposta.ok) {
+                    throw new Error(`O armazenamento recusou a imagem (${resposta.status}).`);
+                }
+                return await chamarApiImagensR2({
+                    acao: 'confirmar-upload',
+                    chave: permissao.chave
+                });
+            } catch (erro) {
+                try {
+                    await excluirImagemR2(permissao.chave);
+                } catch (erroLimpeza) {
+                    console.warn('Não foi possível limpar o envio incompleto da imagem:', erroLimpeza);
+                }
+                if (erro.name === 'AbortError') {
+                    throw new Error('O envio da imagem demorou demais. Verifique a conexão e tente novamente.');
+                }
+                throw erro;
+            } finally {
+                window.clearTimeout(timer);
+            }
+        }
+
+        async function excluirArquivoDaImagem(item) {
+            if (item?.imagemR2Chave) {
+                await excluirImagemR2(item.imagemR2Chave);
+            } else if (item?.datoId) {
+                await excluirArquivoDato(item.datoId);
+            }
         }
 
         async function excluirArquivoDato(uploadId) {
@@ -3843,12 +3895,10 @@
             try {
                 await salvarListaImagens(imagens.filter(imagem => imagem.id !== id));
 
-                if (item.datoId) {
-                    try {
-                        await excluirArquivoDato(item.datoId);
-                    } catch (erroExclusao) {
-                        console.warn('A imagem saiu do mural, mas o arquivo não foi removido do DatoCMS:', erroExclusao);
-                    }
+                try {
+                    await excluirArquivoDaImagem(item);
+                } catch (erroExclusao) {
+                    console.warn('A imagem saiu do mural, mas o arquivo não foi removido do armazenamento:', erroExclusao);
                 }
 
                 if ($('#imagem-id').value === id) limparFormularioImagem();
@@ -4659,11 +4709,12 @@
 
             const botao = $('#imagem-salvar-botao');
             const id = itemAtual ? itemAtual.id : criarIdImagem();
-            const dadoAnteriorId = itemAtual ? itemAtual.datoId || '' : '';
-            let datoId = dadoAnteriorId;
+            let datoId = itemAtual?.datoId || '';
+            let imagemR2Chave = itemAtual?.imagemR2Chave || '';
             let datoPath = itemAtual ? itemAtual.datoPath || '' : '';
             let url = itemAtual ? itemAtual.url || '' : '';
-            let novoArquivoDato = null;
+            let novoArquivoR2 = null;
+            let imagemSalva = false;
 
             botao.disabled = true;
             botao.textContent = arquivo ? 'Otimizando...' : 'Salvando...';
@@ -4672,11 +4723,12 @@
                 if (arquivo) {
                     const arquivoOtimizado = await otimizarImagemParaTv(arquivo);
                     botao.textContent = 'Enviando...';
-                    novoArquivoDato = await enviarImagemParaDato(arquivoOtimizado, nome);
+                    novoArquivoR2 = await enviarImagemParaR2(arquivoOtimizado);
                     botao.textContent = 'Salvando...';
-                    datoId = novoArquivoDato.id;
-                    datoPath = novoArquivoDato.caminho;
-                    url = novoArquivoDato.url;
+                    datoId = '';
+                    datoPath = '';
+                    imagemR2Chave = novoArquivoR2.chave;
+                    url = novoArquivoR2.url;
                 }
 
                 const agora = new Date().toISOString();
@@ -4684,7 +4736,8 @@
                     id,
                     nome,
                     url,
-                    provedor: datoId ? 'datocms' : (itemAtual?.provedor || 'legado'),
+                    provedor: imagemR2Chave ? 'r2' : (datoId ? 'datocms' : (itemAtual?.provedor || 'legado')),
+                    imagemR2Chave,
                     datoId,
                     datoPath,
                     ativo: $('#imagem-ativa').checked,
@@ -4701,12 +4754,13 @@
                     : [...imagens, novoItem];
 
                 await salvarListaImagens(novaLista);
+                imagemSalva = true;
 
-                if (novoArquivoDato && dadoAnteriorId && dadoAnteriorId !== novoArquivoDato.id) {
+                if (novoArquivoR2 && itemAtual) {
                     try {
-                        await excluirArquivoDato(dadoAnteriorId);
+                        await excluirArquivoDaImagem(itemAtual);
                     } catch (erroExclusao) {
-                        console.warn('A imagem antiga não pôde ser removida do DatoCMS:', erroExclusao);
+                        console.warn('A imagem antiga não pôde ser removida do armazenamento:', erroExclusao);
                     }
                 }
 
@@ -4717,9 +4771,9 @@
                     'sucesso'
                 );
             } catch (erro) {
-                if (novoArquivoDato?.id) {
+                if (novoArquivoR2?.chave && !imagemSalva) {
                     try {
-                        await excluirArquivoDato(novoArquivoDato.id);
+                        await excluirImagemR2(novoArquivoR2.chave);
                     } catch (erroLimpeza) {
                         console.warn('Não foi possível limpar o envio incompleto:', erroLimpeza);
                     }
