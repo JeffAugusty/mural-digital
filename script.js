@@ -3172,7 +3172,22 @@ function renderizarComunicados(imagens) {
             );
         });
 
-        section.appendChild(imagem);
+        const fundo = document.createElement('div');
+        fundo.className = 'comunicado-fundo';
+        fundo.setAttribute('aria-hidden', 'true');
+
+        const card = document.createElement('div');
+        card.className = 'comunicado-card';
+        card.appendChild(imagem);
+
+        const credito = document.createElement('div');
+        credito.className = 'credito-desenvolvedor';
+        credito.append('Desenvolvido por ');
+        const autor = document.createElement('span');
+        autor.textContent = 'Jeferson Augusto';
+        credito.appendChild(autor);
+
+        section.append(fundo, card, credito);
 
         return section;
     });
