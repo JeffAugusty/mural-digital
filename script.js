@@ -2651,8 +2651,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
     destruirPlayersSpotify();
 
     const live = visiveis.find(item => item.tipo === 'live' && !midiaUsaVideoArquivo(item));
-    const musicas = visiveis.filter(item => item.tipo === 'musica');
-    MuralMusicas.configurar(musicas);
+    const musicas = MuralMusicas.configurar(visiveis.filter(item => item.tipo === 'musica'));
     const musicaDaRodada =
         musicas.find(item => criarIdTelaYoutube(item, 0) === idMusicaDaRodada) ||
         musicas[0] ||
@@ -3010,15 +3009,10 @@ function selecionarProximaMusicaDaRodada() {
         return;
     }
 
-    const indiceEncontrado = musicas.findIndex(
-        section => section.id === idMusicaDaRodada
-    );
-    const atual = indiceEncontrado >= 0
-        ? indiceEncontrado
-        : -1;
-    const proximo = musicas.length > 1
-        ? (atual + 1) % musicas.length
-        : 0;
+    const atual = musicas.find(section => section.id === idMusicaDaRodada);
+    const chaveProxima = MuralMusicas.avancar(atual?.dataset.musicaChave);
+    const indiceProximo = musicas.findIndex(section => section.dataset.musicaChave === chaveProxima);
+    const proximo = indiceProximo >= 0 ? indiceProximo : 0;
 
     musicas.forEach((section, index) => {
         section.classList.toggle('tela', index === proximo);

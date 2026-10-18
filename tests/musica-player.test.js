@@ -7,8 +7,9 @@ const raiz = path.join(__dirname, '..');
 const fonte = fs.readFileSync(path.join(raiz, 'musica-player.js'), 'utf8');
 const principal = fs.readFileSync(path.join(raiz, 'script.js'), 'utf8');
 const musicas = ['A','B','C','D','E'].map(id => ({ id, titulo: `Música ${id}`, artista: `Artista ${id}`, capaUrl: `https://example.com/${id}.jpg` }));
-function player() {
-    const ctx = vm.createContext({ URL, module: { exports: {} } });
+function player(random = () => 0.999) {
+    const math = Object.create(Math); math.random = random;
+    const ctx = vm.createContext({ URL, Math: math, module: { exports: {} } });
     vm.runInContext(fonte, ctx); return ctx.module.exports;
 }
 function sair(mod, id, tocou = true) {
@@ -36,7 +37,7 @@ test('zero, uma ou duas músicas não fabricam outras faixas', () => {
     p.configurar(musicas.slice(0,1)); assert.deepEqual(ids(p.obterFila('A')), [null,null,'A',null,null]);
     p.configurar(musicas.slice(0,2)); assert.deepEqual(ids(p.obterFila('B')), [null,null,'B','A',null]);
 });
-test('atualização de cadastro preserva histórico e usa a nova ordem', () => {
+test('atualização de cadastro preserva histórico e a fila sorteada', () => {
     const p = player(); p.configurar(musicas); sair(p,'A');
     p.configurar([musicas[2],musicas[4],musicas[1]]);
     assert.deepEqual(ids(p.obterFila('C')), [null,'A','C','E','B']);
@@ -58,7 +59,8 @@ test('player preserva o áudio e o progresso, sem criar controles de reproduçã
 });
 
 test('integração: fim da música volta aos avisos, registra histórico e seleciona só a próxima', () => {
-    const ctx = vm.createContext({ URL, URLSearchParams, console,
+    const math = Object.create(Math); math.random = () => 0.999;
+    const ctx = vm.createContext({ URL, URLSearchParams, console, Math: math,
         window:{location:{search:''},addEventListener(){},clearTimeout(){},setTimeout(){return 1;}},
         document:{readyState:'loading',addEventListener(){}}
     });
@@ -87,4 +89,41 @@ test('integração: fim da música volta aos avisos, registra histórico e selec
     assert.equal(vm.runInContext('a.classList.contains("tela")',ctx),false);
     assert.equal(vm.runInContext('b.classList.contains("tela")',ctx),true);
     assert.equal(vm.runInContext('MuralMusicas.obterFila("B")[1].item.id',ctx),'A');
+});
+
+
+test('playlist aleatória toca todas antes de repetir e a prévia acompanha a virada', () => {
+    const p = player(() => 0);
+    const ordem = Array.from(p.configurar(musicas), item => item.id);
+    assert.notDeepEqual(ordem, musicas.map(item => item.id));
+    assert.equal(new Set(ordem).size, musicas.length);
+    let atual = ordem[0];
+    for (let i = 0; i < 15; i += 1) {
+        const previstas = ids(p.obterFila(atual)).slice(3);
+        const proxima = p.avancar(atual);
+        assert.equal(proxima, previstas[0]);
+        assert.notEqual(proxima, atual);
+        assert.equal(ids(p.obterFila(proxima))[3], previstas[1]);
+        atual = proxima;
+    }
+});
+
+test('recarregar cadastros não embaralha novamente a fila prevista', () => {
+    const p = player(() => 0);
+    const ordem = Array.from(p.configurar(musicas), item => item.id);
+    const fila = ids(p.obterFila(ordem[0]));
+    p.configurar([...musicas].reverse().map(item => ({...item, artista:'Atualizado'})));
+    assert.deepEqual(ids(p.obterFila(ordem[0])), fila);
+    assert.equal(p.obterFila(ordem[0])[2].item.artista, 'Atualizado');
+});
+
+test('playlist tem apenas o rótulo Próxima e não exibe comentários decorativos', () => {
+    const p = player(); p.configurar(musicas);
+    const lista = {dataset:{},querySelectorAll:()=>[]};
+    p.atualizarFila({dataset:{musicaChave:'A'},querySelector:()=>lista});
+    const html = p.criarPlayer(musicas[0],{capa:'',audio:'',videoId:''}) + lista.innerHTML;
+    assert.ok(html.includes('<h2>Playlist</h2>'));
+    assert.equal((html.match(/musica-fila-rotulo/g)||[]).length, 1);
+    assert.ok(html.includes('Próxima'));
+    for (const texto of ['SEU INTERVALO MUSICAL','Tocou antes','Última música','Depois','Uma pausa para ouvir','Uma música completa a cada rodada','Próxima rodada']) assert.ok(!html.includes(texto));
 });

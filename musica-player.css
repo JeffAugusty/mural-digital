@@ -62,9 +62,9 @@
 .tela-musica .musica-card-sequencia .musica-tempos {
     position:static; display:flex; margin:10px 0 0; color:#a9b1bc; font-size:clamp(11px,.9vw,17px);
 }
-.musica-sequencia { display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:clamp(12px,2.6vh,30px); padding-left:clamp(16px,2.4vw,46px); border-left:1px solid rgba(255,255,255,.1); }
+.musica-sequencia { display:grid; grid-template-rows:auto minmax(0,1fr); gap:clamp(12px,2.6vh,30px); padding-left:clamp(16px,2.4vw,46px); border-left:1px solid rgba(255,255,255,.1); }
 .musica-sequencia-cabecalho > span { display:block; color:#8a96a5; font-size:clamp(10px,.72vw,14px); letter-spacing:.2em; font-weight:600; }
-.musica-sequencia-cabecalho h2 { margin:10px 0 0; font-size:clamp(24px,2.5vw,48px); font-weight:500; letter-spacing:-.045em; }
+.musica-sequencia-cabecalho h2 { margin:0; font-size:clamp(24px,2.5vw,48px); font-weight:500; letter-spacing:-.045em; }
 .musica-sequencia-cabecalho h2 span { float:right; color:#8a96a5; font-size:.75em; }
 .musica-fila-lista { list-style:none; display:grid; grid-template-rows:1fr 1fr 1.2fr 1fr 1fr; gap:clamp(6px,1vh,12px); min-height:0; }
 .musica-fila-item {
