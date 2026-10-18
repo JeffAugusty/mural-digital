@@ -1,0 +1,90 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const raiz = path.join(__dirname, '..');
+const fonte = fs.readFileSync(path.join(raiz, 'musica-player.js'), 'utf8');
+const principal = fs.readFileSync(path.join(raiz, 'script.js'), 'utf8');
+const musicas = ['A','B','C','D','E'].map(id => ({ id, titulo: `Música ${id}`, artista: `Artista ${id}`, capaUrl: `https://example.com/${id}.jpg` }));
+function player() {
+    const ctx = vm.createContext({ URL, module: { exports: {} } });
+    vm.runInContext(fonte, ctx); return ctx.module.exports;
+}
+function sair(mod, id, tocou = true) {
+    const section = { dataset: { musicaChave: id, musicaReproduzida: String(tocou) } };
+    mod.registrarSaida(section); return section;
+}
+const ids = fila => Array.from(fila, linha => linha.item?.id || null);
+
+test('primeira rodada tem histórico vazio e duas próximas reais', () => {
+    const p = player(); p.configurar(musicas);
+    assert.deepEqual(ids(p.obterFila('A')), [null,null,'A','B','C']);
+});
+test('fila usa as duas reproduzidas e retorna ao início ao final da lista', () => {
+    const p = player(); p.configurar(musicas); sair(p,'C'); sair(p,'D');
+    assert.deepEqual(ids(p.obterFila('E')), ['C','D','E','A','B']);
+    sair(p,'E'); assert.deepEqual(ids(p.obterFila('A')), ['D','E','A','B','C']);
+});
+test('falha antes de tocar não entra no histórico; pausa/retomada não duplica a saída', () => {
+    const p = player(); p.configurar(musicas); sair(p,'A',false);
+    const section = sair(p,'B'); p.registrarSaida(section);
+    assert.deepEqual(ids(p.obterFila('C')), [null,'B','C','D','E']);
+});
+test('zero, uma ou duas músicas não fabricam outras faixas', () => {
+    const p = player(); p.configurar([]); assert.equal(p.obterFila('A').length,0);
+    p.configurar(musicas.slice(0,1)); assert.deepEqual(ids(p.obterFila('A')), [null,null,'A',null,null]);
+    p.configurar(musicas.slice(0,2)); assert.deepEqual(ids(p.obterFila('B')), [null,null,'B','A',null]);
+});
+test('atualização de cadastro preserva histórico e usa a nova ordem', () => {
+    const p = player(); p.configurar(musicas); sair(p,'A');
+    p.configurar([musicas[2],musicas[4],musicas[1]]);
+    assert.deepEqual(ids(p.obterFila('C')), [null,'A','C','E','B']);
+});
+test('títulos são escapados e links não seguros não entram nas capas da fila', () => {
+    const p = player(); p.configurar([{id:'x',titulo:'<img src=x onerror=alert(1)>',artista:'A & B',capaUrl:'javascript:alert(1)'}]);
+    const lista = { dataset:{},querySelectorAll:()=>[] };
+    p.atualizarFila({dataset:{musicaChave:'x'},querySelector:()=>lista});
+    assert.ok(lista.innerHTML.includes('&lt;img')); assert.ok(lista.innerHTML.includes('A &amp; B'));
+    assert.ok(!lista.innerHTML.includes('src="javascript:'));
+});
+test('player preserva o áudio e o progresso, sem criar controles de reprodução novos', () => {
+    const p = player();
+    const yt = p.criarPlayer(musicas[0],{capa:musicas[0].capaUrl,audio:'',videoId:'abcdefghijk'});
+    const local = p.criarPlayer(musicas[0],{capa:musicas[0].capaUrl,audio:'https://example.com/audio.mp3',videoId:''});
+    assert.ok(yt.includes('youtube-player-alvo')); assert.ok(!yt.includes('<audio'));
+    assert.ok(local.includes('class="musica-audio"')); assert.ok(!local.includes('youtube-player-alvo'));
+    for (const html of [yt,local]) for(const classe of ['musica-progresso-preenchimento','musica-tempo-atual','musica-tempo-total','musica-aviso-audio']) assert.ok(html.includes(classe));
+});
+
+test('integração: fim da música volta aos avisos, registra histórico e seleciona só a próxima', () => {
+    const ctx = vm.createContext({ URL, URLSearchParams, console,
+        window:{location:{search:''},addEventListener(){},clearTimeout(){},setTimeout(){return 1;}},
+        document:{readyState:'loading',addEventListener(){}}
+    });
+    vm.runInContext(fonte + '\n' + principal,ctx);
+    vm.runInContext(`
+        function node(id, classes) {
+            const set = new Set(classes);
+            return { id, dataset:{}, classList:{contains:c=>set.has(c),add:(...cs)=>cs.forEach(c=>set.add(c)),remove:(...cs)=>cs.forEach(c=>set.delete(c)),toggle:(c,v)=>v?set.add(c):set.delete(c)} };
+        }
+        const clima = node('tela-tempo',['tela']);
+        const a = node('tela-musica-A',['tela','tela-musica','ativa','tocando']);
+        const b = node('tela-musica-B',['tela-musica','tela-musica-espera']);
+        a.dataset={musicaChave:'A',musicaReproduzida:'true'};
+        b.dataset={musicaChave:'B'};
+        MuralMusicas.configurar([{id:'A',titulo:'A'},{id:'B',titulo:'B'}]);
+        document.querySelectorAll = () => [a,b];
+        document.querySelector = () => clima;
+        obterTelasOrdenadas = () => [clima, ...[a,b].filter(s=>s.classList.contains('tela'))];
+        controlarVideoClima = () => {};
+        agendarRotacao = () => {};
+        telas=[clima,a]; step=1; idMusicaDaRodada=a.id;
+        rotacionarTela();
+    `,ctx);
+    assert.equal(vm.runInContext('clima.classList.contains("ativa")',ctx),true);
+    assert.equal(vm.runInContext('idMusicaDaRodada',ctx),'tela-musica-B');
+    assert.equal(vm.runInContext('a.classList.contains("tela")',ctx),false);
+    assert.equal(vm.runInContext('b.classList.contains("tela")',ctx),true);
+    assert.equal(vm.runInContext('MuralMusicas.obterFila("B")[1].item.id',ctx),'A');
+});

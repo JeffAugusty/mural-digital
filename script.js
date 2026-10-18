@@ -1395,6 +1395,9 @@ function criarPlayersAudio(registros) {
             audio.addEventListener('durationchange', atualizar);
             audio.addEventListener('timeupdate', atualizar);
             audio.addEventListener('play', () => {
+                if (registro.section.classList.contains('ativa')) {
+                    registro.section.dataset.musicaReproduzida = 'true';
+                }
                 registro.section.classList.add('tocando');
                 registro.section.classList.remove('audio-bloqueado');
                 window.clearTimeout(registro.timerFalha);
@@ -1880,6 +1883,9 @@ function tratarEstadoYoutube(sectionId, estado) {
     }
 
     if (estado === window.YT.PlayerState.PLAYING) {
+        if (registro.item.tipo === 'musica') {
+            registro.section.dataset.musicaReproduzida = 'true';
+        }
         registro.section.classList.add('tocando');
         configurarLegendasYoutube(registro);
         agendarSegurancaYoutube(registro);
@@ -2646,6 +2652,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
 
     const live = visiveis.find(item => item.tipo === 'live' && !midiaUsaVideoArquivo(item));
     const musicas = visiveis.filter(item => item.tipo === 'musica');
+    MuralMusicas.configurar(musicas);
     const musicaDaRodada =
         musicas.find(item => criarIdTelaYoutube(item, 0) === idMusicaDaRodada) ||
         musicas[0] ||
@@ -2709,59 +2716,14 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         section.style.setProperty('--midia-cor-secundaria', secundaria);
 
         if (tipo === 'musica') {
-            section.innerHTML = `
-                <div class="musica-fundo">
-                    <img class="musica-fundo-imagem carregada" src="${escaparHTML(capaMusica)}" alt="">
-                </div>
-
-                <div class="musica-card">
-                    <div class="musica-imagem-tv">
-                        <img src="${escaparHTML(capaMusica)}" alt="Capa de ${escaparHTML(item.titulo || 'música')}">
-                    </div>
-
-                    ${videoId
-                        ? '<div class="musica-youtube-audio"><div class="youtube-player-alvo"></div></div>'
-                        : `<audio class="musica-audio" src="${escaparHTML(audioMusica)}" preload="metadata"></audio>`}
-
-                    <div class="musica-video-sombra"></div>
-
-                    <div class="musica-aviso-audio">O navegador bloqueou o áudio. Verifique a permissão de reprodução automática.</div>
-
-                    <div class="musica-info-tv">
-                        <div class="musica-capa-area">
-                            <div class="musica-capa-fallback" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none">
-                                    <path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <circle cx="6" cy="18" r="3" fill="currentColor"/>
-                                    <circle cx="16" cy="16" r="3" fill="currentColor"/>
-                                </svg>
-                            </div>
-                            <img class="musica-capa-imagem carregada" src="${escaparHTML(capaMusica)}" alt="Capa de ${escaparHTML(item.titulo || 'música')}">
-                        </div>
-
-                        <div class="musica-texto-tv">
-                            <div class="musica-selo">
-                                <span></span>
-                                Tocando agora
-                            </div>
-                            <h1 class="musica-titulo">${escaparHTML(item.titulo || 'Música')}</h1>
-                            <p class="musica-artista">${escaparHTML(item.artista || 'Artista não informado')}</p>
-                        </div>
-                    </div>
-
-                    <div class="musica-progresso" aria-hidden="true">
-                        <span class="musica-progresso-preenchimento"></span>
-                    </div>
-                    <div class="musica-tempos">
-                        <span class="musica-tempo-atual">0:00</span>
-                        <span class="musica-tempo-total">0:00</span>
-                    </div>
-                </div>
-
-                <div class="credito-desenvolvedor">
-                    Desenvolvido por <span>Jeferson Augusto</span>
-                </div>
-            `;
+            section.dataset.musicaChave = MuralMusicas.chave(item, musicas.indexOf(item));
+            section.innerHTML = MuralMusicas.criarPlayer(item, {
+                capa: capaMusica,
+                audio: audioMusica,
+                videoId
+            });
+            MuralMusicas.atualizarFila(section);
+            MuralMusicas.prepararImagens(section);
         } else if (videoArquivo) {
             section.innerHTML = `
             <div class="youtube-fundo"></div>
@@ -3459,6 +3421,7 @@ function agendarRotacao() {
     const telaAtual = telas[step];
 
     if (telaAtual?.classList.contains('tela-musica')) {
+        MuralMusicas.atualizarFila(telaAtual);
         if (playersYoutube.has(telaAtual.id)) {
             iniciarPlayerYoutube(telaAtual);
         } else {
@@ -3498,6 +3461,7 @@ function rotacionarTela() {
     const terminouMusica = telaAnterior.classList.contains('tela-musica');
 
     if (terminouMusica) {
+        MuralMusicas.registrarSaida(telaAnterior);
         const registroYoutube = playersYoutube.get(telaAnterior.id);
         if (registroYoutube?.pronto) {
             try {

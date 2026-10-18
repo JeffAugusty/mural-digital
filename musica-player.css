@@ -1,0 +1,137 @@
+/* Player de TV: imagem inteira e sequência real de músicas. */
+.tela-musica .musica-card-sequencia {
+    width: min(92vw, 1800px);
+    height: 82vh;
+    height: 82dvh;
+    max-height: 1000px;
+    min-height: 0;
+    aspect-ratio: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: clamp(24px, 3.6vw, 70px);
+    padding: clamp(22px, 3vw, 56px);
+    border-radius: clamp(24px, 3vw, 55px);
+    border: 1px solid rgba(255,255,255,.16);
+    background: linear-gradient(130deg, rgba(22,25,29,.9), rgba(10,12,16,.94));
+    box-shadow: 0 32px 100px rgba(0,0,0,.5);
+    backdrop-filter: blur(26px);
+}
+.musica-card-sequencia > * { min-width: 0; min-height: 0; }
+.musica-destaque {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    gap: clamp(12px, 2vh, 26px);
+}
+.musica-destaque-topo { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.musica-card-sequencia .musica-selo {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    backdrop-filter: none;
+    letter-spacing: .12em;
+    font-size: clamp(10px, .8vw, 15px);
+    color: #e7eee9;
+}
+.musica-selo b { font-weight: 600; }
+.musica-status-tocando { display:none; }
+.tela-musica.tocando .musica-status-espera { display:none; }
+.tela-musica.tocando .musica-status-tocando { display:inline; }
+.musica-destaque-legenda { color:rgba(255,255,255,.42); font-size:clamp(11px,.85vw,16px); }
+.musica-arte { position:relative; min-height:0; overflow:hidden; border-radius:clamp(16px,1.5vw,28px); background:#171b20; }
+.musica-arte-fallback { position:absolute; inset:0; display:grid; place-items:center; color:rgba(255,255,255,.18); }
+.musica-arte-fallback svg { width:20%; height:30%; }
+.musica-arte-ambiente { position:absolute; inset:-12%; width:124%; height:124%; object-fit:cover; filter:blur(36px) brightness(.42) saturate(1.2); opacity:.8; }
+.tela-musica .musica-card-sequencia .musica-capa-imagem {
+    inset:0; width:100%; height:100%; aspect-ratio:auto; object-fit:contain; object-position:center;
+    border-radius:0; box-shadow:none;
+}
+.tela-musica .musica-card-sequencia .musica-titulo {
+    margin:0; font-size:clamp(25px,3.3vw,64px); line-height:1.08; letter-spacing:-.045em;
+    white-space:normal; overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+}
+.tela-musica .musica-card-sequencia .musica-artista {
+    margin:clamp(5px,.7vh,10px) 0 0; color:#b4bbc4; font-size:clamp(14px,1.35vw,26px);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.tela-musica .musica-card-sequencia .musica-progresso {
+    position:relative; inset:auto; width:100%; height:4px; background:rgba(255,255,255,.15);
+}
+.tela-musica .musica-card-sequencia .musica-progresso-preenchimento { background:#e4f5ed; box-shadow:0 0 18px rgba(220,255,238,.2); }
+.tela-musica .musica-card-sequencia .musica-tempos {
+    position:static; display:flex; margin:10px 0 0; color:#a9b1bc; font-size:clamp(11px,.9vw,17px);
+}
+.musica-sequencia { display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:clamp(12px,2.6vh,30px); padding-left:clamp(16px,2.4vw,46px); border-left:1px solid rgba(255,255,255,.1); }
+.musica-sequencia-cabecalho > span { display:block; color:#8a96a5; font-size:clamp(10px,.72vw,14px); letter-spacing:.2em; font-weight:600; }
+.musica-sequencia-cabecalho h2 { margin:10px 0 0; font-size:clamp(24px,2.5vw,48px); font-weight:500; letter-spacing:-.045em; }
+.musica-sequencia-cabecalho h2 span { float:right; color:#8a96a5; font-size:.75em; }
+.musica-fila-lista { list-style:none; display:grid; grid-template-rows:1fr 1fr 1.2fr 1fr 1fr; gap:clamp(6px,1vh,12px); min-height:0; }
+.musica-fila-item {
+    min-width:0; min-height:0; display:grid; grid-template-columns:clamp(40px,4.5vw,84px) minmax(0,1fr) 16px;
+    align-items:center; gap:clamp(10px,1.1vw,20px); padding:clamp(8px,1vw,18px); border:1px solid transparent; border-radius:clamp(12px,1.1vw,20px);
+    background:rgba(255,255,255,.025);
+}
+.musica-fila-capa { position:relative; width:100%; aspect-ratio:1; max-height:100%; overflow:hidden; border-radius:clamp(8px,.7vw,13px); background:#222a33; display:grid; place-items:center; }
+.musica-fila-capa > svg { width:40%; height:40%; color:#9ba5b2; }
+.musica-fila-capa img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.musica-fila-texto { min-width:0; }
+.musica-fila-texto > * { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.musica-fila-rotulo { color:#aab5c3; font-size:clamp(9px,.67vw,13px); letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
+.musica-fila-texto strong { color:#f1f4f7; font-size:clamp(14px,1.18vw,23px); font-weight:600; letter-spacing:-.025em; }
+.musica-fila-artista { color:#9ba5b2; font-size:clamp(11px,.86vw,17px); margin-top:4px; }
+.musica-fila-item.anterior { opacity:.55; }
+.musica-fila-item.anterior img { filter:saturate(.5); }
+.musica-fila-item.vazia { opacity:.32; }
+.musica-fila-item.atual {
+    border-color:rgba(203,241,220,.38); background:linear-gradient(110deg,rgba(203,241,220,.15),rgba(203,241,220,.035));
+    box-shadow:0 10px 32px rgba(0,0,0,.15);
+}
+.musica-fila-item.atual .musica-fila-rotulo { color:#cbf1dc; }
+.musica-fila-item.atual strong { font-size:clamp(16px,1.4vw,27px); }
+.musica-fila-marcador { width:5px; height:5px; border-radius:50%; background:#718092; justify-self:center; }
+.musica-fila-ondas { height:24px; display:flex; align-items:center; gap:2px; color:#cbf1dc; }
+.musica-fila-ondas i { display:block; width:3px; height:7px; border-radius:5px; background:currentColor; }
+.tocando .musica-fila-ondas i { animation:musica-onda .85s ease-in-out infinite alternate; }
+.musica-fila-ondas i:nth-child(2) { animation-delay:-.3s; }
+.musica-fila-ondas i:nth-child(3) { animation-delay:-.6s; }
+.musica-fila-ondas i:nth-child(4) { animation-delay:-.15s; }
+.musica-sequencia-nota { color:#83909e; font-size:clamp(10px,.8vw,15px); line-height:1.5; }
+.tela-musica.ativa .musica-fila-item { animation:musica-fila-entrada .7s both; animation-delay:calc(var(--fila-indice) * 65ms); }
+.tela-musica.ativa .musica-arte { animation:musica-arte-entrada 1.2s both; }
+.musica-card-sequencia .musica-aviso-audio { top:auto; bottom:15px; left:50%; right:auto; transform:translateX(-50%); max-width:85%; border-radius:12px; }
+img[data-musica-imagem][hidden] { display:none !important; }
+@keyframes musica-fila-entrada { from { transform:translateY(22px); opacity:0; } }
+@keyframes musica-arte-entrada { from { opacity:0; transform:scale(.98); } }
+@keyframes musica-onda { to { height:24px; } }
+@media (max-height:650px) and (min-aspect-ratio:1/1) {
+    .tela-musica .musica-card-sequencia { padding:20px 28px; gap:28px; height:86vh; }
+    .musica-destaque { gap:10px; }
+    .musica-sequencia { gap:12px; padding-left:24px; }
+    .musica-sequencia-cabecalho h2 { margin-top:5px; font-size:28px; }
+    .musica-fila-item { grid-template-columns:clamp(30px,7vh,52px) minmax(0,1fr) 14px; padding:5px 9px; gap:9px; }
+    .musica-fila-rotulo { margin-bottom:2px; }
+    .musica-fila-artista { margin-top:2px; }
+    .musica-sequencia-nota { font-size:10px; }
+}
+@media (max-aspect-ratio:1/1) {
+    .tela-musica .musica-card-sequencia { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1.05fr) minmax(0,1fr); width:92vw; height:89vh; height:89dvh; padding:20px; gap:20px; }
+    .musica-destaque { gap:10px; }
+    .musica-destaque-legenda { display:none; }
+    .musica-sequencia { padding:14px 0 0; border-left:0; border-top:1px solid rgba(255,255,255,.1); gap:8px; }
+    .musica-sequencia-cabecalho > span, .musica-sequencia-nota { display:none; }
+    .musica-sequencia-cabecalho h2 { margin:0; font-size:20px; }
+    .musica-fila-lista { gap:4px; }
+    .musica-fila-item { grid-template-columns:32px minmax(0,1fr) 14px; padding:4px 8px; gap:10px; border-radius:10px; }
+    .musica-fila-texto { display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:6px; }
+    .musica-fila-rotulo { grid-column:2; grid-row:1; font-size:8px; align-self:center; margin:0; letter-spacing:0; }
+    .musica-fila-texto strong { grid-column:1; grid-row:1; font-size:13px; }
+    .musica-fila-item.atual strong { font-size:14px; }
+    .musica-fila-artista { grid-column:1 / -1; font-size:10px; margin-top:2px; }
+    .tela-musica .musica-card-sequencia .musica-titulo { font-size:24px; -webkit-line-clamp:1; }
+    .tela-musica .musica-card-sequencia .musica-artista { font-size:13px; }
+    .tela-musica .musica-card-sequencia .musica-tempos { margin-top:5px; font-size:10px; }
+}
+@media (prefers-reduced-motion:reduce) {
+    .tela-musica.ativa .musica-fila-item, .tela-musica.ativa .musica-arte, .tocando .musica-fila-ondas i { animation:none; }
+}
