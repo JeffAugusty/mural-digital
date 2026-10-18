@@ -1739,7 +1739,6 @@
             <header class="topo">
                 <div>
                     <h1 id="secao-titulo">Visão geral</h1>
-                    <p id="secao-descricao">Acompanhe o mural e acesse rapidamente cada tipo de conteúdo.</p>
                 </div>
                 <div class="topo-status">Sistema conectado</div>
             </header>
@@ -1777,7 +1776,6 @@
                         <div class="card-cabecalho">
                             <div class="tv-cabecalho-texto">
                                 <h2>Prévia da TV</h2>
-                                <p class="imagem-ajuda">Visualização ao vivo do conteúdo exibido no mural.</p>
                             </div>
                             <div class="tv-acoes">
                                 <button id="preview-som-botao" class="botao botao-som-preview" type="button" aria-pressed="false">Ativar som</button>
@@ -1794,27 +1792,27 @@
                         <div class="atalhos">
                             <button class="atalho-item" type="button" data-ir-secao="programacao">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="6" r="1.4" fill="currentColor"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="4" cy="18" r="1.4" fill="currentColor"/></svg></span>
-                                <span><strong>Programação da TV</strong><small>Arrastar e intercalar todos os conteúdos</small></span>
+                                <span><strong>Programação da TV</strong></span>
                                 <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <button class="atalho-item" type="button" data-ir-secao="eventos">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 3v4m10-4v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-                                <span><strong>Eventos</strong><small>Cadastrar e organizar eventos</small></span>
+                                <span><strong>Eventos</strong></span>
                                 <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <button class="atalho-item" type="button" data-ir-secao="imagens">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m4 17 5-5 4 4 2-2 5 5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
-                                <span><strong>Imagens</strong><small>Enviar comunicados para a TV</small></span>
+                                <span><strong>Imagens</strong></span>
                                 <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <button class="atalho-item" type="button" data-ir-secao="midias">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m10 9 5 3-5 3V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
-                                <span><strong>Vídeos e lives</strong><small>Controlar vídeos e transmissões</small></span>
+                                <span><strong>Vídeos e lives</strong></span>
                                 <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <button class="atalho-item" type="button" data-ir-secao="musicas">
                                 <span class="atalho-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"/></svg></span>
-                                <span><strong>Músicas</strong><small>Controlar capas e arquivos de áudio</small></span>
+                                <span><strong>Músicas</strong></span>
                                 <svg class="atalho-seta" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                         </div>
@@ -1827,21 +1825,15 @@
                     <div class="card-cabecalho programacao-cabecalho">
                         <div>
                             <h2>Ordem de exibição da TV</h2>
-                            <p id="programacao-instrucao-arraste" class="imagem-ajuda">Arraste os blocos pela alça ou use as setas. A nova ordem é salva automaticamente e chega à TV sem precisar atualizar a página.</p>
                         </div>
                         <div id="programacao-salvamento" class="programacao-salvamento salvo" role="status" aria-live="polite">Ordem sincronizada</div>
-                    </div>
-
-                    <div class="programacao-aviso">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span>Relógio e clima sempre abrem a rodada. Uma música toca por completo no final; depois, o mural começa novamente e escolhe a próxima música.</span>
                     </div>
 
                     <div class="programacao-lista">
                         <article class="programacao-item programacao-item-fixo">
                             <span class="programacao-posicao">1</span>
                             <span class="programacao-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                            <span class="programacao-dados"><strong>Relógio, data e clima</strong><span>Primeira tela de toda rodada</span></span>
+                            <span class="programacao-dados"><strong>Relógio, data e clima</strong></span>
                             <span class="programacao-fixo-selo">Posição fixa</span>
                         </article>
 
@@ -1852,7 +1844,7 @@
                         <article class="programacao-item programacao-item-fixo">
                             <span id="programacao-posicao-musica" class="programacao-posicao">2</span>
                             <span class="programacao-icone programacao-icone-musica" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l10-2v13M9 9l10-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"/></svg></span>
-                            <span class="programacao-dados"><strong>Música da rodada</strong><span id="programacao-musica-resumo">A próxima música disponível toca até o final</span></span>
+                            <span class="programacao-dados"><strong>Música da rodada</strong><span id="programacao-musica-resumo"></span></span>
                             <span class="programacao-fixo-selo">Posição fixa</span>
                         </article>
                     </div>
@@ -1998,7 +1990,6 @@
             <div class="card-cabecalho">
                 <div>
                     <h2>Imagens do mural</h2>
-                    <p class="imagem-ajuda">Envie e controle os comunicados exibidos na TV. As alterações são atualizadas automaticamente.</p>
                 </div>
                 <span id="total-imagens">0 imagens</span>
             </div>
@@ -2013,14 +2004,13 @@
                     <h3 id="imagem-form-titulo">Nova imagem</h3>
 
                     <div id="imagem-preview" class="imagem-preview">
-                        <span>Prévia da imagem<br>1920 × 1080 recomendado</span>
+                        <span>Prévia da imagem</span>
                     </div>
 
                     <div class="grade">
                         <div class="campo campo-largo">
-                            <label for="imagem-arquivo">Arquivo da imagem</label>
+                            <label for="imagem-arquivo">Arquivo da imagem (JPG, PNG ou WebP · até 8 MB)</label>
                             <input id="imagem-arquivo" class="imagem-arquivo" type="file" accept="image/jpeg,image/png,image/webp">
-                            <p class="imagem-ajuda">JPG, PNG ou WebP, com no máximo 8 MB. O painel otimiza automaticamente a imagem para a TV antes do envio.</p>
                         </div>
 
                         <div class="campo campo-largo">
@@ -2077,7 +2067,6 @@
             <div class="card-cabecalho">
                 <div>
                     <h2>Vídeos e transmissões</h2>
-                    <p class="imagem-ajuda">Use um link do YouTube ou envie um vídeo. Anúncios tocam até o fim; uma live ativa permanece fixa na TV.</p>
                 </div>
                 <span id="total-midias">0 mídias</span>
             </div>
@@ -2124,13 +2113,11 @@
                         <div id="midia-campo-youtube" class="campo campo-largo">
                             <label for="midia-url">Link do YouTube</label>
                             <input id="midia-url" type="url" placeholder="https://www.youtube.com/watch?v=...">
-                            <p class="imagem-ajuda">Aceita links de vídeos, Shorts e transmissões ao vivo do YouTube.</p>
                         </div>
 
                         <div id="midia-campo-arquivo" class="campo campo-largo oculto">
-                            <label for="midia-video-arquivo">Arquivo do vídeo</label>
+                            <label for="midia-video-arquivo">Arquivo do vídeo (MP4 ou WebM · até 500 MB)</label>
                             <input id="midia-video-arquivo" type="file" accept="video/mp4,video/webm,.mp4,.webm">
-                            <p class="imagem-ajuda">MP4 ou WebM, com no máximo 500 MB. Vídeos verticais serão centralizados na TV sem cortes.</p>
                         </div>
 
                         <div class="campo">
@@ -2151,7 +2138,6 @@
                                 <input id="midia-com-som" type="checkbox">
                                 Reproduzir com som
                             </label>
-                            <p class="imagem-ajuda">Para anúncios, recomendamos deixar sem som. Em uma live, marque esta opção quando precisar do áudio na TV.</p>
                         </div>
 
                         <div id="midia-campo-legenda" class="campo campo-largo">
@@ -2159,7 +2145,6 @@
                                 <input id="midia-com-legenda" type="checkbox">
                                 Exibir legendas
                             </label>
-                            <p class="imagem-ajuda">Deixe desmarcado para reproduzir o conteúdo sem as legendas automáticas do YouTube.</p>
                         </div>
 
                         <div class="campo">
@@ -2204,7 +2189,6 @@
                     <div class="card-cabecalho">
                         <div>
                             <h2>Músicas do mural</h2>
-                            <p class="imagem-ajuda">Envie a capa e informe o link do YouTube. Uma música toca por completo depois de cada rodada dos avisos e a próxima faixa entra na rodada seguinte.</p>
                         </div>
                         <span id="total-musicas">0 músicas</span>
                     </div>
@@ -2215,7 +2199,6 @@
                         <div class="interacao-musica-configuracao-cabecalho">
                             <div>
                                 <h3>Interação com os alunos</h3>
-                                <p class="imagem-ajuda">Configure a chamada com QR Code que será exibida imediatamente antes de cada música.</p>
                             </div>
                         </div>
 
@@ -2232,7 +2215,6 @@
                             <div class="campo campo-largo">
                                 <label for="interacao-musica-link">Link do formulário</label>
                                 <input id="interacao-musica-link" type="url" placeholder="https://forms.gle/...">
-                                <p class="imagem-ajuda">Cole aqui o link público do Google Forms. O QR Code será criado automaticamente.</p>
                             </div>
 
                             <div class="campo">
@@ -2299,7 +2281,6 @@
                                 <div class="campo campo-largo">
                                     <label for="musica-youtube-url">Link da música no YouTube</label>
                                     <input id="musica-youtube-url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
-                                    <p class="imagem-ajuda">Cole o link do vídeo oficial. A capa será obtida automaticamente do YouTube e o vídeo não aparecerá na TV.</p>
                                 </div>
 
                                 <div class="campo">
@@ -2349,7 +2330,6 @@
                     <div class="card-cabecalho">
                         <div>
                             <h2>Usuários e acessos</h2>
-                            <p class="imagem-ajuda">Crie contas, escolha os módulos disponíveis e bloqueie acessos sem excluir o histórico.</p>
                         </div>
                         <span id="total-usuarios">0 usuários</span>
                     </div>
@@ -2377,7 +2357,6 @@
                                         <option value="usuario">Usuário comum</option>
                                         <option value="admin">Administrador</option>
                                     </select>
-                                    <p class="imagem-ajuda">As permissões abaixo definem exatamente o que a pessoa poderá acessar.</p>
                                 </div>
                                 <div id="senha-temporaria-campo" class="campo campo-largo">
                                     <label for="usuario-senha-temporaria">Senha temporária</label>
@@ -2385,7 +2364,6 @@
                                         <input id="usuario-senha-temporaria" type="text" minlength="8" autocomplete="off" placeholder="Mínimo de 8 caracteres">
                                         <button id="gerar-senha-botao" class="botao botao-secundario" type="button">Gerar senha</button>
                                     </div>
-                                    <p class="imagem-ajuda">Entregue esta senha diretamente ao usuário. No primeiro login, ele será obrigado a criar outra.</p>
                                 </div>
                             </div>
 
@@ -2539,32 +2517,25 @@
 
         const SECOES_ADMIN = {
             'visao-geral': {
-                titulo: 'Visão geral',
-                descricao: 'Acompanhe o mural e acesse rapidamente cada tipo de conteúdo.'
+                titulo: 'Visão geral'
             },
             programacao: {
-                titulo: 'Programação da TV',
-                descricao: 'Defina a sequência dos eventos, imagens, vídeos e transmissões.'
+                titulo: 'Programação da TV'
             },
             eventos: {
-                titulo: 'Eventos',
-                descricao: 'Cadastre eventos, defina datas, cores, QR Code e tempo de exibição.'
+                titulo: 'Eventos'
             },
             imagens: {
-                titulo: 'Imagens',
-                descricao: 'Envie e controle os comunicados que entram na programação da TV.'
+                titulo: 'Imagens'
             },
             midias: {
-                titulo: 'Vídeos e lives',
-                descricao: 'Gerencie vídeos enviados, conteúdos do YouTube e transmissões ao vivo.'
+                titulo: 'Vídeos e lives'
             },
             musicas: {
-                titulo: 'Músicas',
-                descricao: 'Organize as faixas que tocam depois de cada rodada dos avisos.'
+                titulo: 'Músicas'
             },
             usuarios: {
-                titulo: 'Usuários',
-                descricao: 'Cadastre pessoas e defina quais áreas cada uma pode acessar.'
+                titulo: 'Usuários'
             }
         };
 
@@ -2604,7 +2575,6 @@
             });
 
             $('#secao-titulo').textContent = SECOES_ADMIN[nome].titulo;
-            $('#secao-descricao').textContent = SECOES_ADMIN[nome].descricao;
             if (nome === 'usuarios' && !usuariosCarregados) carregarUsuarios();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -3030,8 +3000,8 @@
             ).length;
 
             $('#programacao-musica-resumo').textContent = musicasAtivas
-                ? `${musicasAtivas} música${musicasAtivas === 1 ? '' : 's'} disponível${musicasAtivas === 1 ? '' : 'is'}; uma faixa por rodada`
-                : 'Nenhuma música ativa; esta etapa será ignorada';
+                ? `${musicasAtivas} música${musicasAtivas === 1 ? '' : 's'} disponível${musicasAtivas === 1 ? '' : 'is'}`
+                : 'Nenhuma música ativa';
 
             if (!itens.length) {
                 lista.innerHTML = '<div class="programacao-vazia">Nenhum evento, imagem ou vídeo ativo. Ative um conteúdo para incluí-lo na programação.</div>';
@@ -3054,7 +3024,7 @@
                         <button class="programacao-mover" type="button" data-mover-programacao="1" title="Mover para baixo" aria-label="Mover ${escaparHTML(item.titulo)} para baixo">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
-                        <button class="programacao-alca" type="button" title="Arraste para reorganizar" aria-label="Arrastar ${escaparHTML(item.titulo)}" aria-describedby="programacao-instrucao-arraste">
+                        <button class="programacao-alca" type="button" title="Arraste para reorganizar" aria-label="Arrastar ${escaparHTML(item.titulo)}">
                             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                         </button>
                     </span>
@@ -3425,7 +3395,7 @@
 
             const area = $('#imagem-preview');
             if (!url) {
-                area.innerHTML = '<span>Prévia da imagem<br>1920 × 1080 recomendado</span>';
+                area.innerHTML = '<span>Prévia da imagem</span>';
                 return;
             }
 
