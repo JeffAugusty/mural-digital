@@ -60,6 +60,7 @@ let geracaoMidiasYoutube = 0;
 let somPreviaAdminAtivo = false;
 let idMusicaDaRodada = '';
 let programacaoOrdem = [];
+let musicasHabilitadas = true;
 let configuracaoInteracaoMusica = {
     ativo: false,
     linkFormulario: '',
@@ -1112,6 +1113,7 @@ function converterAgendaYoutube(valor, fimDoDia = false) {
 
 
 function midiaYoutubeEstaVisivel(item) {
+    if (item.tipo === 'musica' && !musicasHabilitadas) return false;
     if (item.ativo === false) {
         return false;
     }
@@ -2854,6 +2856,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
 
 
 function iniciarMidiasYoutubeFirebase() {
+    try { musicasHabilitadas = localStorage.getItem('mural-musicas-habilitadas-v1') !== 'false'; } catch {}
     configuracaoInteracaoMusica = carregarCacheInteracaoMusica();
     const cache = carregarCacheMidiasYoutube();
 
@@ -2885,6 +2888,8 @@ function iniciarMidiasYoutubeFirebase() {
                         dados.interacaoMusica || {}
                     );
 
+                musicasHabilitadas = dados.musicasHabilitadas !== false;
+                try { localStorage.setItem('mural-musicas-habilitadas-v1', String(musicasHabilitadas)); } catch {}
                 salvarCacheMidiasYoutube(lista);
                 salvarCacheInteracaoMusica(configuracaoInteracaoMusica);
                 renderizarMidiasYoutube(lista, true);

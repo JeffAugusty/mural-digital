@@ -1604,6 +1604,32 @@
             .usuario-acoes { grid-column: 1 / -1; justify-content: flex-start; }
             .senha-temporaria-linha { grid-template-columns: 1fr; }
         }
+
+        .musicas-interacao { border:1px solid #d8e2ed; border-radius:12px; margin-bottom:16px; background:#f7f9fc; }
+        .musicas-interacao summary { display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; font-weight:600; list-style:none; }
+        .musicas-interacao summary::-webkit-details-marker { display:none; }
+        .musicas-seta { margin-left:auto; font-size:22px; transition:transform .2s; }
+        .musicas-interacao[open] .musicas-seta { transform:rotate(180deg); }
+        .musicas-interacao .interacao-musica-configuracao { border:0; border-top:1px solid #d8e2ed; border-radius:0 0 12px 12px; margin:0; }
+        .musicas-ferramentas { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px; align-items:center; }
+        #musica-busca { flex:1; min-width:200px; width:auto; }
+        .musicas-layout { display:grid; gap:20px; }
+        .musicas-layout #musica-form { max-width:760px; width:100%; box-sizing:border-box; }
+        #musica-form .musica-preview-admin { max-height:120px; }
+        #musica-busca-total { font-size:12px; font-weight:400; color:#667085; }
+        #lista-musicas { max-height:none; overflow:visible; }
+        #lista-musicas .imagem-item { grid-template-columns:52px minmax(0,1fr) auto; padding:10px 12px; gap:14px; align-items:center; }
+        #lista-musicas .imagem-miniatura { width:52px; height:52px; aspect-ratio:1; }
+        #lista-musicas .imagem-miniatura::after { display:none; }
+        #lista-musicas h4 { margin-bottom:3px; }
+        #lista-musicas .imagem-status-linha { margin-top:5px; }
+        #lista-musicas .imagem-acoes { max-width:none; }
+        @media(max-width:600px) {
+            .musicas-ferramentas #musica-busca { flex-basis:100%; }
+            #lista-musicas .imagem-item { grid-template-columns:44px minmax(0,1fr); gap:10px; }
+            #lista-musicas .imagem-miniatura { width:44px; height:44px; }
+            #lista-musicas .imagem-acoes { grid-column:1 / -1; justify-content:flex-end; }
+        }
     </style>
 </head>
 <body>
@@ -2195,12 +2221,8 @@
 
                     <div id="musica-mensagem" class="mensagem oculto"></div>
 
+                    <details class="musicas-interacao"><summary>Interação com os alunos <span id="interacao-musica-status" class="status">Desativada</span><span class="musicas-seta" aria-hidden="true">⌄</span></summary>
                     <form id="interacao-musica-form" class="interacao-musica-configuracao">
-                        <div class="interacao-musica-configuracao-cabecalho">
-                            <div>
-                                <h3>Interação com os alunos</h3>
-                            </div>
-                        </div>
 
                         <div id="interacao-musica-mensagem" class="mensagem oculto"></div>
 
@@ -2237,9 +2259,14 @@
                             <button id="interacao-musica-salvar-botao" class="botao botao-primario" type="submit">Salvar interação</button>
                         </div>
                     </form>
-
-                    <div class="imagem-layout">
-                        <form id="musica-form" class="imagem-formulario">
+                    </details>
+                    <div class="musicas-ferramentas">
+                        <input id="musica-busca" type="search" placeholder="Buscar música ou artista" aria-label="Buscar música ou artista">
+                        <button id="musicas-tv-botao" class="botao botao-secundario" type="button" aria-pressed="true" disabled>Carregando...</button>
+                        <button id="musica-nova-botao" class="botao botao-primario" type="button" aria-expanded="false" aria-controls="musica-form">Adicionar música</button>
+                    </div>
+                    <div class="musicas-layout">
+                        <form id="musica-form" class="imagem-formulario oculto">
                             <input id="musica-id" type="hidden">
                             <input id="musica-capa-url-atual" type="hidden">
                             <input id="musica-capa-dato-id-atual" type="hidden">
@@ -2283,7 +2310,7 @@
                                     <input id="musica-youtube-url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
                                 </div>
 
-                                <div class="campo">
+                                <div class="campo oculto">
                                     <label for="musica-ordem">Ordem de reprodução</label>
                                     <input id="musica-ordem" type="number" min="0" max="999" value="0" required>
                                 </div>
@@ -2316,7 +2343,7 @@
                         </form>
 
                         <div class="imagem-listagem">
-                            <h3>Músicas cadastradas</h3>
+                            <h3>Músicas cadastradas <span id="musica-busca-total" aria-live="polite"></span></h3>
                             <div id="lista-musicas" class="imagem-lista">
                                 <div class="vazio">Carregando músicas...</div>
                             </div>
@@ -2475,6 +2502,8 @@
         let eventos = [];
         let imagens = [];
         let midiasYoutube = [];
+        let musicasHabilitadas = true;
+        let salvandoMusicasTV = false;
         let configuracaoInteracaoMusica = {
             ativo: false,
             linkFormulario: '',
@@ -4093,6 +4122,7 @@
                 configuracaoInteracaoMusica
             );
 
+            $('#interacao-musica-status').textContent = dados.ativo ? 'Ativada' : 'Desativada';
             $('#interacao-musica-ativa').checked = dados.ativo;
             $('#interacao-musica-link').value = dados.linkFormulario;
             $('#interacao-musica-duracao').value = dados.duracao;
@@ -4142,7 +4172,10 @@
             $('#musica-cor-secundaria').value = '#1db954';
             $('#musica-form-titulo').textContent = 'Nova música';
             $('#musica-salvar-botao').textContent = 'Adicionar música';
-            $('#musica-cancelar-botao').classList.add('oculto');
+            $('#musica-cancelar-botao').classList.remove('oculto');
+            $('#musica-cancelar-botao').textContent = 'Cancelar';
+            musicaForm.classList.add('oculto');
+            $('#musica-nova-botao').setAttribute('aria-expanded', 'false');
             esconderMensagem($('#musica-mensagem'));
             atualizarPreviewMusica();
         }
@@ -4221,12 +4254,21 @@
             $('#total-musicas').textContent = `${ordenadas.length} música${ordenadas.length === 1 ? '' : 's'}`;
             $('#resumo-musicas').textContent = ordenadas.length;
 
+            $('#musica-busca-total').textContent = '';
             if (!ordenadas.length) {
                 lista.innerHTML = '<div class="vazio">Nenhuma música cadastrada.</div>';
                 return;
             }
 
-            lista.innerHTML = ordenadas.map(item => {
+            const normalizar = texto => String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            const busca = normalizar($('#musica-busca').value.trim());
+            const filtradas = ordenadas.filter(item => normalizar(`${item.titulo} ${item.artista}`).includes(busca));
+            $('#musica-busca-total').textContent = busca ? `(${filtradas.length} de ${ordenadas.length})` : '';
+            if (!filtradas.length) {
+                lista.innerHTML = '<div class="vazio">Nenhuma música encontrada.</div>';
+                return;
+            }
+            lista.innerHTML = filtradas.map(item => {
                 const miniatura = item.capaUrl || '';
                 const youtubePronto = Boolean(extrairIdYoutube(item.url || item.link));
                 const audioLegado = !youtubePronto && Boolean(item.audioUrl);
@@ -4244,15 +4286,11 @@
                                 <span class="status ${item.ativo !== false ? 'status-ativo' : 'status-inativo'}">
                                     ${item.ativo !== false ? 'Ativa' : 'Inativa'}
                                 </span>
-                                <span class="status">Ordem ${Number(item.ordem || 0)}</span>
                                 <span class="status ${youtubePronto || audioLegado ? 'status-ativo' : 'status-inativo'}">
                                     ${youtubePronto ? 'YouTube pronto' : audioLegado ? 'Áudio atual' : 'Informar YouTube'}
                                 </span>
-                                <span class="status ${capaPronta ? 'status-ativo' : 'status-inativo'}">
-                                    ${capaPronta ? 'Capa pronta' : 'Enviar capa'}
-                                </span>
                             </div>
-                            <p>${escaparHTML(periodoMidia(item))}</p>
+                            ${item.inicio || item.fim ? `<p>${escaparHTML(periodoMidia(item))}</p>` : ''}
                         </div>
                         <div class="imagem-acoes">
                             <button type="button" data-acao-musica="editar" data-id="${item.id}">Editar</button>
@@ -4285,6 +4323,8 @@
                 doc(db, 'eventos', ID_CONFIGURACAO_MIDIAS_YOUTUBE),
                 documento => {
                     const dados = documento.exists() ? documento.data() : {};
+                    musicasHabilitadas = dados.musicasHabilitadas !== false;
+                    atualizarBotaoMusicasTV();
                     midiasYoutube = Array.isArray(dados.midias) ? dados.midias : [];
                     configuracaoInteracaoMusica =
                         normalizarConfiguracaoInteracaoMusica(
@@ -4408,6 +4448,8 @@
             $('#musica-salvar-botao').textContent = 'Salvar alterações';
             $('#musica-cancelar-botao').classList.remove('oculto');
             atualizarPreviewMusica();
+            musicaForm.classList.remove('oculto');
+            $('#musica-nova-botao').setAttribute('aria-expanded', 'true');
             musicaForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -5172,6 +5214,42 @@
             if (botao.dataset.acaoMidia === 'editar') editarMidia(botao.dataset.id);
             if (botao.dataset.acaoMidia === 'alternar') alternarMidia(botao.dataset.id);
             if (botao.dataset.acaoMidia === 'excluir') excluirMidia(botao.dataset.id);
+        });
+
+        function atualizarBotaoMusicasTV() {
+            const botao = $('#musicas-tv-botao');
+            botao.disabled = salvandoMusicasTV;
+            botao.textContent = salvandoMusicasTV ? 'Salvando...' : musicasHabilitadas ? 'Pausar músicas na TV' : 'Ativar músicas na TV';
+            botao.setAttribute('aria-pressed', String(musicasHabilitadas));
+        }
+        $('#musicas-tv-botao').addEventListener('click', async () => {
+            if (!temPermissao('musicas') || salvandoMusicasTV) return;
+            const novoEstado = !musicasHabilitadas;
+            salvandoMusicasTV = true;
+            atualizarBotaoMusicasTV();
+            try {
+                await setDoc(doc(db, 'eventos', ID_CONFIGURACAO_MIDIAS_YOUTUBE), {
+                    tipo: 'configuracao-videos', musicasHabilitadas: novoEstado, atualizadoEm: serverTimestamp()
+                }, { merge:true });
+                musicasHabilitadas = novoEstado;
+                mostrarMensagem($('#musica-mensagem'), novoEstado ? 'Músicas ativadas na TV.' : 'Músicas pausadas na TV.', 'sucesso');
+            } catch (erro) {
+                mostrarMensagem($('#musica-mensagem'), `Não foi possível alterar: ${erro.message}`);
+            } finally {
+                salvandoMusicasTV = false;
+                atualizarBotaoMusicasTV();
+            }
+        });
+        $('#musica-busca').addEventListener('input', renderizarMusicasYoutube);
+        $('#musica-nova-botao').addEventListener('click', () => {
+            if (!musicaForm.classList.contains('oculto')) {
+                $('#musica-titulo').focus();
+                return;
+            }
+            limparFormularioMusica();
+            musicaForm.classList.remove('oculto');
+            $('#musica-nova-botao').setAttribute('aria-expanded', 'true');
+            $('#musica-titulo').focus();
         });
 
         $('#lista-musicas').addEventListener('click', evento => {

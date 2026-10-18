@@ -127,3 +127,40 @@ test('playlist tem apenas o rótulo Próxima e não exibe comentários decorativ
     assert.ok(html.includes('Próxima'));
     for (const texto of ['SEU INTERVALO MUSICAL','Tocou antes','Última música','Depois','Uma pausa para ouvir','Uma música completa a cada rodada','Próxima rodada']) assert.ok(!html.includes(texto));
 });
+
+test('pausa global sincroniza, preserva estados individuais e não bloqueia vídeos/lives', () => {
+    const cache = new Map();
+    let receber;
+    const ctx = vm.createContext({ URL, URLSearchParams, console:{info(){},error(){}},
+        localStorage:{getItem:k=>cache.get(k)??null,setItem:(k,v)=>cache.set(k,v)},
+        window:{location:{search:''},addEventListener(){}},
+        document:{readyState:'loading',addEventListener(){}}
+    });
+    vm.runInContext(fonte+'\n'+principal,ctx);
+    ctx.banco = {collection:()=>({doc:()=>({onSnapshot:fn=>{receber=fn;}})})};
+    vm.runInContext(`
+        db=banco;
+        carregarCacheMidiasYoutube=()=>[];
+        carregarCacheInteracaoMusica=()=>({});
+        salvarCacheMidiasYoutube=()=>{};
+        salvarCacheInteracaoMusica=()=>{};
+        renderizarInteracaoMusica=()=>{};
+        renderizarMidiasYoutube=(lista)=>{ globalThis.visiveis=lista.filter(midiaYoutubeEstaVisivel); };
+        iniciarMidiasYoutubeFirebase();
+    `,ctx);
+    const items = [
+        {id:'song',tipo:'musica',ativo:true,url:'https://www.youtube.com/watch?v=abcdefghijk',capaUrl:'https://example.com/capa.jpg'},
+        {id:'off',tipo:'musica',ativo:false,url:'https://www.youtube.com/watch?v=abcdefghijk',capaUrl:'https://example.com/capa.jpg'},
+        {id:'video',tipo:'video',ativo:true,url:'https://www.youtube.com/watch?v=abcdefghijk'},
+        {id:'live',tipo:'live',ativo:true,url:'https://www.youtube.com/watch?v=abcdefghijk'}
+    ];
+    const original = JSON.stringify(items);
+    receber({exists:true,data:()=>({midias:items,musicasHabilitadas:false})});
+    assert.deepEqual(Array.from(ctx.visiveis,i=>i.id),['video','live']);
+    assert.equal(cache.get('mural-musicas-habilitadas-v1'),'false');
+    vm.runInContext('musicasHabilitadas=true; iniciarMidiasYoutubeFirebase();',ctx);
+    assert.equal(vm.runInContext('musicasHabilitadas',ctx),false);
+    receber({exists:true,data:()=>({midias:items,musicasHabilitadas:true})});
+    assert.deepEqual(Array.from(ctx.visiveis,i=>i.id),['song','video','live']);
+    assert.equal(JSON.stringify(items),original);
+});
