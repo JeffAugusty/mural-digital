@@ -55,6 +55,7 @@ let playersSpotify = new Map();
 let promessaApiSpotify = null;
 let apiSpotify = null;
 let liveFixaId = '';
+let timerRetentativaLive = null;
 let assinaturaMidiasYoutube = '';
 let geracaoMidiasYoutube = 0;
 let somPreviaAdminAtivo = false;
@@ -1249,6 +1250,7 @@ function carregarApiYoutube() {
 
 
 function destruirPlayersYoutube() {
+    cancelarEsperaLiveYoutube();
     playersYoutube.forEach(registro => {
         try {
             registro.player.destroy();
@@ -1751,7 +1753,88 @@ function agendarSegurancaYoutube(registro) {
 }
 
 
+function cancelarEsperaLiveYoutube() {
+    window.clearTimeout(timerRetentativaLive);
+    timerRetentativaLive = null;
+}
+
+function marcarLiveReproduzindo(registro) {
+    registro.liveIniciada = true;
+    cancelarEsperaLiveYoutube();
+    registro.section.querySelector('.live-aguardando')?.remove();
+}
+
+function aguardarLiveYoutube(sectionId, mensagem = 'Aguardando transmissão…') {
+    const section = document.getElementById(sectionId);
+    if (!section || liveFixaId !== sectionId || !section.classList.contains('ativa')) return;
+    let aviso = section.querySelector('.live-aguardando');
+    if (!aviso) {
+        aviso = document.createElement('div');
+        aviso.className = 'youtube-carregando live-aguardando';
+        aviso.setAttribute('role', 'status');
+        section.querySelector('.youtube-card')?.appendChild(aviso);
+    }
+    aviso.textContent = mensagem;
+    // Não empilhar nem adiar indefinidamente o timer a cada evento de buffering.
+    if (timerRetentativaLive !== null) return;
+    timerRetentativaLive = window.setTimeout(async () => {
+        timerRetentativaLive = null;
+        if (liveFixaId !== sectionId || document.getElementById(sectionId) !== section || !section.classList.contains('ativa')) return;
+        const registro = playersYoutube.get(sectionId);
+        const item = registro?.item || midiasYoutube.find(item => item.tipo === 'live' && criarIdTelaYoutube(item, 0) === sectionId);
+        if (!item || !midiaYoutubeEstaVisivel(item)) return;
+        try {
+            if (registro?.pronto) {
+                if (registro.player.getPlayerState() === window.YT.PlayerState.PLAYING) {
+                    marcarLiveReproduzindo(registro);
+                    return;
+                }
+                configurarSomYoutube(registro);
+                registro.player.loadVideoById({ videoId: extrairIdYoutube(item.url || item.link) });
+            } else {
+                // Recria apenas esta live quando o iframe/API não concluiu a inicialização.
+                playersYoutube.delete(sectionId);
+                try { registro?.player?.destroy(); } catch {}
+                const palco = section.querySelector('.youtube-player');
+                if (!palco) return;
+                const alvo = document.createElement('div');
+                alvo.className = 'youtube-player-alvo';
+                palco.replaceChildren(alvo);
+                await criarPlayersYoutube([{ section, item, videoId: extrairIdYoutube(item.url || item.link) }], geracaoMidiasYoutube);
+            }
+        } catch (erro) {
+            console.warn('A live ainda está indisponível. Nova tentativa automática.', erro);
+        }
+        const posterior = playersYoutube.get(sectionId);
+        try {
+            if (posterior?.pronto && posterior.player.getPlayerState() === window.YT.PlayerState.PLAYING) {
+                marcarLiveReproduzindo(posterior); return;
+            }
+        } catch {}
+        aguardarLiveYoutube(sectionId);
+    }, 60000);
+}
+
+function iniciarLiveYoutube(section) {
+    const registro = playersYoutube.get(section.id);
+    if (!registro?.pronto) { aguardarLiveYoutube(section.id); return; }
+    configurarSomYoutube(registro);
+    configurarLegendasYoutube(registro);
+    try {
+        if (registro.player.getPlayerState() === window.YT.PlayerState.PLAYING) {
+            marcarLiveReproduzindo(registro);
+            return;
+        }
+        registro.player.playVideo();
+    } catch (erro) { console.warn('Aguardando o player da live.', erro); }
+    try {
+        if (registro.player.getPlayerState() === window.YT.PlayerState.PLAYING) { marcarLiveReproduzindo(registro); return; }
+    } catch {}
+    aguardarLiveYoutube(section.id);
+}
+
 function agendarFalhaInicioYoutube(registro, tentativaSilenciosa = false) {
+    if (registro.item.tipo === 'live') { aguardarLiveYoutube(registro.section.id); return; }
     window.clearTimeout(timerRotacao);
 
     timerRotacao = window.setTimeout(() => {
@@ -1787,10 +1870,7 @@ function agendarFalhaInicioYoutube(registro, tentativaSilenciosa = false) {
         }
 
         if (registro.item.tipo === 'live') {
-            encerrarLiveYoutube(
-                registro.section.id,
-                'A transmissão não pôde ser iniciada.'
-            );
+            aguardarLiveYoutube(registro.section.id);
         } else {
             rotacionarTela();
         }
@@ -1799,6 +1879,11 @@ function agendarFalhaInicioYoutube(registro, tentativaSilenciosa = false) {
 
 
 function iniciarPlayerYoutube(section) {
+    if (section.dataset.tipoMidia === 'live') {
+        window.clearTimeout(timerRotacao);
+        iniciarLiveYoutube(section);
+        return;
+    }
     const registro = playersYoutube.get(section.id);
 
     window.clearTimeout(timerRotacao);
@@ -1810,7 +1895,7 @@ function iniciarPlayerYoutube(section) {
             }
 
             if (section.dataset.tipoMidia === 'live') {
-                encerrarLiveYoutube(section.id, 'A transmissão não pôde ser iniciada.');
+                aguardarLiveYoutube(section.id);
             } else {
                 rotacionarTela();
             }
@@ -1835,7 +1920,7 @@ function iniciarPlayerYoutube(section) {
         console.error('Não foi possível iniciar o vídeo do YouTube:', erro);
 
         if (registro.item.tipo === 'live') {
-            encerrarLiveYoutube(section.id, 'A transmissão está indisponível.');
+            aguardarLiveYoutube(section.id);
         } else {
             rotacionarTela();
         }
@@ -1864,6 +1949,7 @@ function encerrarLiveYoutube(sectionId, motivo = '') {
         return;
     }
 
+    cancelarEsperaLiveYoutube();
     const section = document.getElementById(sectionId);
     liveFixaId = '';
 
@@ -1888,6 +1974,7 @@ function tratarEstadoYoutube(sectionId, estado) {
     }
 
     if (estado === window.YT.PlayerState.PLAYING) {
+        if (registro.item.tipo === 'live') marcarLiveReproduzindo(registro);
         if (registro.item.tipo === 'musica') {
             registro.section.dataset.musicaReproduzida = 'true';
         }
@@ -1898,10 +1985,14 @@ function tratarEstadoYoutube(sectionId, estado) {
     }
 
     registro.section.classList.remove('tocando');
+    if (registro.item.tipo === 'live' && estado !== window.YT.PlayerState.ENDED) {
+        aguardarLiveYoutube(sectionId, registro.liveIniciada ? 'Reconectando à transmissão…' : 'Aguardando transmissão…');
+    }
 
     if (estado === window.YT.PlayerState.ENDED) {
         if (registro.item.tipo === 'live') {
-            encerrarLiveYoutube(sectionId);
+            if (registro.liveIniciada) encerrarLiveYoutube(sectionId);
+            else aguardarLiveYoutube(sectionId);
         } else if (!liveFixaId) {
             rotacionarTela();
         }
@@ -1921,7 +2012,9 @@ function tratarErroYoutube(sectionId, codigo) {
     }
 
     if (registro.item.tipo === 'live') {
-        encerrarLiveYoutube(sectionId, 'A live foi ignorada porque o YouTube recusou a reprodução.');
+        aguardarLiveYoutube(sectionId, [100, 101, 150].includes(Number(codigo))
+            ? 'Transmissão indisponível no YouTube. Aguardando liberação…'
+            : 'Reconectando à transmissão…');
     } else {
         window.setTimeout(() => {
             if (registro.section.classList.contains('ativa')) {
@@ -1993,6 +2086,7 @@ async function criarPlayersYoutube(sections, geracao) {
                 },
                 events: {
                     onReady: () => {
+                        if (item.tipo === 'live' && playersYoutube.get(section.id) !== registro) return;
                         registro.pronto = true;
                         configurarLegendasYoutube(registro);
                         section
@@ -2010,12 +2104,15 @@ async function criarPlayersYoutube(sections, geracao) {
                         }
                     },
                     onStateChange: evento => {
+                        if (item.tipo === 'live' && playersYoutube.get(section.id) !== registro) return;
                         tratarEstadoYoutube(section.id, evento.data);
                     },
                     onError: evento => {
+                        if (item.tipo === 'live' && playersYoutube.get(section.id) !== registro) return;
                         tratarErroYoutube(section.id, evento.data);
                     },
                     onAutoplayBlocked: () => {
+                        if (item.tipo === 'live' && playersYoutube.get(section.id) !== registro) return;
                         tratarAutoplayBloqueado(section.id);
                     }
                 }
@@ -2029,7 +2126,7 @@ async function criarPlayersYoutube(sections, geracao) {
 
         const ativa = document.querySelector('.tela-youtube.ativa, .tela-musica.ativa');
         if (ativa?.dataset.tipoMidia === 'live') {
-            encerrarLiveYoutube(ativa.id, 'A API do YouTube está indisponível.');
+            aguardarLiveYoutube(ativa.id, 'Conectando à transmissão…');
         } else if (ativa) {
             rotacionarTela();
         }
