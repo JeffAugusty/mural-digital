@@ -48,6 +48,7 @@ let step = 0;
 let timerRotacao = null;
 let midiasYoutube = [];
 let playersYoutube = new Map();
+let fontesYoutube = new Map();
 let playersVideoArquivo = new Map();
 let promessaApiYoutube = null;
 let playersAudio = new Map();
@@ -1260,6 +1261,7 @@ function destruirPlayersYoutube() {
     });
 
     playersYoutube.clear();
+    fontesYoutube.clear();
 }
 
 
@@ -1879,7 +1881,15 @@ function agendarFalhaInicioYoutube(registro, tentativaSilenciosa = false) {
 }
 
 
+function prepararPlayerYoutube(section) {
+    const fonte = fontesYoutube.get(section.id);
+    if (!fonte || fonte.preparando || playersYoutube.has(section.id)) return;
+    fonte.preparando = true;
+    criarPlayersYoutube([fonte], geracaoMidiasYoutube).finally(() => { fonte.preparando = false; });
+}
+
 function iniciarPlayerYoutube(section) {
+    prepararPlayerYoutube(section);
     if (section.dataset.tipoMidia === 'live') {
         window.clearTimeout(timerRotacao);
         iniciarLiveYoutube(section);
@@ -1937,16 +1947,16 @@ function iniciarPlayerYoutube(section) {
 
 function pausarPlayersYoutubeExceto(idAtivo) {
     playersYoutube.forEach((registro, id) => {
-        if (id === idAtivo || !registro.pronto) {
-            return;
-        }
-
+        if (id === idAtivo) return;
         registro.iniciadoNestaExibicao = false;
-        try {
-            registro.player.pauseVideo();
-            registro.section.classList.remove('tocando');
-        } catch {
-            // O player ainda pode estar mudando de estado.
+        playersYoutube.delete(id);
+        try { registro.player.destroy(); } catch {}
+        registro.section.classList.remove('tocando');
+        const palco = registro.section.querySelector('.youtube-player');
+        if (palco) {
+            const alvo = document.createElement('div');
+            alvo.className = 'youtube-player-alvo';
+            palco.replaceChildren(alvo);
         }
     });
 }
@@ -2065,6 +2075,7 @@ async function criarPlayersYoutube(sections, geracao) {
         }
 
         sections.forEach(({ section, item, videoId }) => {
+            if (!section.classList.contains('ativa') || playersYoutube.has(section.id)) return;
             const elemento = section.querySelector('.youtube-player-alvo');
 
             if (!elemento || !document.body.contains(section)) {
@@ -2755,7 +2766,7 @@ function renderizarMidiasYoutube(lista, forcar = false) {
             String(a.titulo || '').localeCompare(String(b.titulo || ''))
         );
 
-    const novaAssinatura = assinaturaYoutube(visiveis);
+    const novaAssinatura = JSON.stringify([assinaturaYoutube(visiveis), configuracaoInteracaoMusica, musicasHabilitadas]);
 
     if (!forcar && novaAssinatura === assinaturaMidiasYoutube) {
         return;
@@ -2958,17 +2969,11 @@ function renderizarMidiasYoutube(lista, forcar = false) {
         ? registros.find(registro => registro.item.tipo === 'live')?.section.id || ''
         : '';
 
-    sincronizarTelas(
-        liveFixaId || idAtivoAnterior
-    );
+    fontesYoutube = new Map(registros
+        .filter(registro => !midiaUsaVideoArquivo(registro.item) && Boolean(registro.videoId))
+        .map(registro => [registro.section.id, registro]));
+    sincronizarTelas(liveFixaId || idAtivoAnterior);
     agendarRotacao();
-    criarPlayersYoutube(
-        registros.filter(registro =>
-            !midiaUsaVideoArquivo(registro.item) &&
-            Boolean(registro.videoId)
-        ),
-        geracao
-    );
     criarPlayersVideoArquivo(registros);
     criarPlayersAudio(registros);
 }
@@ -3011,7 +3016,7 @@ function iniciarMidiasYoutubeFirebase() {
                 try { localStorage.setItem('mural-musicas-habilitadas-v1', String(musicasHabilitadas)); } catch {}
                 salvarCacheMidiasYoutube(lista);
                 salvarCacheInteracaoMusica(configuracaoInteracaoMusica);
-                renderizarMidiasYoutube(lista, true);
+                renderizarMidiasYoutube(lista);
 
                 console.info(
                     `${lista.length} mídia(s) recebida(s) do painel.`
@@ -3073,7 +3078,7 @@ function tentarAtivarSomAudio() {
     const section = document.querySelector('.tela-musica.ativa');
     if (!section) return;
 
-    if (playersYoutube.has(section.id)) {
+    if (fontesYoutube.has(section.id) || playersYoutube.has(section.id)) {
         iniciarPlayerYoutube(section);
         return;
     }
@@ -3095,7 +3100,25 @@ function formatarTempoMusica(segundos) {
 }
 
 
+function verificarTerminoVideoYoutube() {
+    const section = document.querySelector('.tela-youtube.ativa');
+    const registro = section && playersYoutube.get(section.id);
+    if (!registro?.pronto || registro.item.tipo !== 'video' || liveFixaId) return;
+    try {
+        const estado = registro.player.getPlayerState();
+        const posicao = Number(registro.player.getCurrentTime());
+        const duracao = Number(registro.player.getDuration());
+        const anterior = registro.ultimaPosicao || 0;
+        // Alguns players podem retornar ao começo sem entregar ENDED à página.
+        const repetiu = duracao > 0 && anterior >= duracao - 2 &&
+            anterior > 2 && posicao < 1 && anterior - posicao > 2;
+        registro.ultimaPosicao = posicao;
+        if (estado === window.YT.PlayerState.ENDED || repetiu) rotacionarTela();
+    } catch { /* O iframe ainda pode estar concluindo a inicialização. */ }
+}
+
 function atualizarProgressoMusica() {
+    verificarTerminoVideoYoutube();
     const section = document.querySelector('.tela-musica.ativa');
 
     if (!section) return;
@@ -3563,7 +3586,7 @@ function agendarRotacao() {
     }
     if (telaAtual?.classList.contains('tela-musica')) {
         MuralMusicas.atualizarFila(telaAtual);
-        if (playersYoutube.has(telaAtual.id)) {
+        if (fontesYoutube.has(telaAtual.id) || playersYoutube.has(telaAtual.id)) {
             iniciarPlayerYoutube(telaAtual);
         } else {
             iniciarPlayerAudio(telaAtual);
@@ -3654,7 +3677,7 @@ function controlarVideoClima() {
     }
 
     const youtubeAtivo =
-        document.querySelector('.tela-youtube.ativa');
+        document.querySelector('.tela-youtube.ativa, .tela-musica.ativa');
     const videoArquivoAtivo =
         document.querySelector('.tela-video-arquivo.ativa');
     const audioAtivo =

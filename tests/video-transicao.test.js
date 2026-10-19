@@ -5,10 +5,10 @@ const vm=require('node:vm');
 const path=require('node:path');
 function ambiente(){
  const classes=new Set(['ativa']);let id=0;const timers=new Map();
- const section={id:'video1',dataset:{tipoMidia:'video'},classList:{contains:c=>classes.has(c),add:c=>classes.add(c),remove:c=>classes.delete(c)}};
+ const section={querySelector:()=>null,id:'video1',dataset:{tipoMidia:'video'},classList:{contains:c=>classes.has(c),add:c=>classes.add(c),remove:c=>classes.delete(c)}};
  const ctx=vm.createContext({console,URL,URLSearchParams,section,
  window:{location:{search:''},addEventListener(){},YT:{PlayerState:{PLAYING:1,ENDED:0,BUFFERING:3}},setTimeout(f){timers.set(++id,f);return id;},clearTimeout:i=>timers.delete(i)},
- document:{readyState:'loading',addEventListener(){}}});
+ document:{readyState:'loading',addEventListener(){},querySelector:()=>section}});
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../script.js'),'utf8'),ctx);
  const run=s=>vm.runInContext(s,ctx);
  run(`globalThis.rotacoes=0;globalThis.reinicios=0;globalThis.plays=0;globalThis.estado=1;
@@ -25,9 +25,9 @@ test('YouTube terminado avança em vez de rebobinar quando reagendado',()=>{
  assert.equal(a.ctx.rotacoes,1);assert.equal(a.ctx.reinicios,0);assert.equal(a.ctx.plays,0);
  a.run('tratarEstadoYoutube(section.id,0)');assert.equal(a.ctx.rotacoes,1);
 });
-test('YouTube pode começar do início na rodada seguinte',()=>{
- const a=ambiente();a.run('registro.iniciadoNestaExibicao=true;pausarPlayersYoutubeExceto("");estado=0;iniciarPlayerYoutube(section)');
- assert.equal(a.ctx.reinicios,1);assert.equal(a.ctx.plays,1);assert.equal(a.ctx.rotacoes,0);
+test('player que sai da tela é removido e libera recursos',()=>{
+ const a=ambiente();a.run('globalThis.destruidos=0;registro.player.destroy=()=>destruidos++;pausarPlayersYoutubeExceto("")');
+ assert.equal(a.ctx.destruidos,1);assert.equal(a.run('playersYoutube.size'),0);
 });
 test('vídeo arquivo terminado avança sem repetir',()=>{
  const a=ambiente();a.run('registro.iniciadoNestaExibicao=true;registro.video.ended=true;iniciarPlayerVideoArquivo(section)');
@@ -42,4 +42,16 @@ test('eventos de vídeo inativo não cancelam o timer da tela atual',()=>{
 });
 test('fim normal do YouTube libera a programação',()=>{
  const a=ambiente();a.run('tratarEstadoYoutube(section.id,1);tratarEstadoYoutube(section.id,0)');assert.equal(a.ctx.rotacoes,1);
+});
+
+test('Shorts que volta ao início sem ENDED avança para a próxima tela',()=>{
+ const a=ambiente();a.run('verificarTerminoVideoYoutube();registro.player.getCurrentTime=()=>0.1;verificarTerminoVideoYoutube()');
+ assert.equal(a.ctx.rotacoes,1);
+});
+test('monitor de término não interfere em lives',()=>{
+ const a=ambiente();a.run('registro.item.tipo="live";estado=0;verificarTerminoVideoYoutube()');assert.equal(a.ctx.rotacoes,0);
+});
+test('preparação repetida não duplica players enquanto API carrega',async()=>{
+ const a=ambiente();a.run('playersYoutube.clear();fontesYoutube.set(section.id,{section});globalThis.criacoes=0;criarPlayersYoutube=async()=>{criacoes++;};prepararPlayerYoutube(section);prepararPlayerYoutube(section)');
+ assert.equal(a.ctx.criacoes,1);
 });
