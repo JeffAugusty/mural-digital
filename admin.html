@@ -1631,6 +1631,7 @@
             #lista-musicas .imagem-acoes { grid-column:1 / -1; justify-content:flex-end; }
         }
     </style>
+    <link rel="stylesheet" href="albuns-admin.css?v=14.0.0">
 </head>
 <body>
     <section id="login-tela" class="login-tela">
@@ -2012,7 +2013,8 @@
             </section>
 
             <section class="painel-secao" data-painel="imagens">
-                <section class="card painel-imagens">
+                <div class="imagens-navegacao"><button type="button" id="aba-imagens" class="botao botao-secundario" aria-pressed="true">Imagens</button><button type="button" id="aba-albuns" class="botao botao-secundario" aria-pressed="false">Álbuns de aulas</button></div>
+                <section id="imagens-card" class="card painel-imagens">
             <div class="card-cabecalho">
                 <div>
                     <h2>Imagens do mural</h2>
@@ -2086,6 +2088,7 @@
                 </div>
             </div>
                 </section>
+                <section id="albuns-admin" class="card oculto"></section>
             </section>
 
             <section class="painel-secao" data-painel="midias">
@@ -2422,6 +2425,7 @@
         </div>
     </main>
 
+    <script src="albuns-admin.js?v=14.0.0"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
         import {
@@ -2430,7 +2434,7 @@
         } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
         import {
             getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
-            onSnapshot, serverTimestamp, setDoc
+            onSnapshot, serverTimestamp, setDoc, runTransaction
         } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 
         const firebaseConfig = {
@@ -2501,6 +2505,7 @@
 
         let eventos = [];
         let imagens = [];
+        let albuns = [];
         let midiasYoutube = [];
         let musicasHabilitadas = true;
         let salvandoMusicasTV = false;
@@ -2944,7 +2949,11 @@
                     miniatura: midiaUsaArquivo(item) ? '' : miniaturaYoutube(item.url || item.link)
                 }));
 
-            return [...itensEventos, ...itensImagens, ...itensMidias];
+            const itensAlbuns = albuns.filter(item => item.ativo !== false).map(item => ({
+                chave: `album:${item.id}`, tipo:'imagem', titulo:item.nome || 'Álbum',
+                detalhe:`Álbum · ${item.fotos?.length || 0} fotos`, ordem:Number(item.ordem || 0), miniatura:item.fotos?.[0]?.url || ''
+            }));
+            return [...itensEventos, ...itensImagens, ...itensAlbuns, ...itensMidias];
         }
 
         function intercalarItensProgramacao(itens) {
@@ -3843,6 +3852,8 @@
                 documento => {
                     const dados = documento.exists() ? documento.data() : {};
                     imagens = Array.isArray(dados.imagens) ? dados.imagens : [];
+                    albuns = Array.isArray(dados.albuns) ? dados.albuns : [];
+                    editorAlbuns.carregar(albuns);
                     renderizarImagens();
                     renderizarProgramacao();
                 },
@@ -5252,6 +5263,34 @@
             $('#musica-titulo').focus();
         });
 
+        const editorAlbuns = criarEditorAlbuns({
+            raiz: $('#albuns-admin'),
+            podeEditar: () => temPermissao('imagens'),
+            enviar: enviarImagemParaR2,
+            otimizar: otimizarImagemParaTv,
+            validar: validarArquivoImagem,
+            excluirArquivo: excluirArquivoDaImagem,
+            salvar: async (id, item) => {
+                if (!temPermissao('imagens')) throw new Error('Sem permissão para alterar álbuns.');
+                const referencia = doc(db, 'eventos', ID_CONFIGURACAO_IMAGENS);
+                await runTransaction(db, async transacao => {
+                    const snapshot = await transacao.get(referencia);
+                    const atuais = snapshot.exists() && Array.isArray(snapshot.data().albuns) ? snapshot.data().albuns : [];
+                    const novaLista = atuais.filter(album => album.id !== id);
+                    if (item) novaLista.push(item);
+                    transacao.set(referencia, {tipo:'configuracao-imagens', albuns:novaLista, atualizadoEm:serverTimestamp()}, {merge:true});
+                });
+            }
+        });
+        function abrirAreaImagens(album) {
+            $('#imagens-card').classList.toggle('oculto', album);
+            $('#albuns-admin').classList.toggle('oculto', !album);
+            $('#aba-imagens').setAttribute('aria-pressed', String(!album));
+            $('#aba-albuns').setAttribute('aria-pressed', String(album));
+        }
+        $('#aba-imagens').addEventListener('click', () => abrirAreaImagens(false));
+        $('#aba-albuns').addEventListener('click', () => abrirAreaImagens(true));
+
         $('#lista-musicas').addEventListener('click', evento => {
             const botao = evento.target.closest('button[data-acao-musica]');
             if (!botao) return;
@@ -5367,6 +5406,8 @@
                 pararTimerInatividade();
                 encerrarEscutasPainel();
                 perfilUsuario = null;
+                albuns = [];
+                editorAlbuns.limpar();
                 usuariosCadastrados = [];
                 usuariosCarregados = false;
                 adminApp.classList.add('oculto');

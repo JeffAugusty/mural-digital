@@ -61,6 +61,9 @@ let somPreviaAdminAtivo = false;
 let idMusicaDaRodada = '';
 let programacaoOrdem = [];
 let musicasHabilitadas = true;
+let albunsMural = [];
+let assinaturaAlbuns = '';
+const CHAVE_CACHE_ALBUNS = 'mural-albuns-v1';
 let configuracaoInteracaoMusica = {
     ativo: false,
     linkFormulario: '',
@@ -3163,7 +3166,20 @@ function renderizarComunicados(imagens) {
     agendarRotacao();
 }
 
+function renderizarAlbuns(lista) {
+    albunsMural = Array.isArray(lista) ? lista : [];
+    const visiveis = albunsMural.filter(album => MuralAlbuns.visivel(album));
+    const assinatura = JSON.stringify(visiveis);
+    if (assinatura === assinaturaAlbuns) return;
+    assinaturaAlbuns = assinatura;
+    const idAtivo = obterIdTelaAtiva();
+    document.getElementById('container-albuns').replaceChildren(...visiveis.map(album => MuralAlbuns.criar(album)));
+    sincronizarTelas(idAtivo);
+    agendarRotacao();
+}
+
 function iniciarComunicadosFirebase() {
+    try { renderizarAlbuns(JSON.parse(localStorage.getItem(CHAVE_CACHE_ALBUNS) || '[]')); } catch {}
     const cache = carregarCacheComunicados();
 
     if (cache.length) {
@@ -3189,6 +3205,9 @@ function iniciarComunicadosFirebase() {
                     ? dados.imagens
                     : [];
 
+                const albuns = Array.isArray(dados.albuns) ? dados.albuns : [];
+                try { localStorage.setItem(CHAVE_CACHE_ALBUNS, JSON.stringify(albuns)); } catch {}
+                renderizarAlbuns(albuns);
                 salvarCacheComunicados(imagens);
                 renderizarComunicados(imagens);
 
@@ -3399,6 +3418,7 @@ function sincronizarTelas(
 
 function agendarRotacao() {
     window.clearTimeout(timerRotacao);
+    if (liveFixaId || !telas[step]?.classList.contains('tela-album')) MuralAlbuns.parar();
 
     if (liveFixaId) {
         const live = document.getElementById(liveFixaId);
@@ -3421,6 +3441,10 @@ function agendarRotacao() {
 
     const telaAtual = telas[step];
 
+    if (telaAtual?.classList.contains('tela-album')) {
+        MuralAlbuns.iniciar(telaAtual, rotacionarTela);
+        return;
+    }
     if (telaAtual?.classList.contains('tela-musica')) {
         MuralMusicas.atualizarFila(telaAtual);
         if (playersYoutube.has(telaAtual.id)) {
@@ -3575,7 +3599,7 @@ function iniciarMural() {
     agendarRotacao();
 
     window.setInterval(
-        () => renderizarMidiasYoutube(midiasYoutube),
+        () => { renderizarMidiasYoutube(midiasYoutube); renderizarAlbuns(albunsMural); },
         30000
     );
 

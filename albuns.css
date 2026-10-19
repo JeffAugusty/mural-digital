@@ -1,0 +1,20 @@
+.tela-album { display:flex; align-items:center; justify-content:center; background:radial-gradient(ellipse at 20% 10%,#24374b,#080e16 75%); }
+.album-card { position:relative; width:90vw; height:82vh; height:82dvh; border-radius:clamp(24px,3vw,54px); overflow:hidden; background:#111923; border:1px solid #ffffff25; box-shadow:0 25px 90px #0008; }
+.album-palco { position:absolute; inset:0; overflow:hidden; }
+.album-quadro { position:absolute; inset:0; display:grid; grid-template-columns:minmax(0,1fr); overflow:hidden; animation:album-entrada .8s ease both; background:#101820; }
+.album-quadro.album-dupla { grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(8px,1vw,22px); padding:clamp(10px,1.5vw,28px); }
+.album-foto { position:relative; min-width:0; min-height:0; margin:0; overflow:hidden; border-radius:inherit; background:#111b27; display:grid; grid-template-rows:minmax(0,1fr) auto; }
+.album-dupla .album-foto { border-radius:20px; }
+.album-foto-fundo { position:absolute; inset:-10%; width:120%; height:120%; object-fit:cover; filter:blur(35px) brightness(.32); opacity:.8; }
+.album-foto-frente { position:relative; grid-row:1; width:100%; height:100%; min-height:0; object-fit:contain; animation:album-respirar var(--album-tempo) linear both; }
+.album-legenda { position:relative; grid-row:2; text-align:center; color:#fff; font-size:clamp(17px,1.5vw,30px); line-height:1.35; padding:12px 24px 20px; background:#09121bd9; overflow-wrap:anywhere; }
+.album-abertura { margin:auto; max-width:85%; text-align:center; color:#fff; font-size:clamp(32px,5vw,96px); line-height:1.1; letter-spacing:-.035em; overflow-wrap:anywhere; }
+.album-progresso { position:absolute; bottom:0; left:4%; right:4%; height:3px; background:#ffffff18; }
+.album-progresso-valor { display:block; height:100%; background:#d7eafa; transition:width .8s ease; }
+.album-foto-erro img { visibility:hidden; }
+.album-foto-erro::after { content:'Imagem indisponível'; position:absolute; inset:0; display:grid; place-items:center; color:#b8c6d6; font-size:24px; }
+@keyframes album-entrada { from { opacity:0; } to { opacity:1; } }
+/* A imagem inteira fica dentro do quadro em todos os pontos da animação. */
+@keyframes album-respirar { from { transform:scale(.94); } to { transform:scale(1); } }
+@media(max-aspect-ratio:1/1) { .album-card { height:85dvh; } .album-quadro.album-dupla { grid-template-columns:1fr; grid-template-rows:repeat(2,minmax(0,1fr)); } .album-legenda { font-size:16px; padding:8px 14px; } }
+@media(prefers-reduced-motion:reduce) { .album-quadro,.album-foto-frente { animation:none; } .album-progresso-valor { transition:none; } }
