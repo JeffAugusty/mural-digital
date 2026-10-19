@@ -3006,7 +3006,7 @@ function atualizarProgressoMusica() {
 }
 
 
-function selecionarProximaMusicaDaRodada() {
+function selecionarProximaMusicaDaRodada(telaFinalizada) {
     const musicas = Array.from(document.querySelectorAll('.tela-musica'));
 
     if (!musicas.length) {
@@ -3014,8 +3014,10 @@ function selecionarProximaMusicaDaRodada() {
         return;
     }
 
-    const atual = musicas.find(section => section.id === idMusicaDaRodada);
-    const chaveProxima = MuralMusicas.avancar(atual?.dataset.musicaChave);
+    const atual = telaFinalizada || musicas.find(section => section.id === idMusicaDaRodada);
+    const chaveProxima = MuralMusicas.avancar(
+        atual?.dataset.musicaChave, atual?.dataset.musicaProxima
+    );
     const indiceProximo = musicas.findIndex(section => section.dataset.musicaChave === chaveProxima);
     const proximo = indiceProximo >= 0 ? indiceProximo : 0;
 
@@ -3489,7 +3491,7 @@ function rotacionarTela() {
     controlarVideoClima();
 
     if (terminouMusica) {
-        selecionarProximaMusicaDaRodada();
+        selecionarProximaMusicaDaRodada(telaAnterior);
     }
 
     agendarRotacao();

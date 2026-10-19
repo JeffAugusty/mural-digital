@@ -164,3 +164,37 @@ test('pausa global sincroniza, preserva estados individuais e não bloqueia víd
     assert.deepEqual(Array.from(ctx.visiveis,i=>i.id),['song','video','live']);
     assert.equal(JSON.stringify(items),original);
 });
+
+
+test('troca segue a reserva exibida mesmo com o seletor global desatualizado', () => {
+    const ctx = vm.createContext({ URL, URLSearchParams, console,
+        window:{location:{search:''},addEventListener(){}},
+        document:{readyState:'loading',addEventListener(){}}
+    });
+    vm.runInContext(fonte+'\n'+principal,ctx);
+    vm.runInContext(`
+        const itens = ['A','B','C','D'].map(id=>({id,titulo:id}));
+        const ordem = MuralMusicas.configurar(itens);
+        const nodes = ordem.map(item=>({id:'tela-musica-'+item.id,dataset:{musicaChave:item.id},classList:{toggle(){}}}));
+        const tocando = nodes[0];
+        const lista = {dataset:{},querySelectorAll:()=>[]};
+        tocando.querySelector=()=>lista;
+        MuralMusicas.atualizarFila(tocando);
+        globalThis.anunciada = tocando.dataset.musicaProxima;
+        document.querySelectorAll=()=>nodes;
+        document.querySelector=()=>null;
+        obterTelasOrdenadas=()=>[];
+        idMusicaDaRodada=nodes[1].id;
+        selecionarProximaMusicaDaRodada(tocando);
+    `,ctx);
+    assert.equal(vm.runInContext('idMusicaDaRodada',ctx), 'tela-musica-'+ctx.anunciada);
+});
+
+test('reserva anunciada continua válida na virada do ciclo aleatório', () => {
+    const p=player(()=>0);
+    const ordem=Array.from(p.configurar(musicas),item=>item.id);
+    const atual=ordem[ordem.length-1];
+    const section={dataset:{musicaChave:atual},querySelector:()=>({dataset:{},querySelectorAll:()=>[]})};
+    p.atualizarFila(section);
+    assert.equal(p.avancar(atual,section.dataset.musicaProxima),section.dataset.musicaProxima);
+});

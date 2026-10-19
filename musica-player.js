@@ -50,12 +50,17 @@ const MuralMusicas = (() => {
         return [...sequencia];
     }
 
-    function avancar(id) {
+    function avancar(id, anunciada) {
         const indice = sequencia.findIndex(item => item.filaId === String(id));
-        if (indice < sequencia.length - 1) return sequencia[indice + 1]?.filaId;
-        sequencia = proximoCiclo;
-        proximoCiclo = planejarCiclo();
-        return sequencia[0]?.filaId;
+        let proxima = sequencia[indice + 1]?.filaId;
+        if (indice === sequencia.length - 1) {
+            sequencia = proximoCiclo;
+            proximoCiclo = planejarCiclo();
+            proxima = sequencia[0]?.filaId;
+        }
+        // A reserva exibida tem prioridade enquanto a faixa continuar disponível.
+        return sequencia.some(item => item.filaId === anunciada)
+            ? anunciada : proxima;
     }
 
     function obterFila(id) {
@@ -99,6 +104,8 @@ const MuralMusicas = (() => {
     function atualizarFila(section) {
         const lista = section.querySelector('.musica-fila-lista');
         if (!lista) return;
+        const fila = obterFila(section.dataset.musicaChave);
+        section.dataset.musicaProxima = fila[3]?.item?.filaId || '';
         const html = renderizarFila(section.dataset.musicaChave);
         if (lista.dataset.assinatura === html) return;
         lista.innerHTML = html;
