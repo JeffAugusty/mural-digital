@@ -1714,6 +1714,7 @@ window.addEventListener('message', evento => {
 
 
 function agendarSegurancaYoutube(registro) {
+    if (!registro.section.classList.contains('ativa')) return;
     window.clearTimeout(timerRotacao);
 
     if (registro.item.tipo === 'live') {
@@ -1907,11 +1908,17 @@ function iniciarPlayerYoutube(section) {
     configurarLegendasYoutube(registro);
 
     try {
-        if (
-            registro.player.getPlayerState() ===
-            window.YT.PlayerState.ENDED
-        ) {
+        const estado = registro.player.getPlayerState();
+        if (estado === window.YT.PlayerState.ENDED) {
+            if (registro.iniciadoNestaExibicao) {
+                rotacionarTela();
+                return;
+            }
             registro.player.seekTo(0, true);
+        } else if (estado === window.YT.PlayerState.PLAYING) {
+            registro.iniciadoNestaExibicao = true;
+            agendarSegurancaYoutube(registro);
+            return;
         }
 
         registro.player.playVideo();
@@ -1934,6 +1941,7 @@ function pausarPlayersYoutubeExceto(idAtivo) {
             return;
         }
 
+        registro.iniciadoNestaExibicao = false;
         try {
             registro.player.pauseVideo();
             registro.section.classList.remove('tocando');
@@ -1974,6 +1982,7 @@ function tratarEstadoYoutube(sectionId, estado) {
     }
 
     if (estado === window.YT.PlayerState.PLAYING) {
+        registro.iniciadoNestaExibicao = true;
         if (registro.item.tipo === 'live') marcarLiveReproduzindo(registro);
         if (registro.item.tipo === 'musica') {
             registro.section.dataset.musicaReproduzida = 'true';
@@ -2086,7 +2095,7 @@ async function criarPlayersYoutube(sections, geracao) {
                 },
                 events: {
                     onReady: () => {
-                        if (item.tipo === 'live' && playersYoutube.get(section.id) !== registro) return;
+                        if (playersYoutube.get(section.id) !== registro) return;
                         registro.pronto = true;
                         configurarLegendasYoutube(registro);
                         section
@@ -2104,15 +2113,15 @@ async function criarPlayersYoutube(sections, geracao) {
                         }
                     },
                     onStateChange: evento => {
-                        if (item.tipo === 'live' && playersYoutube.get(section.id) !== registro) return;
+                        if (playersYoutube.get(section.id) !== registro) return;
                         tratarEstadoYoutube(section.id, evento.data);
                     },
                     onError: evento => {
-                        if (item.tipo === 'live' && playersYoutube.get(section.id) !== registro) return;
+                        if (playersYoutube.get(section.id) !== registro) return;
                         tratarErroYoutube(section.id, evento.data);
                     },
                     onAutoplayBlocked: () => {
-                        if (item.tipo === 'live' && playersYoutube.get(section.id) !== registro) return;
+                        if (playersYoutube.get(section.id) !== registro) return;
                         tratarAutoplayBloqueado(section.id);
                     }
                 }
@@ -2150,6 +2159,7 @@ function configurarSomVideoArquivo(registro, forcarSilencio = false) {
 
 
 function agendarSegurancaVideoArquivo(registro) {
+    if (!registro.section.classList.contains('ativa')) return;
     window.clearTimeout(timerRotacao);
 
     let espera = 5 * 60 * 1000;
@@ -2169,6 +2179,7 @@ function agendarSegurancaVideoArquivo(registro) {
 
 
 function pularVideoArquivoComFalha(registro, mensagem) {
+    if (!registro.section.classList.contains('ativa')) return;
     window.clearTimeout(registro.timerFalha);
     window.clearTimeout(timerRotacao);
 
@@ -2200,14 +2211,19 @@ function iniciarPlayerVideoArquivo(section) {
     window.clearTimeout(registro.timerFalha);
     registro.ajustarEnquadramento?.();
 
-    if (
-        video.ended ||
-        (Number.isFinite(video.duration) && video.currentTime >= video.duration - 0.25)
-    ) {
+    video.loop = false;
+    if (video.ended) {
+        if (registro.iniciadoNestaExibicao) {
+            rotacionarTela();
+            return;
+        }
         video.currentTime = 0;
     }
-
     configurarSomVideoArquivo(registro);
+    if (!video.paused) {
+        agendarSegurancaVideoArquivo(registro);
+        return;
+    }
 
     const tentarReproduzir = forcarSilencio => {
         if (forcarSilencio) configurarSomVideoArquivo(registro, true);
@@ -2258,6 +2274,7 @@ function pausarPlayersVideoArquivoExceto(idAtivo) {
         if (id === idAtivo) return;
 
         window.clearTimeout(registro.timerFalha);
+        registro.iniciadoNestaExibicao = false;
         registro.video.pause();
         registro.video.currentTime = 0;
         registro.section.classList.remove('tocando');
@@ -2351,6 +2368,8 @@ function criarPlayersVideoArquivo(registros) {
             });
             video.addEventListener('canplay', removerCarregamento);
             video.addEventListener('playing', () => {
+                if (!registro.section.classList.contains('ativa')) { video.pause(); return; }
+                registro.iniciadoNestaExibicao = true;
                 window.clearTimeout(registro.timerFalha);
                 registro.section.classList.add('tocando');
                 agendarSegurancaVideoArquivo(registro);
