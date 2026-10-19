@@ -79,54 +79,61 @@ async function autenticarRequisicao(req, authAdmin) {
     }
 }
 
-async function garantirPerfil(decoded, authAdmin, dbAdmin) {
+function claimsCorrespondem(decoded, perfil) {
+    return decoded.papel === perfil.papel &&
+        decoded.primeiroAcesso === (perfil.primeiroAcesso === true) &&
+        decoded.ativo === (perfil.ativo !== false) &&
+        Array.isArray(decoded.permissoes) &&
+        JSON.stringify([...decoded.permissoes].sort()) ===
+        JSON.stringify([...perfil.permissoes].sort());
+}
+
+async function garantirPerfil(decoded, authAdmin, dbAdmin, registrarAcesso = false) {
     const referencia = dbAdmin.collection('usuarios').doc(decoded.uid);
     const registro = await referencia.get();
+    const existente = registro.data();
     const email = normalizarEmail(decoded.email);
     const superadminInicial = email && email === emailSuperadminInicial();
+    let perfil;
+    let alteracoes = {};
 
     if (superadminInicial) {
-        const perfil = {
+        perfil = {
             uid: decoded.uid,
-            nome: registro.data()?.nome || decoded.name || 'Administrador principal',
+            nome: existente?.nome || decoded.name || 'Administrador principal',
             email,
             papel: 'superadmin',
             permissoes: [...TODAS_PERMISSOES],
             primeiroAcesso: false,
             ativo: true
         };
-
-        await Promise.all([
-            authAdmin.setCustomUserClaims(decoded.uid, {
-                papel: perfil.papel,
-                permissoes: perfil.permissoes,
-                primeiroAcesso: false,
-                ativo: true
-            }),
-            referencia.set({
+        if (!registro.exists || !claimsCorrespondem(existente, perfil) ||
+            existente.uid !== perfil.uid || existente.email !== email || !existente.nome) {
+            alteracoes = {
                 ...perfil,
                 atualizadoEm: FieldValue.serverTimestamp(),
                 ...(!registro.exists ? {
                     criadoEm: FieldValue.serverTimestamp(),
                     criadoPor: 'configuracao-inicial'
                 } : {})
-            }, { merge: true })
-        ]);
-
-        return perfil;
+            };
+        }
+    } else {
+        if (!registro.exists) {
+            throw erroHttp('Esta conta ainda não foi cadastrada por um administrador.', 403);
+        }
+        perfil = dadosPublicos(existente);
+        if (!perfil.ativo) throw erroHttp('Este usuário está desativado.', 403);
     }
 
-    if (!registro.exists) {
-        throw erroHttp(
-            'Esta conta ainda não foi cadastrada por um administrador.',
-            403
-        );
-    }
-
-    const perfil = dadosPublicos(registro.data());
-    if (!perfil.ativo) throw erroHttp('Este usuário está desativado.', 403);
-    await sincronizarClaims(authAdmin, decoded.uid, perfil);
-    return perfil;
+    // O perfil lido no servidor continua sendo a fonte das permissões.
+    const renovarToken = !claimsCorrespondem(decoded, perfil);
+    if (registrarAcesso) alteracoes.ultimoAcesso = FieldValue.serverTimestamp();
+    await Promise.all([
+        ...(renovarToken ? [sincronizarClaims(authAdmin, decoded.uid, perfil)] : []),
+        ...(Object.keys(alteracoes).length ? [referencia.set(alteracoes, { merge: true })] : [])
+    ]);
+    return { perfil, renovarToken };
 }
 
 function exigirSuperadmin(perfil) {
@@ -351,15 +358,14 @@ module.exports = async function handler(req, res) {
     try {
         const { authAdmin, dbAdmin } = obterFirebaseAdmin();
         const decoded = await autenticarRequisicao(req, authAdmin);
-        const perfilAtual = await garantirPerfil(decoded, authAdmin, dbAdmin);
         const corpo = req.body && typeof req.body === 'object' ? req.body : {};
         const acao = corpo.acao || 'me';
+        const { perfil: perfilAtual, renovarToken } = await garantirPerfil(
+            decoded, authAdmin, dbAdmin, acao === 'me'
+        );
 
         if (acao === 'me') {
-            await dbAdmin.collection('usuarios').doc(decoded.uid).set({
-                ultimoAcesso: FieldValue.serverTimestamp()
-            }, { merge: true });
-            responder(res, 200, { usuario: dadosPublicos(perfilAtual) });
+            responder(res, 200, { usuario: dadosPublicos(perfilAtual), renovarToken });
             return;
         }
 

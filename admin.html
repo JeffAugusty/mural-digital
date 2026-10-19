@@ -4513,7 +4513,6 @@
                 $('#login-senha').value = '';
             } catch (erro) {
                 mostrarMensagem($('#login-mensagem'), 'E-mail ou senha incorretos.');
-            } finally {
                 botao.disabled = false;
                 botao.textContent = 'Entrar';
             }
@@ -5331,6 +5330,13 @@
             pararEscutaPerfil = null;
         }
 
+        function assinaturaPermissoes(perfil) {
+            return JSON.stringify([
+                perfil?.papel, [...(perfil?.permissoes || [])].sort(),
+                perfil?.primeiroAcesso === true, perfil?.ativo !== false
+            ]);
+        }
+
         function iniciarEscutaPerfil() {
             if (!auth.currentUser) return;
             if (pararEscutaPerfil) pararEscutaPerfil();
@@ -5347,8 +5353,10 @@
                         return;
                     }
 
+                    const mudouAcesso = assinaturaPermissoes(perfilUsuario) !== assinaturaPermissoes(atualizado);
                     perfilUsuario = atualizado;
-                    await auth.currentUser.getIdToken(true).catch(() => {});
+                    if (mudouAcesso) await auth.currentUser.getIdToken(true).catch(() => {});
+                    if (auth.currentUser?.uid !== uid) return;
                     aplicarPermissoesInterface();
                     const painelAtual = document.querySelector('[data-painel].ativo')?.dataset.painel;
                     if (painelAtual && !temPermissao(painelAtual)) abrirSecaoAdmin('visao-geral');
@@ -5383,8 +5391,9 @@
                     const retorno = await chamarApiUsuarios({ acao: 'me' });
                     if (revisao !== autenticacaoEmAndamento || auth.currentUser?.uid !== usuario.uid) return;
 
+                    if (retorno.renovarToken !== false) await usuario.getIdToken(true);
+                    if (revisao !== autenticacaoEmAndamento || auth.currentUser?.uid !== usuario.uid) return;
                     perfilUsuario = retorno.usuario;
-                    await usuario.getIdToken(true);
 
                     if (perfilUsuario.primeiroAcesso) {
                         loginTela.classList.add('oculto');
@@ -5401,6 +5410,11 @@
                         $('#login-mensagem'),
                         erro.message || 'Não foi possível validar as permissões desta conta.'
                     );
+                } finally {
+                    if (revisao === autenticacaoEmAndamento) {
+                        $('#login-botao').disabled = false;
+                        $('#login-botao').textContent = 'Entrar';
+                    }
                 }
             } else {
                 pararTimerInatividade();
@@ -5414,6 +5428,8 @@
                 primeiroAcessoTela.classList.add('oculto');
                 loginTela.classList.remove('oculto');
                 limparCamposLogin();
+                $('#login-botao').disabled = false;
+                $('#login-botao').textContent = 'Entrar';
             }
         });
 
